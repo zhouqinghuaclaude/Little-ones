@@ -398,22 +398,21 @@ function renderMessages(msgs) {
 }
 
 function msgHTML(role, content, time) {
-  const isUser = role === "user";
   const t = new Date(time || Date.now()).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
-  if(isUser) {
-    return `<div class="msg-row user">
-      <div class="bubble">
-        <div class="bubble-text user">${content}</div>
-        <div class="bubble-time" style="text-align:right">${t}</div>
+  if(role === "user") {
+    return `<div style="display:flex;flex-direction:row-reverse;align-items:flex-end;gap:8px;margin-bottom:4px">
+      <div style="width:32px;height:32px;border-radius:50%;background:#F0E8FF;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">👩</div>
+      <div style="max-width:74%">
+        <div style="background:#B87BDB;color:white;border-radius:18px 18px 4px 18px;padding:10px 14px;font-size:14px;font-weight:500;line-height:1.6;word-break:break-word">${content}</div>
+        <div style="font-size:10px;color:#B0A0C0;margin-top:3px;padding:0 4px;text-align:right">${t}</div>
       </div>
-      <div class="msg-avatar user-av">👩</div>
     </div>`;
   } else {
-    return `<div class="msg-row">
-      <div class="msg-avatar">${currentKid?.gender === "boy" ? "👦" : "👧"}</div>
-      <div class="bubble">
-        <div class="bubble-text kid">${content}</div>
-        <div class="bubble-time">${t}</div>
+    return `<div style="display:flex;align-items:flex-end;gap:8px;margin-bottom:4px">
+      <div style="width:32px;height:32px;border-radius:50%;background:#F0E8FF;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">${currentKid?.gender === "boy" ? "👦" : "👧"}</div>
+      <div style="max-width:74%">
+        <div style="background:white;color:#3A2A4A;border-radius:18px 18px 18px 4px;padding:10px 14px;font-size:14px;font-weight:500;line-height:1.6;box-shadow:0 2px 8px rgba(0,0,0,0.07);word-break:break-word">${content}</div>
+        <div style="font-size:10px;color:#B0A0C0;margin-top:3px;padding:0 4px">${t}</div>
       </div>
     </div>`;
   }
