@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>我的小天使</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --purple: #B87BDB; --pink: #FF8FAB; --bg: #FFF8FE;
+  --card: #ffffff; --text: #3A2A4A; --sub: #B0A0C0;
+  --border: #F0E8FF; --grad: linear-gradient(135deg, #B87BDB, #FF8FAB);
+}
+body { font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+button { cursor: pointer; border: none; font-family: inherit; }
+input, textarea { font-family: inherit; }
+
+/* ── 通用 ── */
+.screen { display: none; flex-direction: column; min-height: 100vh; }
+.screen.active { display: flex; }
+.btn-primary { background: var(–grad); color: white; border-radius: 16px;
+padding: 15px; font-size: 16px; font-weight: 700; width: 100%; }
+.btn-outline { background: white; color: var(–purple); border: 1.5px solid var(–border);
+border-radius: 16px; padding: 14px; font-size: 15px; font-weight: 600; width: 100%; }
+.input-field { border: 1.5px solid var(–border); border-radius: 14px; padding: 14px 16px;
+font-size: 15px; color: var(–text); width: 100%; background: white; outline: none; }
+.input-field:focus { border-color: var(–purple); }
+.card { background: white; border-radius: 20px; padding: 20px;
+box-shadow: 0 4px 20px rgba(184,123,219,0.1); }
+
+/* ── 登录页 ── */
+#loginScreen { align-items: center; justify-content: center; padding: 32px 24px; }
+.login-logo { font-size: 64px; margin-bottom: 12px; }
+.login-title { font-size: 28px; font-weight: 900; color: var(–text); margin-bottom: 6px; }
+.login-sub { font-size: 14px; color: var(–sub); margin-bottom: 40px; }
+.login-card { width: 100%; max-width: 380px; }
+.login-card .input-field { margin-bottom: 14px; }
+.login-toggle { text-align: center; color: var(–purple); font-size: 14px;
+font-weight: 600; margin-top: 18px; }
+.login-toggle span { cursor: pointer; text-decoration: underline; }
+.error-msg { color: #FF6B6B; font-size: 13px; text-align: center; margin-top: 10px; min-height: 18px; }
+
+/* ── 主页 ── */
+#homeScreen { }
+.home-header { padding: 20px 20px 12px; display: flex; align-items: center; justify-content: space-between; }
+.home-title { font-size: 22px; font-weight: 900; }
+.home-logout { color: var(–sub); font-size: 13px; font-weight: 600; background: none; }
+.kids-list { padding: 8px 16px; flex: 1; overflow-y: auto; }
+.kid-card { display: flex; align-items: center; gap: 14px; background: white;
+border-radius: 20px; padding: 16px; margin-bottom: 12px;
+border: 1.5px solid var(–border); box-shadow: 0 2px 12px rgba(184,123,219,0.08);
+cursor: pointer; transition: transform .15s; }
+.kid-card:active { transform: scale(0.98); }
+.kid-avatar { width: 54px; height: 54px; border-radius: 50%; background: #F0E8FF;
+display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; }
+.kid-info { flex: 1; }
+.kid-name { font-size: 17px; font-weight: 800; }
+.kid-meta { font-size: 12px; color: var(–sub); margin-top: 2px; }
+.kid-arrow { font-size: 22px; color: var(–border); }
+.add-kid-btn { margin: 4px 16px 24px; border: 1.5px dashed #D0B8F0; border-radius: 18px;
+padding: 16px; text-align: center; background: none; width: calc(100% - 32px);
+font-size: 15px; font-weight: 700; color: var(–purple); }
+.empty-state { display: flex; flex-direction: column; align-items: center;
+justify-content: center; flex: 1; padding: 40px 24px; text-align: center; }
+.empty-emoji { font-size: 72px; margin-bottom: 16px; }
+.empty-text { font-size: 16px; color: var(–sub); line-height: 1.6; }
+
+/* ── 创建孩子页 ── */
+#createScreen { }
+.create-header { padding: 16px 20px; display: flex; align-items: center; gap: 12; }
+.back-btn { background: none; font-size: 24px; color: var(–purple); width: 36px; }
+.create-title { font-size: 20px; font-weight: 900; }
+.create-body { padding: 8px 20px 40px; overflow-y: auto; flex: 1; }
+.form-label { font-size: 13px; font-weight: 700; color: var(–sub);
+margin-bottom: 8px; margin-top: 20px; display: block; }
+.option-row { display: flex; gap: 10px; }
+.option-btn { flex: 1; padding: 14px; border: 1.5px solid var(–border); border-radius: 14px;
+background: white; font-size: 15px; font-weight: 700; color: var(–sub); transition: all .2s; }
+.option-btn.selected { border-color: var(–purple); background: #F5EEFF; color: var(–purple); }
+
+/* ── 聊天页 ── */
+#chatScreen { height: 100vh; }
+.chat-header { padding: 12px 16px; background: rgba(255,255,255,0.92);
+backdrop-filter: blur(12px); border-bottom: 1px solid var(–border);
+display: flex; align-items: center; gap: 12; flex-shrink: 0; position: sticky; top: 0; z-index: 10; }
+.chat-back { background: none; font-size: 24px; color: var(–purple); }
+.chat-avatar { width: 42px; height: 42px; border-radius: 50%; background: #F0E8FF;
+display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.chat-name { font-size: 16px; font-weight: 800; }
+.chat-status { font-size: 11px; color: var(–sub); }
+.messages-area { flex: 1; overflow-y: auto; padding: 16px 14px; display: flex;
+flex-direction: column; gap: 12; scroll-behavior: smooth; }
+.msg-row { display: flex; align-items: flex-end; gap: 8; }
+.msg-row.user { flex-direction: row-reverse; }
+.msg-avatar { width: 32px; height: 32px; border-radius: 50%; background: #F0E8FF;
+display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+.msg-avatar.user-av { background: linear-gradient(135deg, #B87BDB22, #FF8FAB22); }
+.bubble { max-width: 74%; }
+.bubble-text { padding: 10px 14px; border-radius: 18px; font-size: 14px;
+line-height: 1.6; font-weight: 500; }
+.bubble-text.kid { background: white; color: var(–text); border-bottom-left-radius: 4px;
+box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+.bubble-text.user { background: var(–grad); color: white; border-bottom-right-radius: 4px; }
+.bubble-time { font-size: 10px; color: var(–sub); margin-top: 3px; padding: 0 4px; }
+.bubble.user .bubble-time { text-align: right; }
+.typing-bubble .bubble-text { display: flex; gap: 4px; align-items: center; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(–purple);
+animation: dot 1.2s ease-in-out infinite; }
+.dot:nth-child(2) { animation-delay: .2s; }
+.dot:nth-child(3) { animation-delay: .4s; }
+@keyframes dot { 0%,80%,100%{transform:scale(.7);opacity:.5} 40%{transform:scale(1);opacity:1} }
+.quick-bar { padding: 8px 12px 6px; overflow-x: auto; display: flex; gap: 7px;
+border-top: 1px solid var(–border); flex-shrink: 0;
+background: rgba(255,255,255,0.9); scrollbar-width: none; }
+.quick-bar::-webkit-scrollbar { display: none; }
+.quick-btn { background: white; border: 1.5px solid var(–border); border-radius: 20px;
+padding: 6px 13px; font-size: 12px; font-weight: 600; color: var(–purple);
+white-space: nowrap; flex-shrink: 0; }
+.input-area { padding: 8px 12px 24px; background: rgba(255,255,255,0.95);
+border-top: 1px solid var(–border); flex-shrink: 0; display: flex; gap: 8; align-items: flex-end; }
+.msg-input { flex: 1; border: 1.5px solid var(–border); border-radius: 22px;
+padding: 10px 16px; font-size: 14px; color: var(–text); resize: none;
+outline: none; max-height: 100px; line-height: 1.5; background: white; }
+.msg-input:focus { border-color: var(–purple); }
+.send-btn { width: 42px; height: 42px; border-radius: 50%; background: var(–grad);
+display: flex; align-items: center; justify-content: center;
+font-size: 16px; color: white; flex-shrink: 0; font-weight: 900; }
+.send-btn:disabled { background: #EEE4F8; color: var(–sub); }
+
+/* ── 工具 ── */
+.loading { display: flex; align-items: center; justify-content: center;
+flex: 1; font-size: 32px; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+background: #3A2A4A; color: white; border-radius: 20px; padding: 10px 20px;
+font-size: 13px; font-weight: 600; z-index: 999; animation: fadeIn .3s; display: none; }
+.toast.show { display: block; }
+@keyframes fadeIn { from{opacity:0;transform:translateX(-50%) translateY(-10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+</style>
+
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<!-- ══ 登录页 ══ -->
+
+<div id="loginScreen" class="screen active">
+  <div class="login-logo">👶</div>
+  <div class="login-title">我的小天使</div>
+  <div class="login-sub">陪伴你的虚拟宝宝成长</div>
+  <div class="card login-card">
+    <input id="loginEmail" class="input-field" type="email" placeholder="邮箱" autocomplete="email">
+    <input id="loginPwd" class="input-field" type="password" placeholder="密码（至少6位）" autocomplete="current-password">
+    <button id="loginBtn" class="btn-primary" onclick="doLogin()">登录</button>
+    <div class="login-toggle">没有账号？<span onclick="toggleRegister()">立即注册</span></div>
+    <div id="loginError" class="error-msg"></div>
+  </div>
+</div>
+
+<!-- ══ 主页 ══ -->
+
+<div id="homeScreen" class="screen">
+  <div class="home-header">
+    <div class="home-title">我的小天使 👶</div>
+    <button class="home-logout" onclick="logout()">退出</button>
+  </div>
+  <div class="kids-list" id="kidsList"></div>
+</div>
+
+<!-- ══ 创建孩子页 ══ -->
+
+<div id="createScreen" class="screen">
+  <div class="create-header">
+    <button class="back-btn" onclick="showScreen('homeScreen')">‹</button>
+    <div class="create-title">创建小天使 ✨</div>
+  </div>
+  <div class="create-body">
+    <label class="form-label">宝宝名字</label>
+    <input id="kidName" class="input-field" placeholder="给宝宝起个名字" maxlength="10">
+    <label class="form-label">年龄</label>
+    <input id="kidAge" class="input-field" type="number" placeholder="几岁？" min="0" max="18">
+    <label class="form-label">性别</label>
+    <div class="option-row">
+      <button class="option-btn selected" id="genderBoy" onclick="selectGender('boy')">👦 儿子</button>
+      <button class="option-btn" id="genderGirl" onclick="selectGender('girl')">👧 女儿</button>
+    </div>
+    <label class="form-label">我是</label>
+    <div class="option-row">
+      <button class="option-btn selected" id="roleMom" onclick="selectRole('妈妈')">👩 妈妈</button>
+      <button class="option-btn" id="roleDad" onclick="selectRole('爸爸')">👨 爸爸</button>
+    </div>
+    <br><br>
+    <button class="btn-primary" onclick="createKid()">创建我的小天使 ✨</button>
+    <div id="createError" class="error-msg"></div>
+  </div>
+</div>
+
+<!-- ══ 聊天页 ══ -->
+
+<div id="chatScreen" class="screen">
+  <div class="chat-header">
+    <button class="chat-back" onclick="showScreen('homeScreen'); loadKids()">‹</button>
+    <div class="chat-avatar" id="chatAvatar">👦</div>
+    <div>
+      <div class="chat-name" id="chatName">小朵</div>
+      <div class="chat-status" id="chatStatus">8岁 · 等你说话～</div>
+    </div>
+  </div>
+  <div class="messages-area" id="messagesArea"></div>
+  <div class="quick-bar" id="quickBar"></div>
+  <div class="input-area">
+    <textarea id="msgInput" class="msg-input" placeholder="和宝宝说点什么…" rows="1"
+      oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
+    <button id="sendBtn" class="send-btn" onclick="sendMsg()">➤</button>
+  </div>
+</div>
+
+<script>
+// ── 状态 ──────────────────────────────────────
+const API = ""; // 空字符串 = 同域，Railway部署后自动正确
+let token = localStorage.getItem("token") || "";
+let currentUser = JSON.parse(localStorage.getItem("user") || "null");
+let currentKid = null;
+let isRegister = false;
+let selectedGender = "boy";
+let selectedRole = "妈妈";
+
+// ── 工具函数 ──────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function showToast(msg, duration = 2500) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), duration);
+}
+
+function request(path, options = {}) {
+  return fetch(API + path, {
+    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}), ...options.headers },
+    ...options
+  }).then(async r => {
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || "请求失败");
+    return data;
+  });
+}
+
+function autoResize(el) {
+  el.style.height = "auto";
+  el.style.height = Math.min(el.scrollHeight, 100) + "px";
+}
+
+function timeStr() {
+  return new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+}
+
+// ── 登录/注册 ──────────────────────────────────
+function toggleRegister() {
+  isRegister = !isRegister;
+  document.querySelector(".login-toggle span").textContent = isRegister ? "返回登录" : "立即注册";
+  document.getElementById("loginBtn").textContent = isRegister ? "注册" : "登录";
+  document.getElementById("loginError").textContent = "";
+}
+
+async function doLogin() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const pwd = document.getElementById("loginPwd").value;
+  const errEl = document.getElementById("loginError");
+  errEl.textContent = "";
+  if (!email || !pwd) return errEl.textContent = "请填写邮箱和密码";
+  document.getElementById("loginBtn").textContent = "请稍候…";
+  try {
+    const data = await request(`/api/${isRegister ? "register" : "login"}`, {
+      method: "POST", body: JSON.stringify({ email, password: pwd })
+    });
+    token = data.token;
+    currentUser = data.user;
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+    showScreen("homeScreen");
+    loadKids();
+  } catch (e) {
+    errEl.textContent = e.message;
+  } finally {
+    document.getElementById("loginBtn").textContent = isRegister ? "注册" : "登录";
+  }
+}
+
+function logout() {
+  token = "";
+  currentUser = null;
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  showScreen("loginScreen");
+}
+
+// ── 主页 ──────────────────────────────────────
+async function loadKids() {
+  try {
+    const kids = await request("/api/kids");
+    renderKids(kids);
+  } catch (e) {
+    if (e.message.includes("登录")) { logout(); }
+  }
+}
+
+function renderKids(kids) {
+  const list = document.getElementById("kidsList");
+  if (!kids.length) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="empty-emoji">👶</div>
+      <div class="empty-text">还没有小天使<br>点下方按钮创建你的第一个宝宝</div>
+    </div>
+    <button class="add-kid-btn" onclick="showScreen('createScreen')">＋ 创建小天使</button>`;
+    return;
+  }
+  const emojis = { boy: "👦", girl: "👧" };
+  list.innerHTML = kids.map(k => `
+    <div class="kid-card" onclick="openChat(${JSON.stringify(k).replace(/"/g, '&quot;')})">
+      <div class="kid-avatar">${emojis[k.gender] || "👶"}</div>
+      <div class="kid-info">
+        <div class="kid-name">${k.name}</div>
+        <div class="kid-meta">${k.age}岁 · ${k.parent_role}的宝贝</div>
+      </div>
+      <div class="kid-arrow">›</div>
+    </div>`).join("") +
+    (kids.length < 3 ? `<button class="add-kid-btn" onclick="showScreen('createScreen')">＋ 添加孩子（${kids.length}/3）</button>` : "");
+}
+
+// ── 创建孩子 ──────────────────────────────────
+function selectGender(g) {
+  selectedGender = g;
+  document.getElementById("genderBoy").className = "option-btn" + (g === "boy" ? " selected" : "");
+  document.getElementById("genderGirl").className = "option-btn" + (g === "girl" ? " selected" : "");
+}
+
+function selectRole(r) {
+  selectedRole = r;
+  document.getElementById("roleMom").className = "option-btn" + (r === "妈妈" ? " selected" : "");
+  document.getElementById("roleDad").className = "option-btn" + (r === "爸爸" ? " selected" : "");
+}
+
+async function createKid() {
+  const name = document.getElementById("kidName").value.trim();
+  const age = document.getElementById("kidAge").value;
+  const errEl = document.getElementById("createError");
+  errEl.textContent = "";
+  if (!name) return errEl.textContent = "请填写宝宝的名字";
+  if (!age || age < 0 || age > 18) return errEl.textContent = "请填写0-18的年龄";
+  try {
+    await request("/api/kids", { method: "POST", body: JSON.stringify({ name, age: parseInt(age), gender: selectedGender, parent_role: selectedRole }) });
+    document.getElementById("kidName").value = "";
+    document.getElementById("kidAge").value = "";
+    showToast("✨ 小天使创建成功！");
+    showScreen("homeScreen");
+    loadKids();
+  } catch (e) {
+    errEl.textContent = e.message;
+  }
+}
+
+// ── 聊天 ──────────────────────────────────────
+const QUICK_MSGS = ["❤️ 我爱你", "😊 你好吗", "🍎 吃饭了吗", "📚 作业写了吗", "⚽ 体育课怎么样", "🌙 晚安"];
+
+async function openChat(kid) {
+  currentKid = kid;
+  document.getElementById("chatAvatar").textContent = kid.gender === "boy" ? "👦" : "👧";
+  document.getElementById("chatName").textContent = kid.name;
+  document.getElementById("chatStatus").textContent = `${kid.age}岁 · ${kid.parent_role}的宝贝`;
+
+  // 快捷按钮
+  document.getElementById("quickBar").innerHTML = QUICK_MSGS.map(q =>
+    `<button class="quick-btn" onclick="sendMsg('${q.replace(/^[^\s]+\s/, '')}')">${q}</button>`
+  ).join("");
+
+  showScreen("chatScreen");
+  document.getElementById("messagesArea").innerHTML = `<div class="loading">⟳</div>`;
+
+  try {
+    const msgs = await request(`/api/kids/${kid.id}/messages`);
+    renderMessages(msgs.length ? msgs : [{ role: "assistant", content: `${kid.parent_role}～（跑过来）你找我干嘛呀？`, created_at: new Date().toISOString() }]);
+  } catch {
+    renderMessages([{ role: "assistant", content: `${kid.parent_role}～ 你来了！`, created_at: new Date().toISOString() }]);
+  }
+}
+
+function renderMessages(msgs) {
+  const area = document.getElementById("messagesArea");
+  area.innerHTML = msgs.map(m => msgHTML(m.role, m.content, m.created_at)).join("");
+  scrollToBottom();
+}
+
+function msgHTML(role, content, time) {
+  const isUser = role === "user";
+  const t = new Date(time || Date.now()).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+  return `<div class="msg-row ${isUser ? "user" : ""}">
+    ${!isUser ? `<div class="msg-avatar">${currentKid?.gender === "boy" ? "👦" : "👧"}</div>` : ""}
+    <div class="bubble">
+      <div class="bubble-text ${isUser ? "user" : "kid"}">${content}</div>
+      <div class="bubble-time">${t}</div>
+    </div>
+    ${isUser ? `<div class="msg-avatar user-av">👩</div>` : ""}
+  </div>`;
+}
+
+function showTyping() {
+  const area = document.getElementById("messagesArea");
+  const div = document.createElement("div");
+  div.className = "msg-row typing-bubble";
+  div.id = "typingIndicator";
+  div.innerHTML = `<div class="msg-avatar">${currentKid?.gender === "boy" ? "👦" : "👧"}</div>
+    <div class="bubble"><div class="bubble-text kid">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div></div>`;
+  area.appendChild(div);
+  scrollToBottom();
+}
+
+function hideTyping() {
+  document.getElementById("typingIndicator")?.remove();
+}
+
+function scrollToBottom() {
+  const area = document.getElementById("messagesArea");
+  area.scrollTop = area.scrollHeight;
+}
+
+async function sendMsg(text) {
+  const input = document.getElementById("msgInput");
+  const msg = (text || input.value).trim();
+  if (!msg || !currentKid) return;
+  input.value = "";
+  input.style.height = "auto";
+
+  // 立即显示用户消息
+  const area = document.getElementById("messagesArea");
+  area.insertAdjacentHTML("beforeend", msgHTML("user", msg, new Date().toISOString()));
+  scrollToBottom();
+
+  // 显示打字指示器
+  showTyping();
+  document.getElementById("sendBtn").disabled = true;
+
+  try {
+    const data = await request(`/api/kids/${currentKid.id}/chat`, {
+      method: "POST",
+      body: JSON.stringify({ message: msg })
+    });
+    hideTyping();
+    area.insertAdjacentHTML("beforeend", msgHTML("assistant", data.reply, new Date().toISOString()));
+    scrollToBottom();
+  } catch (e) {
+    hideTyping();
+    area.insertAdjacentHTML("beforeend", msgHTML("assistant", `（${currentKid.name}没有回应，请稍后再试）`, new Date().toISOString()));
+    scrollToBottom();
+  } finally {
+    document.getElementById("sendBtn").disabled = false;
+  }
+}
+
+// ── 初始化 ────────────────────────────────────
+if (token) {
+  showScreen("homeScreen");
+  loadKids();
+} else {
+  showScreen("loginScreen");
+}
+</script>
+
+</body>
+</html>
