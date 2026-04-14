@@ -400,14 +400,23 @@ function renderMessages(msgs) {
 function msgHTML(role, content, time) {
   const isUser = role === "user";
   const t = new Date(time || Date.now()).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
-  return `<div class="msg-row ${isUser ? "user" : ""}">
-    ${!isUser ? `<div class="msg-avatar">${currentKid?.gender === "boy" ? "👦" : "👧"}</div>` : ""}
-    <div class="bubble">
-      <div class="bubble-text ${isUser ? "user" : "kid"}">${content}</div>
-      <div class="bubble-time">${t}</div>
-    </div>
-    ${isUser ? `<div class="msg-avatar user-av">👩</div>` : ""}
-  </div>`;
+  if(isUser) {
+    return `<div class="msg-row user">
+      <div class="bubble">
+        <div class="bubble-text user">${content}</div>
+        <div class="bubble-time" style="text-align:right">${t}</div>
+      </div>
+      <div class="msg-avatar user-av">👩</div>
+    </div>`;
+  } else {
+    return `<div class="msg-row">
+      <div class="msg-avatar">${currentKid?.gender === "boy" ? "👦" : "👧"}</div>
+      <div class="bubble">
+        <div class="bubble-text kid">${content}</div>
+        <div class="bubble-time">${t}</div>
+      </div>
+    </div>`;
+  }
 }
 
 function showTyping() {
