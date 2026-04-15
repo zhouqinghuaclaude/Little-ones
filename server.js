@@ -119,7 +119,7 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
   await db.query("INSERT INTO messages (kid_id, role, content) VALUES ($1,'user',$2)", [kid.id, message.trim()]);
 
   // 构建系统提示词
-  const system = buildSystem(kid);
+  const system = process.env.SYSTEM_PROMPT || buildSystem(kid);
 
   try {
     const response = await claude.messages.create({
