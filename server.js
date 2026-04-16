@@ -119,22 +119,7 @@ const history = histResult.rows.reverse();
 
 await db.query(“INSERT INTO messages (kid_id, role, content) VALUES ($1,‘user’,$2)”, [kid.id, message.trim()]);
 
-const today = new Date();
-const isBirthday = kid.birthday &&
-new Date(kid.birthday).getDate() === today.getDate() &&
-new Date(kid.birthday).getMonth() === today.getMonth();
-
-const birthdayNote = isBirthday ? “ Today is your birthday! You are very excited about it!” : “”;
-
-let ageText = kid.age + “ years old”;
-if (kid.age <= 1) ageText = “about 1 year old, just learning to talk”;
-else if (kid.age <= 2) ageText = “2 years old, speaks in short simple words”;
-else if (kid.age <= 3) ageText = “3 years old, speaks in simple short sentences”;
-else if (kid.age <= 6) ageText = kid.age + “ years old, goes to kindergarten”;
-else if (kid.age <= 12) ageText = kid.age + “ years old, goes to primary school”;
-else ageText = kid.age + “ years old, goes to middle school”;
-
-const system = “You are “ + kid.name + “, a “ + ageText + “ child chatting with your “ + kid.parent_role + “.” + birthdayNote + “ NEVER use asterisks. NEVER write actions. ONLY write spoken words. Keep it to 1-2 sentences. Reply in Chinese. You are exactly “ + kid.age + “ years old, act accordingly.”;
+const system = "You are " + kid.name + ", a " + kid.age + "-year-old child chatting with your " + kid.parent_role + ". NEVER use asterisks. NEVER write actions. ONLY write spoken words. Keep it to 1-2 sentences. Reply in Chinese.";
 
 try {
 const response = await claude.messages.create({
