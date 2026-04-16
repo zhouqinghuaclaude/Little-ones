@@ -182,8 +182,10 @@ input, textarea { font-family: inherit; }
   <div class="create-body">
     <label class="field-label">宝宝叫什么名字？</label>
     <input id="kidName" class="field-input" placeholder="给宝宝起个名字" maxlength="10">
-    <label class="field-label">宝宝几岁？</label>
-    <input id="kidAge" class="field-input" type="number" placeholder="填写年龄（0-18）" min="0" max="18">
+    <label class="field-label">宝宝生日</label>
+    <input id="kidBirthday" class="field-input" type="date" max="2025-12-31">
+    <label class="field-label" style="margin-top:10px">或者直接填年龄</label>
+    <input id="kidAge" class="field-input" type="number" placeholder="几岁？（不填生日时用）" min="0" max="18">
     <label class="field-label">性别</label>
     <div class="choice-row">
       <button class="choice-btn on" id="gBoy" onclick="setGender('boy')">👦 儿子</button>
@@ -298,12 +300,13 @@ function setRole(r) { selRole=r; document.getElementById("rMom").className="choi
 async function createKid() {
   const name=document.getElementById("kidName").value.trim();
   const age=document.getElementById("kidAge").value;
+  const birthday=document.getElementById("kidBirthday").value;
   const err=document.getElementById("createErr");
   err.textContent="";
   if(!name) return err.textContent="请填写宝宝的名字";
-  if(!age||age<0||age>18) return err.textContent="请填写0-18的年龄";
+  if(!birthday && (!age||age<0||age>18)) return err.textContent="请填写生日或年龄";
   try {
-    await req("/api/kids",{method:"POST",body:JSON.stringify({name,age:parseInt(age),gender:selGender,parent_role:selRole})});
+    await req("/api/kids",{method:"POST",body:JSON.stringify({name,age:age?parseInt(age):0,birthday:birthday||null,gender:selGender,parent_role:selRole})});
     document.getElementById("kidName").value=""; document.getElementById("kidAge").value="";
     showToast("✨ 小天使创建成功！"); showScreen("homeScreen"); loadKids();
   } catch(e) { err.textContent=e.message; }
@@ -317,7 +320,7 @@ async function openChat(k) {
   face.textContent=boy?"👦":"👧";
   face.style.background=boy?"linear-gradient(135deg,#D6EAF8,#AED6F1)":"linear-gradient(135deg,#FDEBD0,#FADBD8)";
   document.getElementById("chatName").textContent=k.name;
-  document.getElementById("chatStatus").textContent=`${k.age}岁 · ${k.parent_role}的宝贝`;
+  document.getElementById("chatStatus").textContent=`${k.age}岁 · ${k.parent_role}的宝贝${k.birthday ? " · 生日 " + k.birthday.slice(0,10) : ""}`;
   document.getElementById("quickBar").innerHTML=QUICK.map(q=>
     `<button class="qbtn" onclick="sendMsg('${q.replace(/^[^\s]+\s/,"")}')">${q}</button>`).join("");
   showScreen("chatScreen");
