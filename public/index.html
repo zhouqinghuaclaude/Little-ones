@@ -100,6 +100,10 @@ input, textarea { font-family: inherit; }
 .primary-btn { width: 100%; padding: 16px; border-radius: 18px; background: var(--grad);
   color: white; font-size: 16px; font-weight: 700; margin-top: 28px;
   box-shadow: 0 8px 24px rgba(155,89,182,0.35); }
+.zodiac-display { font-size: 13px; font-weight: 700; color: var(--p);
+  text-align: center; margin-top: 8px; min-height: 20px; letter-spacing: .4px;
+  opacity: 0; transition: opacity .25s; }
+.zodiac-display.visible { opacity: 1; }
 #chatScreen { height: 100vh; height: 100dvh; background: #F5EFF9; display: none; flex-direction: column; }
 #chatScreen.active { display: flex; }
 .chat-header { padding: 52px 14px 10px; background: white;
@@ -204,7 +208,8 @@ input, textarea { font-family: inherit; }
     <label class="field-label">宝宝叫什么名字？</label>
     <input id="kidName" class="field-input" placeholder="给宝宝起个名字" maxlength="10">
     <label class="field-label">宝宝生日</label>
-    <input id="kidBirthday" class="field-input" type="date" max="2025-12-31">
+    <input id="kidBirthday" class="field-input" type="date" max="2025-12-31" oninput="updateZodiacDisplay(this.value)">
+    <div id="zodiacDisplay" class="zodiac-display"></div>
     <label class="field-label" style="margin-top:10px">或者直接填年龄</label>
     <input id="kidAge" class="field-input" type="number" placeholder="几岁？（不填生日时用）" min="0" max="18">
     <label class="field-label">性别</label>
@@ -488,6 +493,45 @@ async function openDiary(k) {
         <div class="diary-card-content">${e.content}</div>
       </div>`).join("");
   } catch(e) { showToast("加载失败：" + e.message); }
+}
+
+function getZodiacSign(dateString) {
+  if (!dateString) return null;
+  const parts = dateString.split("-");
+  const month = parseInt(parts[1], 10);
+  const day = parseInt(parts[2], 10);
+  const signs = [
+    { emoji: "♑", name: "摩羯座", from: [12, 22], to: [1, 19] },
+    { emoji: "♒", name: "水瓶座", from: [1, 20], to: [2, 18] },
+    { emoji: "♓", name: "双鱼座", from: [2, 19], to: [3, 20] },
+    { emoji: "♈", name: "白羊座", from: [3, 21], to: [4, 19] },
+    { emoji: "♉", name: "金牛座", from: [4, 20], to: [5, 20] },
+    { emoji: "♊", name: "双子座", from: [5, 21], to: [6, 20] },
+    { emoji: "♋", name: "巨蟹座", from: [6, 21], to: [7, 22] },
+    { emoji: "♌", name: "狮子座", from: [7, 23], to: [8, 22] },
+    { emoji: "♍", name: "处女座", from: [8, 23], to: [9, 22] },
+    { emoji: "♎", name: "天秤座", from: [9, 23], to: [10, 22] },
+    { emoji: "♏", name: "天蝎座", from: [10, 23], to: [11, 21] },
+    { emoji: "♐", name: "射手座", from: [11, 22], to: [12, 21] },
+  ];
+  for (const s of signs) {
+    const [fm, fd] = s.from;
+    const [tm, td] = s.to;
+    if (fm <= tm) {
+      if ((month === fm && day >= fd) || (month === tm && day <= td) || (month > fm && month < tm)) return s;
+    } else {
+      if ((month === fm && day >= fd) || (month === tm && day <= td) || month > fm || month < tm) return s;
+    }
+  }
+  return null;
+}
+
+function updateZodiacDisplay(value) {
+  const el = document.getElementById("zodiacDisplay");
+  if (!value) { el.textContent = ""; el.classList.remove("visible"); return; }
+  const sign = getZodiacSign(value);
+  if (sign) { el.textContent = sign.emoji + " " + sign.name; el.classList.add("visible"); }
+  else { el.textContent = ""; el.classList.remove("visible"); }
 }
 
 if(token){showScreen("homeScreen");loadKids();}
