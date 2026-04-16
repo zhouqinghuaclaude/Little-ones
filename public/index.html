@@ -400,14 +400,14 @@ function bubble(role, content, time) {
       </div>
     </div>`;
   } else {
-    const escaped = content.replace(/'/g, "&#39;").replace(/`/g, "&#96;");
+    const dataContent = JSON.stringify(content).replace(/"/g, "&quot;");
     return `<div style="display:flex;align-items:flex-end;gap:8px;animation:fadeIn .25s ease">
       <div style="width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;background:${faceBg}">${faceEmoji}</div>
       <div style="max-width:72%">
         <div style="background:white;color:var(--text);border-radius:4px 18px 18px 18px;padding:11px 15px;font-size:14px;line-height:1.65;word-break:break-word;box-shadow:0 2px 10px rgba(0,0,0,0.07)">${content}</div>
         <div style="font-size:10px;color:var(--sub);margin-top:4px;padding-left:4px">${t}</div>
       </div>
-      <button class="bookmark-btn" title="保存到日记" onclick="saveToDiary(${kid?.id},'${escaped}');event.stopPropagation();">📌</button>
+      <button class="bookmark-btn" title="保存到日记" data-kid-id="${kid?.id}" data-content="${dataContent}" onclick="saveToDiary(this.dataset.kidId, JSON.parse(this.dataset.content));event.stopPropagation();">📌</button>
     </div>`;
   }
 }
@@ -451,7 +451,7 @@ async function sendMsg(text) {
 async function saveToDiary(kidId, content) {
   if (!kidId || !content) return;
   try {
-    await req(`/api/kids/${kidId}/diary`, {method: "POST", body: JSON.stringify({content})});
+    await req(`/api/kids/${parseInt(kidId)}/diary`, {method: "POST", body: JSON.stringify({content: String(content)})});
     showToast("📌 已保存到日记！");
   } catch(e) { showToast("保存失败：" + e.message); }
 }
