@@ -196,6 +196,12 @@ input, textarea { font-family: inherit; }
       <button class="choice-btn on" id="rMom" onclick="setRole('妈妈')">👩 妈妈</button>
       <button class="choice-btn" id="rDad" onclick="setRole('爸爸')">👨 爸爸</button>
     </div>
+    <label class="field-label">宝宝性格</label>
+    <div class="choice-row">
+      <button class="choice-btn on" id="pLively" onclick="setPersonality('lively')">活泼开朗</button>
+      <button class="choice-btn" id="pQuiet" onclick="setPersonality('quiet')">文静乖巧</button>
+      <button class="choice-btn" id="pClever" onclick="setPersonality('clever')">聪明好学</button>
+    </div>
     <button class="primary-btn" onclick="createKid()">创建我的小天使 ✨</button>
     <div id="createErr" class="error-text" style="text-align:center;margin-top:12px"></div>
   </div>
@@ -227,6 +233,7 @@ let kid = null;
 let isReg = false;
 let selGender = "boy";
 let selRole = "妈妈";
+let selPersonality = "lively";
 
 function showScreen(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
@@ -297,6 +304,7 @@ async function loadKids() {
 
 function setGender(g) { selGender=g; document.getElementById("gBoy").className="choice-btn"+(g==="boy"?" on":""); document.getElementById("gGirl").className="choice-btn"+(g==="girl"?" on":""); }
 function setRole(r) { selRole=r; document.getElementById("rMom").className="choice-btn"+(r==="妈妈"?" on":""); document.getElementById("rDad").className="choice-btn"+(r==="爸爸"?" on":""); }
+function setPersonality(p) { selPersonality=p; document.getElementById("pLively").className="choice-btn"+(p==="lively"?" on":""); document.getElementById("pQuiet").className="choice-btn"+(p==="quiet"?" on":""); document.getElementById("pClever").className="choice-btn"+(p==="clever"?" on":""); }
 async function createKid() {
   const name=document.getElementById("kidName").value.trim();
   const age=document.getElementById("kidAge").value;
@@ -306,7 +314,7 @@ async function createKid() {
   if(!name) return err.textContent="请填写宝宝的名字";
   if(!birthday && (!age||age<0||age>18)) return err.textContent="请填写生日或年龄";
   try {
-    await req("/api/kids",{method:"POST",body:JSON.stringify({name,age:age?parseInt(age):0,birthday:birthday||null,gender:selGender,parent_role:selRole})});
+    await req("/api/kids",{method:"POST",body:JSON.stringify({name,age:age?parseInt(age):0,birthday:birthday||null,gender:selGender,parent_role:selRole,personality:selPersonality})});
     document.getElementById("kidName").value=""; document.getElementById("kidAge").value="";
     showToast("✨ 小天使创建成功！"); showScreen("homeScreen"); loadKids();
   } catch(e) { err.textContent=e.message; }
