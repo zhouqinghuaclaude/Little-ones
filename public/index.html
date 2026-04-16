@@ -144,6 +144,24 @@ input, textarea { font-family: inherit; }
   font-size: 13px; font-weight: 600; z-index: 999; opacity: 0; transition: all .3s;
   pointer-events: none; white-space: nowrap; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.bookmark-btn { background: none; border: none; cursor: pointer; font-size: 15px;
+  padding: 3px 5px; border-radius: 8px; opacity: 0.55; transition: opacity .2s, transform .2s;
+  line-height: 1; flex-shrink: 0; align-self: flex-end; margin-bottom: 18px; }
+.bookmark-btn:hover { opacity: 1; }
+.bookmark-btn:active { transform: scale(0.85); }
+#diaryScreen { background: var(--bg); }
+.diary-entries { padding: 16px; overflow-y: auto; flex: 1; }
+.diary-empty { display: flex; flex-direction: column; align-items: center;
+  justify-content: center; flex: 1; padding: 60px 24px; text-align: center; }
+.diary-empty-emoji { font-size: 72px; margin-bottom: 16px; }
+.diary-empty-title { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+.diary-empty-sub { font-size: 14px; color: var(--sub); line-height: 1.7; }
+.diary-card { background: white; border-radius: 20px; padding: 16px 18px;
+  margin-bottom: 12px; box-shadow: var(--card-shadow); animation: fadeIn .25s ease; }
+.diary-card-date { font-size: 11px; font-weight: 700; color: var(--p2);
+  letter-spacing: .4px; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+.diary-card-content { font-size: 15px; color: var(--text); line-height: 1.7;
+  word-break: break-word; }
 </style>
 </head>
 <body>
@@ -214,10 +232,11 @@ input, textarea { font-family: inherit; }
   <div class="chat-header">
     <button class="chat-back" onclick="showScreen('homeScreen');loadKids()">‹</button>
     <div class="chat-face" id="chatFace">👦</div>
-    <div>
+    <div style="flex:1">
       <div class="chat-kid-name" id="chatName">宝宝</div>
       <div class="chat-kid-status"><span class="online-dot"></span><span id="chatStatus">在线</span></div>
     </div>
+    <button onclick="openDiary(kid)" style="padding:7px 13px;border-radius:20px;background:var(--bg);border:1.5px solid var(--border);color:var(--p);font-size:13px;font-weight:700;flex-shrink:0">📖 日记</button>
   </div>
   <div class="msgs-area" id="msgsArea"></div>
   <div class="quick-bar" id="quickBar"></div>
@@ -227,6 +246,16 @@ input, textarea { font-family: inherit; }
       onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
     <button id="sendBtn" class="send-btn" onclick="sendMsg()">➤</button>
   </div>
+</div>
+
+<div id="diaryScreen" class="screen">
+  <div class="page-header">
+    <button class="back-btn" onclick="showScreen('chatScreen')">‹</button>
+    <div style="flex:1">
+      <div class="page-title" id="diaryTitle">日记</div>
+    </div>
+  </div>
+  <div id="diaryEntries" class="diary-entries"></div>
 </div>
 
 <script>
@@ -371,12 +400,14 @@ function bubble(role, content, time) {
       </div>
     </div>`;
   } else {
+    const escaped = content.replace(/'/g, "&#39;").replace(/`/g, "&#96;");
     return `<div style="display:flex;align-items:flex-end;gap:8px;animation:fadeIn .25s ease">
       <div style="width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;background:${faceBg}">${faceEmoji}</div>
       <div style="max-width:72%">
         <div style="background:white;color:var(--text);border-radius:4px 18px 18px 18px;padding:11px 15px;font-size:14px;line-height:1.65;word-break:break-word;box-shadow:0 2px 10px rgba(0,0,0,0.07)">${content}</div>
         <div style="font-size:10px;color:var(--sub);margin-top:4px;padding-left:4px">${t}</div>
       </div>
+      <button class="bookmark-btn" title="保存到日记" onclick="saveToDiary(${kid?.id},'${escaped}');event.stopPropagation();">📌</button>
     </div>`;
   }
 }
@@ -415,6 +446,48 @@ async function sendMsg(text) {
     area.insertAdjacentHTML("beforeend",bubble("assistant",`（${kid.name}没有回应，请稍后再试）`,new Date().toISOString()));
     scrollBot();
   } finally { document.getElementById("sendBtn").disabled=false; }
+}
+
+async function saveToDiary(kidId, content) {
+  if (!kidId || !content) return;
+  try {
+    await req(`/api/kids/${kidId}/diary`, {method: "POST", body: JSON.stringify({content})});
+    showToast("📌 已保存到日记！");
+  } catch(e) { showToast("保存失败：" + e.message); }
+}
+
+function formatDiaryDate(iso) {
+  const d = new Date(iso);
+  const y = d.getFullYear();
+  const mo = d.getMonth() + 1;
+  const day = d.getDate();
+  const h = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  return `${y}年${mo}月${day}日 ${h}:${mi}`;
+}
+
+async function openDiary(k) {
+  if (!k) return;
+  document.getElementById("diaryTitle").textContent = `${k.name}的日记 📖`;
+  showScreen("diaryScreen");
+  const container = document.getElementById("diaryEntries");
+  container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--sub);font-size:24px">⟳</div>`;
+  try {
+    const entries = await req(`/api/kids/${k.id}/diary`);
+    if (!entries.length) {
+      container.innerHTML = `<div class="diary-empty">
+        <div class="diary-empty-emoji">📝</div>
+        <div class="diary-empty-title">还没有日记</div>
+        <div class="diary-empty-sub">点击聊天消息旁的 📌 按钮<br>把宝宝说的暖心话保存下来吧～</div>
+      </div>`;
+      return;
+    }
+    container.innerHTML = entries.map(e => `
+      <div class="diary-card">
+        <div class="diary-card-date">📅 ${formatDiaryDate(e.created_at)}</div>
+        <div class="diary-card-content">${e.content}</div>
+      </div>`).join("");
+  } catch(e) { showToast("加载失败：" + e.message); }
 }
 
 if(token){showScreen("homeScreen");loadKids();}

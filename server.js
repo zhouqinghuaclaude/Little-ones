@@ -182,9 +182,38 @@ async function initDB() {
     CREATE INDEX IF NOT EXISTS idx_messages_kid ON messages(kid_id, created_at);
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS birthday DATE;
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS personality VARCHAR(20) DEFAULT 'lively';
+    CREATE TABLE IF NOT EXISTS diary (
+      id SERIAL PRIMARY KEY,
+      kid_id INTEGER REFERENCES kids(id) ON DELETE CASCADE,
+      content TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_diary_kid ON diary(kid_id, created_at);
   `);
   console.log("Database ready");
 }
+
+app.get("/api/kids/:id/diary", auth, async (req, res) => {
+  const kid = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
+  if (!kid.rows[0]) return res.status(404).json({ error: "Child not found" });
+  const entries = await db.query(
+    "SELECT * FROM diary WHERE kid_id=$1 ORDER BY created_at DESC",
+    [req.params.id]
+  );
+  res.json(entries.rows);
+});
+
+app.post("/api/kids/:id/diary", auth, async (req, res) => {
+  const { content } = req.body;
+  if (!content?.trim()) return res.status(400).json({ error: "Content cannot be empty" });
+  const kid = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
+  if (!kid.rows[0]) return res.status(404).json({ error: "Child not found" });
+  const r = await db.query(
+    "INSERT INTO diary (kid_id, content) VALUES ($1, $2) RETURNING id, content, created_at",
+    [req.params.id, content.trim()]
+  );
+  res.json(r.rows[0]);
+});
 
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
