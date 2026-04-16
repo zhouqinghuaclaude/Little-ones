@@ -67,7 +67,7 @@ app.get("/api/kids", auth, async (req, res) => {
 });
 
 app.post("/api/kids", auth, async (req, res) => {
-  const { name, gender, age, parent_role, birthday } = req.body;
+  const { name, gender, age, parent_role, birthday, personality } = req.body;
   if (!name) return res.status(400).json({ error: "Please fill in child name" });
   const count = await db.query("SELECT COUNT(*) FROM kids WHERE user_id = $1", [req.user.id]);
   if (parseInt(count.rows[0].count) >= 3) return res.status(400).json({ error: "Maximum 3 children allowed" });
@@ -82,8 +82,8 @@ app.post("/api/kids", auth, async (req, res) => {
   }
 
   const r = await db.query(
-    "INSERT INTO kids (user_id, name, gender, age, parent_role, birthday) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *",
-    [req.user.id, name.trim(), gender || "boy", finalAge, parent_role || "mom", birthday || null]
+    "INSERT INTO kids (user_id, name, gender, age, parent_role, birthday, personality) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *",
+    [req.user.id, name.trim(), gender || "boy", finalAge, parent_role || "mom", birthday || null, personality || "lively"]
   );
   res.json(r.rows[0]);
 });
@@ -119,7 +119,15 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
 
   await db.query("INSERT INTO messages (kid_id, role, content) VALUES ($1,'user',$2)", [kid.id, message.trim()]);
 
-  const system = "You are " + kid.name + ", a " + kid.age + "-year-old child chatting with your " + kid.parent_role + ". NEVER use asterisks. NEVER write actions. ONLY write spoken words. Keep it to 1-2 sentences. Reply in Chinese.";
+  let system = "You are " + kid.name + ", a " + kid.age + "-year-old child chatting with your " + kid.parent_role + ". NEVER use asterisks. NEVER write actions. ONLY write spoken words. Keep it to 1-2 sentences. Reply in Chinese.";
+
+  if (kid.personality === 'lively') {
+    system += " You are energetic, curious and talkative.";
+  } else if (kid.personality === 'quiet') {
+    system += " You are gentle, thoughtful and speak softly.";
+  } else if (kid.personality === 'clever') {
+    system += " You are smart, ask lots of questions and love learning.";
+  }
 
   try {
     const response = await claude.messages.create({
@@ -161,6 +169,7 @@ async function initDB() {
       age INTEGER NOT NULL DEFAULT 0,
       parent_role VARCHAR(20) DEFAULT 'mom',
       birthday DATE,
+      personality VARCHAR(20) DEFAULT 'lively',
       created_at TIMESTAMP DEFAULT NOW()
     );
     CREATE TABLE IF NOT EXISTS messages (
@@ -172,6 +181,7 @@ async function initDB() {
     );
     CREATE INDEX IF NOT EXISTS idx_messages_kid ON messages(kid_id, created_at);
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS birthday DATE;
+    ALTER TABLE kids ADD COLUMN IF NOT EXISTS personality VARCHAR(20) DEFAULT 'lively';
   `);
   console.log("Database ready");
 }
