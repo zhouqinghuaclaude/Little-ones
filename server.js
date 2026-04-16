@@ -61,9 +61,49 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
+function getZodiacSign(birthday) {
+  if (!birthday) return null;
+  const d = new Date(birthday);
+  const month = d.getMonth() + 1; // 1-12
+  const day = d.getDate();
+
+  if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return "Aries (白羊座)";
+  if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) return "Taurus (金牛座)";
+  if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) return "Gemini (双子座)";
+  if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) return "Cancer (巨蟹座)";
+  if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) return "Leo (狮子座)";
+  if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) return "Virgo (处女座)";
+  if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) return "Libra (天秤座)";
+  if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) return "Scorpio (天蝎座)";
+  if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) return "Sagittarius (射手座)";
+  if ((month === 12 && day >= 22) || (month === 1 && day <= 19)) return "Capricorn (摩羯座)";
+  if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return "Aquarius (水瓶座)";
+  if ((month === 2 && day >= 19) || (month === 3 && day <= 20)) return "Pisces (双鱼座)";
+  return null;
+}
+
+const ZODIAC_TRAITS = {
+  "Aries (白羊座)": "bold, energetic, and adventurous",
+  "Taurus (金牛座)": "patient, reliable, and loves comfort",
+  "Gemini (双子座)": "curious, playful, and full of ideas",
+  "Cancer (巨蟹座)": "caring, sensitive, and loves home",
+  "Leo (狮子座)": "confident, warm-hearted, and loves attention",
+  "Virgo (处女座)": "thoughtful, detail-oriented, and helpful",
+  "Libra (天秤座)": "friendly, fair-minded, and loves harmony",
+  "Scorpio (天蝎座)": "passionate, intuitive, and deeply feeling",
+  "Sagittarius (射手座)": "cheerful, curious, and loves adventure",
+  "Capricorn (摩羯座)": "responsible, determined, and mature for your age",
+  "Aquarius (水瓶座)": "imaginative, independent, and full of original ideas",
+  "Pisces (双鱼座)": "imaginative, intuitive, and dreamy",
+};
+
 app.get("/api/kids", auth, async (req, res) => {
   const r = await db.query("SELECT * FROM kids WHERE user_id = $1 ORDER BY created_at", [req.user.id]);
-  res.json(r.rows);
+  const kids = r.rows.map(kid => ({
+    ...kid,
+    zodiac: getZodiacSign(kid.birthday),
+  }));
+  res.json(kids);
 });
 
 app.post("/api/kids", auth, async (req, res) => {
@@ -111,6 +151,10 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
   const kid = kidResult.rows[0];
   if (!kid) return res.status(404).json({ error: "Child not found" });
 
+  // Check if the child has been missing the parent (last chat > 2 days ago)
+  const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+  const isMissing = kid.last_chat_at && new Date(kid.last_chat_at) < twoDaysAgo;
+
   const histResult = await db.query(
     "SELECT role, content FROM messages WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 20",
     [kid.id]
@@ -118,6 +162,9 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
   const history = histResult.rows.reverse();
 
   await db.query("INSERT INTO messages (kid_id, role, content) VALUES ($1,'user',$2)", [kid.id, message.trim()]);
+
+  // Update last_chat_at to now
+  await db.query("UPDATE kids SET last_chat_at = NOW() WHERE id = $1", [kid.id]);
 
   let system = "You are " + kid.name + ", a " + kid.age + "-year-old child chatting with your " + kid.parent_role + ". NEVER use asterisks. NEVER write actions. ONLY write spoken words. Keep it to 1-2 sentences. Reply in Chinese.";
 
@@ -129,15 +176,32 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
     system += " You are smart, ask lots of questions and love learning.";
   }
 
+  const zodiac = getZodiacSign(kid.birthday);
+  if (zodiac) {
+    const traits = ZODIAC_TRAITS[zodiac] || "unique and special";
+    system += " You are a " + zodiac + ", so you are " + traits + ".";
+  }
+
+  // Build the messages array, prepending a missing-you note if applicable
+  const chatMessages = [
+    ...history.map(m => ({ role: m.role, content: m.content })),
+    { role: "user", content: message.trim() }
+  ];
+
+  if (isMissing) {
+    chatMessages.unshift({
+      role: "user",
+      content: "[System note: You haven't seen your parent for a few days and you've been missing them. Mention this naturally early in the conversation.]"
+    });
+    chatMessages.splice(1, 0, { role: "assistant", content: "好的。" });
+  }
+
   try {
     const response = await claude.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 300,
       system: system,
-      messages: [
-        ...history.map(m => ({ role: m.role, content: m.content })),
-        { role: "user", content: message.trim() }
-      ]
+      messages: chatMessages
     });
 
     const reply = response.content[0].text.trim();
@@ -182,6 +246,7 @@ async function initDB() {
     CREATE INDEX IF NOT EXISTS idx_messages_kid ON messages(kid_id, created_at);
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS birthday DATE;
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS personality VARCHAR(20) DEFAULT 'lively';
+    ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_chat_at TIMESTAMP;
     CREATE TABLE IF NOT EXISTS diary (
       id SERIAL PRIMARY KEY,
       kid_id INTEGER REFERENCES kids(id) ON DELETE CASCADE,
