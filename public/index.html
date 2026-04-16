@@ -70,6 +70,9 @@ input, textarea { font-family: inherit; }
 .kid-name { font-size: 17px; font-weight: 800; }
 .kid-meta { font-size: 12px; color: var(--sub); margin-top: 3px; }
 .kid-emoji { font-size: 20px; }
+.kid-delete-btn { padding: 6px 12px; border-radius: 12px; background: #E74C3C;
+  color: white; font-size: 12px; font-weight: 700; flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(231,76,60,0.3); }
 .add-card { display: flex; align-items: center; justify-content: center; gap: 10px;
   background: white; border-radius: 22px; padding: 18px; border: 2px dashed var(--border);
   color: var(--p); font-size: 15px; font-weight: 700; width: 100%; margin-bottom: 12px; }
@@ -297,9 +300,19 @@ async function loadKids() {
           <div class="kid-meta">${k.age}岁 · ${k.parent_role}的宝贝</div>
         </div>
         <div class="kid-emoji">${MOODS[i%MOODS.length]}</div>
+        <button class="kid-delete-btn" onclick="deleteKid(${k.id},'${k.name.replace(/'/g,"&#39;")}');event.stopPropagation();">删除</button>
       </div>`).join("")+
       (kids.length<3?`<button class="add-card" onclick="showScreen('createScreen')">＋ 添加孩子（${kids.length}/3）</button>`:"");
   } catch(e) { if(e.message.includes("登录")) logout(); }
+}
+
+async function deleteKid(id, name) {
+  if (!confirm(`确定要删除 ${name} 吗?`)) return;
+  try {
+    await req(`/api/kids/${id}`, {method: "DELETE"});
+    showToast("✨ 已删除");
+    loadKids();
+  } catch(e) { showToast("删除失败：" + e.message); }
 }
 
 function setGender(g) { selGender=g; document.getElementById("gBoy").className="choice-btn"+(g==="boy"?" on":""); document.getElementById("gGirl").className="choice-btn"+(g==="girl"?" on":""); }
