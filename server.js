@@ -200,19 +200,18 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
     system += " You are a " + zodiac + ", so you are " + traits + ".";
   }
 
-  // Build the messages array, prepending a missing-you note if applicable
+  // If the parent hasn't chatted in over 2 days, tell the child to express that
+  // they've been missing them. This goes in the system prompt so Claude treats it
+  // as an authoritative instruction rather than a user-role message.
+  if (isMissing) {
+    system += " You haven't seen your " + kid.parent_role + " for a few days and you've been missing them. Mention this naturally and warmly early in your reply.";
+  }
+
+  // Build the messages array for Claude
   const chatMessages = [
     ...history.map(m => ({ role: m.role, content: m.content })),
     { role: "user", content: message.trim() }
   ];
-
-  if (isMissing) {
-    chatMessages.unshift({
-      role: "user",
-      content: "[System note: You haven't seen your parent for a few days and you've been missing them. Mention this naturally early in the conversation.]"
-    });
-    chatMessages.splice(1, 0, { role: "assistant", content: "好的。" });
-  }
 
   try {
     const response = await claude.messages.create({
