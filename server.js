@@ -99,12 +99,21 @@ const ZODIAC_TRAITS = {
 
 app.get("/api/kids", auth, async (req, res) => {
   const r = await db.query("SELECT * FROM kids WHERE user_id = $1 ORDER BY created_at", [req.user.id]);
-  const kids = r.rows.map(kid => ({
-    ...kid,
-    zodiac: getZodiacSign(kid.birthday),
-  }));
+  const today = new Date();
+  const kids = r.rows.map(kid => {
+    const createdAt = new Date(kid.created_at);
+    const companion_days = Math.floor((today - createdAt) / 86400000);
+    return {
+      ...kid,
+      zodiac: getZodiacSign(kid.birthday),
+      companion_days,
+      bond_score: kid.bond_score || 0,
+      streak_days: kid.streak_days || 0,
+    };
+  });
   res.json(kids);
 });
+
 
 app.post("/api/kids", auth, async (req, res) => {
   const { name, gender, age, parent_role, birthday, personality, avatar } = req.body;
@@ -185,10 +194,67 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
   await db.query("UPDATE kids SET last_chat_at = NOW() WHERE id = $1", [kid.id]);
 
   // Clear pending_gift after reading it for this chat turn
-  const pendingGift = kid.pending_gift;
-  if (pendingGift) {
+  const pendingGiftRaw = kid.pending_gift;
+  let pendingGiftLevel = null;
+  let pendingGiftName = null;
+  if (pendingGiftRaw) {
+    const colonIdx = pendingGiftRaw.indexOf(":");
+    if (colonIdx !== -1) {
+      pendingGiftLevel = pendingGiftRaw.slice(0, colonIdx);
+      pendingGiftName = pendingGiftRaw.slice(colonIdx + 1);
+    } else {
+      // Legacy format without level prefix
+      pendingGiftLevel = "free";
+      pendingGiftName = pendingGiftRaw;
+    }
     await db.query("UPDATE kids SET pending_gift = NULL WHERE id = $1", [kid.id]);
   }
+
+  // ── Bond score calculation ────────────────────────────────────────────────
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  const lastChatDate = kid.last_chat_date ? String(kid.last_chat_date).slice(0, 10) : null;
+
+  let bondDelta = 2; // base per message
+  let newStreakDays = kid.streak_days || 0;
+  let isFirstChatToday = false;
+
+  if (lastChatDate !== todayStr) {
+    // First chat of today
+    isFirstChatToday = true;
+    bondDelta += 3;
+    if (lastChatDate === yesterdayStr) {
+      // Streak continues
+      newStreakDays = (kid.streak_days || 0) + 1;
+      bondDelta += 5;
+    } else if (lastChatDate === null) {
+      // Very first chat ever
+      newStreakDays = 1;
+    } else {
+      // Streak broken
+      newStreakDays = 1;
+    }
+  }
+
+  // Birthday bonus
+  if (kid.birthday) {
+    const bday = String(kid.birthday).slice(5, 10); // MM-DD
+    const todayMMDD = todayStr.slice(5, 10);
+    if (bday === todayMMDD) bondDelta += 50;
+  }
+
+  // Gift bonus
+  if (pendingGiftLevel === "free") bondDelta += 5;
+  else if (pendingGiftLevel === "medium") bondDelta += 15;
+  else if (pendingGiftLevel === "premium") bondDelta += 30;
+
+  const newBondScore = (kid.bond_score || 0) + bondDelta;
+
+  await db.query(
+    "UPDATE kids SET bond_score=$1, streak_days=$2, last_chat_date=$3 WHERE id=$4",
+    [newBondScore, newStreakDays, todayStr, kid.id]
+  );
+  // ─────────────────────────────────────────────────────────────────────────
 
   let system = "You are " + kid.name + ", a " + kid.age + "-year-old child chatting with your " + kid.parent_role + ". NEVER use asterisks. NEVER write actions. ONLY write spoken words. Keep it to 1-2 sentences. Reply in Chinese.";
 
@@ -206,8 +272,14 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
     system += " You are a " + zodiac + ", so you are " + traits + ".";
   }
 
-  if (pendingGift) {
-    system += ` Your parent just sent you a gift: "${pendingGift}". Mention receiving this gift excitedly and naturally early in your reply.`;
+  if (pendingGiftName) {
+    if (pendingGiftLevel === "free") {
+      system += ` You just received ${pendingGiftName}. React happily in 1 sentence.`;
+    } else if (pendingGiftLevel === "medium") {
+      system += ` You just received ${pendingGiftName} as a present! React with great excitement, mention wanting to use it together with your ${kid.parent_role}.`;
+    } else if (pendingGiftLevel === "premium") {
+      system += ` You just received ${pendingGiftName}! React with extreme excitement, use exclamation marks, mention it multiple times, ask your ${kid.parent_role} to join you.`;
+    }
   }
 
   // Build the messages array, prepending a missing-you note if applicable
@@ -237,7 +309,7 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
       "INSERT INTO messages (kid_id, role, content) VALUES ($1,'assistant',$2) RETURNING id",
       [kid.id, reply]
     );
-    res.json({ reply, id: saved.rows[0].id });
+    res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "No response, please try again" });
@@ -255,7 +327,7 @@ app.get("/api/kids/:id/gifts", auth, async (req, res) => {
 });
 
 app.post("/api/kids/:id/gifts", auth, async (req, res) => {
-  const { gift_emoji, gift_name, gift_type } = req.body;
+  const { gift_emoji, gift_name, gift_type, gift_level } = req.body;
   if (!gift_emoji || !gift_name) return res.status(400).json({ error: "Missing gift info" });
 
   const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
@@ -300,8 +372,9 @@ app.post("/api/kids/:id/gifts", auth, async (req, res) => {
     );
   }
 
-  // Set pending_gift on kid
-  await db.query("UPDATE kids SET pending_gift=$1 WHERE id=$2", [gift_name, req.params.id]);
+  // Set pending_gift on kid with level prefix: "level:name"
+  const level = gift_level || "free";
+  await db.query("UPDATE kids SET pending_gift=$1 WHERE id=$2", [`${level}:${gift_name}`, req.params.id]);
 
   res.json({ status: "ok", gift: giftResult.rows[0], used: usedCount + 1, limit: dailyLimit });
 });
@@ -347,6 +420,9 @@ async function initDB() {
     CREATE INDEX IF NOT EXISTS idx_diary_kid ON diary(kid_id, created_at);
     ALTER TABLE users ADD COLUMN IF NOT EXISTS is_premium BOOLEAN DEFAULT false;
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS pending_gift VARCHAR(100);
+    ALTER TABLE kids ADD COLUMN IF NOT EXISTS bond_score INTEGER DEFAULT 0;
+    ALTER TABLE kids ADD COLUMN IF NOT EXISTS streak_days INTEGER DEFAULT 0;
+    ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_chat_date DATE;
     CREATE TABLE IF NOT EXISTS gifts (
       id SERIAL PRIMARY KEY,
       kid_id INTEGER REFERENCES kids(id) ON DELETE CASCADE,
@@ -367,6 +443,19 @@ async function initDB() {
   `);
   console.log("Database ready");
 }
+
+app.get("/api/kids/:id/bond", auth, async (req, res) => {
+  const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
+  const kid = kidResult.rows[0];
+  if (!kid) return res.status(404).json({ error: "Child not found" });
+  const createdAt = new Date(kid.created_at);
+  const companion_days = Math.floor((new Date() - createdAt) / 86400000);
+  res.json({
+    bond_score: kid.bond_score || 0,
+    streak_days: kid.streak_days || 0,
+    companion_days,
+  });
+});
 
 app.get("/api/kids/:id/diary", auth, async (req, res) => {
   const kid = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);

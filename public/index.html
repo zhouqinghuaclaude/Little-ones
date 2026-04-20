@@ -215,6 +215,40 @@ input, textarea { font-family: inherit; }
   font-size: 13px; font-weight: 700; color: #27AE60; text-align: center;
   border: 1.5px solid #A9DFBF; }
 .gift-success-banner.show { display: block; }
+
+/* Bond Profile Modal */
+.bond-overlay { display: none; position: fixed; inset: 0; background: rgba(44,22,84,0.5);
+  z-index: 300; align-items: flex-end; justify-content: center; }
+.bond-overlay.open { display: flex; }
+.bond-modal { background: var(--bg); border-radius: 28px 28px 0 0; width: 100%; max-width: 520px;
+  padding: 28px 24px 40px; box-shadow: 0 -8px 40px rgba(155,89,182,0.25);
+  animation: slideUp .28s ease; }
+.bond-modal-handle { width: 40px; height: 4px; border-radius: 2px; background: var(--border);
+  margin: 0 auto 20px; }
+.bond-companion-text { font-size: 22px; font-weight: 900; color: var(--text);
+  text-align: center; margin-bottom: 6px; line-height: 1.4; }
+.bond-level-badge { display: inline-flex; align-items: center; gap: 6px;
+  background: linear-gradient(135deg, #F5ECF9, #FFF0F5); border-radius: 20px;
+  padding: 6px 16px; font-size: 15px; font-weight: 800; color: var(--p);
+  border: 1.5px solid var(--border); margin: 0 auto 20px; display: flex;
+  justify-content: center; width: fit-content; }
+.bond-progress-wrap { margin: 0 0 20px; }
+.bond-progress-label { display: flex; justify-content: space-between;
+  font-size: 12px; font-weight: 700; color: var(--sub); margin-bottom: 8px; }
+.bond-progress-bar { height: 10px; background: var(--border); border-radius: 10px; overflow: hidden; }
+.bond-progress-fill { height: 100%; border-radius: 10px;
+  background: var(--grad); transition: width .6s ease; }
+.bond-stats { display: flex; gap: 12px; }
+.bond-stat { flex: 1; background: white; border-radius: 18px; padding: 14px 12px;
+  text-align: center; box-shadow: var(--card-shadow); }
+.bond-stat-value { font-size: 22px; font-weight: 900; color: var(--p); margin-bottom: 4px; }
+.bond-stat-label { font-size: 11px; font-weight: 700; color: var(--sub); }
+.bond-close-btn { width: 100%; padding: 14px; border-radius: 16px; background: var(--grad);
+  color: white; font-size: 15px; font-weight: 700; margin-top: 20px;
+  box-shadow: 0 6px 20px rgba(155,89,182,0.3); }
+
+/* Kid card bond info */
+.kid-bond-info { font-size: 11px; color: var(--p); margin-top: 4px; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -292,6 +326,7 @@ input, textarea { font-family: inherit; }
       <div class="chat-kid-name" id="chatName">宝宝</div>
       <div class="chat-kid-status"><span class="online-dot"></span><span id="chatStatus">在线</span></div>
     </div>
+    <button onclick="openBondProfile()" style="padding:7px 13px;border-radius:20px;background:var(--bg);border:1.5px solid var(--border);color:var(--p);font-size:13px;font-weight:700;flex-shrink:0;margin-right:4px" id="bondHeaderBtn">💫 亲密</button>
     <button onclick="openGiftShop()" style="padding:7px 13px;border-radius:20px;background:var(--bg);border:1.5px solid var(--border);color:var(--p);font-size:13px;font-weight:700;flex-shrink:0;margin-right:4px">🎁 礼物</button>
     <button onclick="openDiary(kid)" style="padding:7px 13px;border-radius:20px;background:var(--bg);border:1.5px solid var(--border);color:var(--p);font-size:13px;font-weight:700;flex-shrink:0">📖 日记</button>
   </div>
@@ -329,6 +364,41 @@ input, textarea { font-family: inherit; }
     </div>
   </div>
   <div id="diaryEntries" class="diary-entries"></div>
+</div>
+
+<!-- Bond Profile Overlay -->
+<div id="bondOverlay" class="bond-overlay" onclick="closeBondProfile(event)">
+  <div class="bond-modal" onclick="event.stopPropagation()">
+    <div class="bond-modal-handle"></div>
+    <div class="bond-companion-text" id="bondCompanionText">已陪伴你0天</div>
+    <div style="display:flex;justify-content:center;margin-bottom:20px">
+      <div class="bond-level-badge" id="bondLevelBadge">☁️ 初识</div>
+    </div>
+    <div class="bond-progress-wrap">
+      <div class="bond-progress-label">
+        <span id="bondProgressLabel">亲密值进度</span>
+        <span id="bondProgressNext"></span>
+      </div>
+      <div class="bond-progress-bar">
+        <div class="bond-progress-fill" id="bondProgressFill" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="bond-stats">
+      <div class="bond-stat">
+        <div class="bond-stat-value" id="bondScoreVal">0</div>
+        <div class="bond-stat-label">亲密值</div>
+      </div>
+      <div class="bond-stat">
+        <div class="bond-stat-value" id="bondStreakVal">🔥0</div>
+        <div class="bond-stat-label">连续陪伴天数</div>
+      </div>
+      <div class="bond-stat">
+        <div class="bond-stat-value" id="bondDaysVal">0</div>
+        <div class="bond-stat-label">陪伴总天数</div>
+      </div>
+    </div>
+    <button class="bond-close-btn" onclick="closeBondProfile()">关闭</button>
+  </div>
 </div>
 
 <script>
@@ -393,32 +463,18 @@ async function loadKids() {
         <button class="primary-btn" style="max-width:240px;margin-top:0" onclick="showScreen('createScreen')">＋ 创建小天使</button>
       </div>`; return;
     }
-    list.innerHTML=kids.map((k,i)=>`
-      <div class="kid-card" onclick='openChat(${JSON.stringify(k).replace(/'/g,"&#39;")})'>
-        <div class="kid-face ${k.gender==="boy"?"boy-face":"girl-face"}">
-          ${k.avatar||(k.gender==="boy"?"👦":"👧")}<div class="kid-badge">✦</div>
-        </div>
-        <div class="kid-info">
-          <div class="kid-name">${k.name}</div>
-          <div class="kid-meta">${k.age}岁 · ${k.parent_role}的宝贝${getKidZodiacInfo(k)}</div>
-        </div>
-        <div class="kid-emoji">${MOODS[i%MOODS.length]}</div>
-        <button class="kid-delete-btn" onclick="deleteKid(${k.id},'${k.name.replace(/'/g,"&#39;")}');event.stopPropagation();">删除</button>
-      </div>`).join("")+
+    list.innerHTML=kids.map((k,i)=>{
+      const bl=getBondLevel(k.bond_score||0);
+      const compDays=k.companion_days||0;
+      return `
+      <div class="kid-card" onclick='openChat(${JSON.stringify(k).replace(/'/g,"&#39;")})'>\n        <div class="kid-face ${k.gender==="boy"?"boy-face":"girl-face"}">\n          ${k.avatar||(k.gender==="boy"?"👦":"👧")}<div class="kid-badge">✦</div>\n        </div>\n        <div class="kid-info">\n          <div class="kid-name">${k.name}</div>\n          <div class="kid-meta">${k.age}岁 · ${k.parent_role}的宝贝${getKidZodiacInfo(k)}</div>\n          <div class="kid-bond-info">${k.name}已陪伴你${compDays}天 · ${bl.emoji}${bl.name}</div>\n        </div>\n        <div class="kid-emoji">${MOODS[i%MOODS.length]}</div>\n        <button class="kid-delete-btn" onclick="deleteKid(${k.id},'${k.name.replace(/'/g,"&#39;")}');event.stopPropagation();">删除</button>\n      </div>`;
+    }).join("")+
       (kids.length<3?`<button class="add-card" onclick="showScreen('createScreen')">＋ 添加孩子（${kids.length}/3）</button>`:"");
   } catch(e) { if(e.message.includes("登录")) logout(); }
 }
 
-async function deleteKid(id, name) {
-  if (!confirm(`确定要删除 ${name} 吗?`)) return;
-  try {
-    await req(`/api/kids/${id}`, {method: "DELETE"});
-    showToast("✨ 已删除");
-    loadKids();
-  } catch(e) { showToast("删除失败：" + e.message); }
-}
-
 function setGender(g) { selGender=g; document.getElementById("gBoy").className="choice-btn"+(g==="boy"?" on":""); document.getElementById("gGirl").className="choice-btn"+(g==="girl"?" on":""); updateAvatarGrid(); }
+
 function setRole(r) { selRole=r; document.getElementById("rMom").className="choice-btn"+(r==="妈妈"?" on":""); document.getElementById("rDad").className="choice-btn"+(r==="爸爸"?" on":""); }
 function setPersonality(p) { selPersonality=p; document.getElementById("pLively").className="choice-btn"+(p==="lively"?" on":""); document.getElementById("pQuiet").className="choice-btn"+(p==="quiet"?" on":""); document.getElementById("pClever").className="choice-btn"+(p==="clever"?" on":""); }
 function updateAvatarGrid() {
@@ -430,6 +486,7 @@ function updateAvatarGrid() {
     `<button class="avatar-btn" onclick="selectAvatar('${e}')">${e}</button>`
   ).join("");
 }
+
 function selectAvatar(emoji) {
   selAvatar = emoji;
   document.querySelectorAll(".avatar-btn").forEach(btn => {
@@ -660,6 +717,67 @@ function updateZodiacDisplay(value) {
 updateAvatarGrid();
 if(token){showScreen("homeScreen");loadKids();}
 
+// ── Bond System ────────────────────────────────────────────────────────────
+
+const BOND_LEVELS = [
+  { min: 0,    max: 50,   emoji: "☁️",  name: "初识" },
+  { min: 51,   max: 150,  emoji: "🌱",  name: "萌芽" },
+  { min: 151,  max: 300,  emoji: "🌸",  name: "温暖" },
+  { min: 301,  max: 500,  emoji: "⭐",  name: "亲密" },
+  { min: 501,  max: 1000, emoji: "💫",  name: "挚爱" },
+  { min: 1001, max: Infinity, emoji: "👑", name: "永恒" },
+];
+
+function getBondLevel(score) {
+  for (const lvl of BOND_LEVELS) {
+    if (score >= lvl.min && score <= lvl.max) return lvl;
+  }
+  return BOND_LEVELS[BOND_LEVELS.length - 1];
+}
+
+function getBondProgress(score) {
+  for (let i = 0; i < BOND_LEVELS.length; i++) {
+    const lvl = BOND_LEVELS[i];
+    if (score >= lvl.min && score <= lvl.max) {
+      const next = BOND_LEVELS[i + 1];
+      if (!next) return { pct: 100, nextScore: null, nextName: null };
+      const range = next.min - lvl.min;
+      const progress = score - lvl.min;
+      return {
+        pct: Math.min(100, Math.round((progress / range) * 100)),
+        nextScore: next.min,
+        nextName: next.emoji + next.name,
+      };
+    }
+  }
+  return { pct: 100, nextScore: null, nextName: null };
+}
+
+async function openBondProfile() {
+  if (!kid) return;
+  try {
+    const data = await req(`/api/kids/${kid.id}/bond`);
+    const bl = getBondLevel(data.bond_score);
+    const prog = getBondProgress(data.bond_score);
+    document.getElementById("bondCompanionText").textContent = `${kid.name}已陪伴你${data.companion_days}天`;
+    document.getElementById("bondLevelBadge").textContent = `${bl.emoji} ${bl.name}`;
+    document.getElementById("bondScoreVal").textContent = data.bond_score;
+    document.getElementById("bondStreakVal").textContent = `🔥${data.streak_days}`;
+    document.getElementById("bondDaysVal").textContent = data.companion_days;
+    document.getElementById("bondProgressFill").style.width = prog.pct + "%";
+    document.getElementById("bondProgressLabel").textContent = `${bl.emoji}${bl.name} · ${data.bond_score}分`;
+    document.getElementById("bondProgressNext").textContent = prog.nextScore
+      ? `距${prog.nextName} ${prog.nextScore - data.bond_score}分`
+      : "已达最高等级 👑";
+    document.getElementById("bondOverlay").classList.add("open");
+  } catch(e) { showToast("加载亲密度失败"); }
+}
+
+function closeBondProfile(e) {
+  if (e && e.target !== document.getElementById("bondOverlay")) return;
+  document.getElementById("bondOverlay").classList.remove("open");
+}
+
 // ── Gift Shop ──────────────────────────────────────────────────────────────
 
 const GIFT_CATEGORIES = [
@@ -667,6 +785,7 @@ const GIFT_CATEGORIES = [
     id: "free",
     label: "每日免费",
     type: "free",
+    gift_level: "free",
     items: [
       { emoji: "🍎", name: "苹果" },
       { emoji: "🧸", name: "玩具熊" },
@@ -680,6 +799,7 @@ const GIFT_CATEGORIES = [
     id: "general",
     label: "通用礼物",
     type: "paid",
+    gift_level: "medium",
     items: [
       { emoji: "🎂", name: "生日蛋糕" },
       { emoji: "📚", name: "故事书" },
@@ -693,6 +813,7 @@ const GIFT_CATEGORIES = [
     id: "sports",
     label: "运动系列",
     type: "paid",
+    gift_level: "medium",
     items: [
       { emoji: "⚽", name: "足球" },
       { emoji: "🏀", name: "篮球" },
@@ -707,6 +828,7 @@ const GIFT_CATEGORIES = [
     id: "barbie",
     label: "芭比系列",
     type: "paid",
+    gift_level: "medium",
     items: [
       { emoji: "👗", name: "公主裙" },
       { emoji: "👑", name: "皇冠" },
@@ -720,6 +842,7 @@ const GIFT_CATEGORIES = [
     id: "special",
     label: "特别礼物",
     type: "paid",
+    gift_level: "premium",
     items: [
       { emoji: "🎡", name: "游乐园" },
       { emoji: "✈️", name: "旅行" },
@@ -788,10 +911,11 @@ function renderGiftGrid() {
   if (!cat) return;
   const isFree = cat.type === "free";
   const limitReached = isFree && giftUsed >= giftLimit;
+  const level = cat.gift_level || "free";
   document.getElementById("giftGrid").innerHTML = cat.items.map(item => {
     const btnHtml = isFree
       ? `<button class="gift-send-btn" ${limitReached ? "disabled" : ""}
-           onclick="sendGift('${item.emoji}','${item.name}','free')">
+           onclick="sendGift('${item.emoji}','${item.name}','free','${level}')">
            ${limitReached ? "已用完" : "送出 ✨"}
          </button>`
       : `<button class="gift-paid-btn" disabled>💰 即将开放</button>`;
@@ -803,14 +927,14 @@ function renderGiftGrid() {
   }).join("");
 }
 
-async function sendGift(emoji, name, type) {
+async function sendGift(emoji, name, type, level) {
   if (!kid) return;
   // Disable all send buttons during request
   document.querySelectorAll(".gift-send-btn").forEach(b => b.disabled = true);
   try {
     const d = await req(`/api/kids/${kid.id}/gifts`, {
       method: "POST",
-      body: JSON.stringify({ gift_emoji: emoji, gift_name: name, gift_type: type })
+      body: JSON.stringify({ gift_emoji: emoji, gift_name: name, gift_type: type, gift_level: level || "free" })
     });
     if (d.status === "payment_required") {
       showToast("💰 " + d.message);
