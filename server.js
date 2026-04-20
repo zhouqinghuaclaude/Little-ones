@@ -107,7 +107,7 @@ app.get("/api/kids", auth, async (req, res) => {
 });
 
 app.post("/api/kids", auth, async (req, res) => {
-  const { name, gender, age, parent_role, birthday, personality } = req.body;
+  const { name, gender, age, parent_role, birthday, personality, avatar } = req.body;
   if (!name) return res.status(400).json({ error: "Please fill in child name" });
   const count = await db.query("SELECT COUNT(*) FROM kids WHERE user_id = $1", [req.user.id]);
   if (parseInt(count.rows[0].count) >= 3) return res.status(400).json({ error: "Maximum 3 children allowed" });
@@ -122,8 +122,8 @@ app.post("/api/kids", auth, async (req, res) => {
   }
 
   const r = await db.query(
-    "INSERT INTO kids (user_id, name, gender, age, parent_role, birthday, personality) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *",
-    [req.user.id, name.trim(), gender || "boy", finalAge, parent_role || "mom", birthday || null, personality || "lively"]
+    "INSERT INTO kids (user_id, name, gender, age, parent_role, birthday, personality, avatar) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *",
+    [req.user.id, name.trim(), gender || "boy", finalAge, parent_role || "mom", birthday || null, personality || "lively", avatar || null]
   );
   res.json(r.rows[0]);
 });
@@ -265,6 +265,7 @@ async function initDB() {
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS birthday DATE;
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS personality VARCHAR(20) DEFAULT 'lively';
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_chat_at TIMESTAMP;
+    ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar VARCHAR(10);
     CREATE TABLE IF NOT EXISTS diary (
       id SERIAL PRIMARY KEY,
       kid_id INTEGER REFERENCES kids(id) ON DELETE CASCADE,
