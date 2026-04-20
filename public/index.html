@@ -332,7 +332,7 @@ async function loadKids() {
         </div>
         <div class="kid-info">
           <div class="kid-name">${k.name}</div>
-          <div class="kid-meta">${k.age}岁 · ${k.parent_role}的宝贝</div>
+          <div class="kid-meta">${k.age}岁 · ${k.parent_role}的宝贝${getKidZodiacInfo(k)}</div>
         </div>
         <div class="kid-emoji">${MOODS[i%MOODS.length]}</div>
         <button class="kid-delete-btn" onclick="deleteKid(${k.id},'${k.name.replace(/'/g,"&#39;")}');event.stopPropagation();">删除</button>
@@ -546,6 +546,16 @@ function getZodiacSign(dateString) {
     }
   }
   return null;
+}
+
+function getKidZodiacInfo(k) {
+  if (!k.birthday) return "";
+  const sign = getZodiacSign(k.birthday);
+  const cz = getChineseZodiac(k.birthday);
+  let info = "";
+  if (cz) info += ` · ${cz.emoji}${cz.name}`;
+  if (sign) info += ` · ${sign.emoji}${sign.name}`;
+  return info;
 }
 
 function updateZodiacDisplay(value) {
