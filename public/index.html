@@ -501,18 +501,18 @@ function getZodiacSign(dateString) {
   const month = parseInt(parts[1], 10);
   const day = parseInt(parts[2], 10);
   const signs = [
-    { emoji: "♑", name: "摩羯座", from: [12, 22], to: [1, 19] },
-    { emoji: "♒", name: "水瓶座", from: [1, 20], to: [2, 18] },
-    { emoji: "♓", name: "双鱼座", from: [2, 19], to: [3, 20] },
-    { emoji: "♈", name: "白羊座", from: [3, 21], to: [4, 19] },
-    { emoji: "♉", name: "金牛座", from: [4, 20], to: [5, 20] },
-    { emoji: "♊", name: "双子座", from: [5, 21], to: [6, 20] },
-    { emoji: "♋", name: "巨蟹座", from: [6, 21], to: [7, 22] },
-    { emoji: "♌", name: "狮子座", from: [7, 23], to: [8, 22] },
-    { emoji: "♍", name: "处女座", from: [8, 23], to: [9, 22] },
-    { emoji: "♎", name: "天秤座", from: [9, 23], to: [10, 22] },
-    { emoji: "♏", name: "天蝎座", from: [10, 23], to: [11, 21] },
-    { emoji: "♐", name: "射手座", from: [11, 22], to: [12, 21] },
+    { emoji: "♑", name: "摩羯座", traits: "沉稳成熟,有责任心", from: [12, 22], to: [1, 19] },
+    { emoji: "♒", name: "水瓶座", traits: "独立创意,想法新奇", from: [1, 20], to: [2, 18] },
+    { emoji: "♓", name: "双鱼座", traits: "温柔梦幻,富有想象", from: [2, 19], to: [3, 20] },
+    { emoji: "♈", name: "白羊座", traits: "勇敢直接,充满活力", from: [3, 21], to: [4, 19] },
+    { emoji: "♉", name: "金牛座", traits: "稳重可靠,热爱舒适", from: [4, 20], to: [5, 20] },
+    { emoji: "♊", name: "双子座", traits: "聪慧灵动,充满好奇", from: [5, 21], to: [6, 20] },
+    { emoji: "♋", name: "巨蟹座", traits: "温柔体贴,恋家宝宝", from: [6, 21], to: [7, 22] },
+    { emoji: "♌", name: "狮子座", traits: "自信热情,爱被关注", from: [7, 23], to: [8, 22] },
+    { emoji: "♍", name: "处女座", traits: "细心周到,乐于帮助", from: [8, 23], to: [9, 22] },
+    { emoji: "♎", name: "天秤座", traits: "温和友善,追求平衡", from: [9, 23], to: [10, 22] },
+    { emoji: "♏", name: "天蝎座", traits: "深情专注,直觉敏锐", from: [10, 23], to: [11, 21] },
+    { emoji: "♐", name: "射手座", traits: "乐观开朗,爱冒险", from: [11, 22], to: [12, 21] },
   ];
   for (const s of signs) {
     const [fm, fd] = s.from;
@@ -530,7 +530,7 @@ function updateZodiacDisplay(value) {
   const el = document.getElementById("zodiacDisplay");
   if (!value) { el.textContent = ""; el.classList.remove("visible"); return; }
   const sign = getZodiacSign(value);
-  if (sign) { el.textContent = sign.emoji + " " + sign.name; el.classList.add("visible"); }
+  if (sign) { el.textContent = sign.emoji + " " + sign.name + " · " + sign.traits; el.classList.add("visible"); }
   else { el.textContent = ""; el.classList.remove("visible"); }
 }
 
