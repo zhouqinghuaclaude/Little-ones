@@ -143,6 +143,16 @@ app.get("/api/kids/:id/messages", auth, async (req, res) => {
   res.json(msgs.rows.reverse());
 });
 
+function calcAge(birthday) {
+  const born = new Date(birthday);
+  const today = new Date();
+  let age = today.getFullYear() - born.getFullYear();
+  if (today.getMonth() < born.getMonth() || (today.getMonth() === born.getMonth() && today.getDate() < born.getDate())) {
+    age--;
+  }
+  return age;
+}
+
 app.post("/api/kids/:id/chat", auth, async (req, res) => {
   const { message } = req.body;
   if (!message?.trim()) return res.status(400).json({ error: "Message cannot be empty" });
@@ -150,6 +160,14 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
   const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
   const kid = kidResult.rows[0];
   if (!kid) return res.status(404).json({ error: "Child not found" });
+
+  if (kid.birthday) {
+    const currentAge = calcAge(kid.birthday);
+    if (currentAge !== kid.age) {
+      await db.query("UPDATE kids SET age = $1 WHERE id = $2", [currentAge, kid.id]);
+      kid.age = currentAge;
+    }
+  }
 
   // Check if the child has been missing the parent (last chat > 2 days ago)
   const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
