@@ -184,6 +184,12 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
   // Update last_chat_at to now
   await db.query("UPDATE kids SET last_chat_at = NOW() WHERE id = $1", [kid.id]);
 
+  // Clear pending_gift after reading it for this chat turn
+  const pendingGift = kid.pending_gift;
+  if (pendingGift) {
+    await db.query("UPDATE kids SET pending_gift = NULL WHERE id = $1", [kid.id]);
+  }
+
   let system = "You are " + kid.name + ", a " + kid.age + "-year-old child chatting with your " + kid.parent_role + ". NEVER use asterisks. NEVER write actions. ONLY write spoken words. Keep it to 1-2 sentences. Reply in Chinese.";
 
   if (kid.personality === 'lively') {
@@ -198,6 +204,10 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
   if (zodiac) {
     const traits = ZODIAC_TRAITS[zodiac] || "unique and special";
     system += " You are a " + zodiac + ", so you are " + traits + ".";
+  }
+
+  if (pendingGift) {
+    system += ` Your parent just sent you a gift: "${pendingGift}". Mention receiving this gift excitedly and naturally early in your reply.`;
   }
 
   // Build the messages array, prepending a missing-you note if applicable
@@ -232,6 +242,68 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
     console.error(e);
     res.status(500).json({ error: "No response, please try again" });
   }
+});
+
+app.get("/api/kids/:id/gifts", auth, async (req, res) => {
+  const kid = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
+  if (!kid.rows[0]) return res.status(404).json({ error: "Child not found" });
+  const gifts = await db.query(
+    "SELECT id, gift_emoji, gift_name, gift_type, created_at FROM gifts WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 50",
+    [req.params.id]
+  );
+  res.json(gifts.rows);
+});
+
+app.post("/api/kids/:id/gifts", auth, async (req, res) => {
+  const { gift_emoji, gift_name, gift_type } = req.body;
+  if (!gift_emoji || !gift_name) return res.status(400).json({ error: "Missing gift info" });
+
+  const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
+  if (!kidResult.rows[0]) return res.status(404).json({ error: "Child not found" });
+
+  if (gift_type === "paid") {
+    return res.json({ status: "payment_required", message: "即将开放" });
+  }
+
+  // Free gift logic
+  const today = new Date().toISOString().slice(0, 10);
+  const userResult = await db.query("SELECT is_premium FROM users WHERE id=$1", [req.user.id]);
+  const isPremium = userResult.rows[0]?.is_premium || false;
+  const dailyLimit = isPremium ? 3 : 1;
+
+  const dailyResult = await db.query(
+    "SELECT * FROM daily_gifts WHERE user_id=$1 AND kid_id=$2 AND gift_date=$3",
+    [req.user.id, req.params.id, today]
+  );
+  const usedCount = dailyResult.rows[0]?.count || 0;
+
+  if (usedCount >= dailyLimit) {
+    return res.status(429).json({ error: "今日免费礼物已用完" });
+  }
+
+  // Insert gift
+  const giftResult = await db.query(
+    "INSERT INTO gifts (kid_id, gift_emoji, gift_name, gift_type) VALUES ($1,$2,$3,'free') RETURNING *",
+    [req.params.id, gift_emoji, gift_name]
+  );
+
+  // Update daily_gifts count
+  if (dailyResult.rows[0]) {
+    await db.query(
+      "UPDATE daily_gifts SET count = count + 1 WHERE user_id=$1 AND kid_id=$2 AND gift_date=$3",
+      [req.user.id, req.params.id, today]
+    );
+  } else {
+    await db.query(
+      "INSERT INTO daily_gifts (user_id, kid_id, gift_date, count) VALUES ($1,$2,$3,1)",
+      [req.user.id, req.params.id, today]
+    );
+  }
+
+  // Set pending_gift on kid
+  await db.query("UPDATE kids SET pending_gift=$1 WHERE id=$2", [gift_name, req.params.id]);
+
+  res.json({ status: "ok", gift: giftResult.rows[0], used: usedCount + 1, limit: dailyLimit });
 });
 
 async function initDB() {
@@ -273,6 +345,25 @@ async function initDB() {
       created_at TIMESTAMP DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS idx_diary_kid ON diary(kid_id, created_at);
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_premium BOOLEAN DEFAULT false;
+    ALTER TABLE kids ADD COLUMN IF NOT EXISTS pending_gift VARCHAR(100);
+    CREATE TABLE IF NOT EXISTS gifts (
+      id SERIAL PRIMARY KEY,
+      kid_id INTEGER REFERENCES kids(id) ON DELETE CASCADE,
+      gift_emoji VARCHAR(10) NOT NULL,
+      gift_name VARCHAR(50) NOT NULL,
+      gift_type VARCHAR(20) DEFAULT 'free',
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_gifts_kid ON gifts(kid_id, created_at);
+    CREATE TABLE IF NOT EXISTS daily_gifts (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      kid_id INTEGER REFERENCES kids(id) ON DELETE CASCADE,
+      gift_date DATE NOT NULL,
+      count INTEGER DEFAULT 0
+    );
+    CREATE INDEX IF NOT EXISTS idx_daily_gifts_user_date ON daily_gifts(user_id, gift_date);
   `);
   console.log("Database ready");
 }

@@ -171,6 +171,50 @@ input, textarea { font-family: inherit; }
   background: white; font-size: 28px; cursor: pointer; transition: all .15s; margin: 6px; }
 .avatar-btn.selected { border: 2px solid var(--p); box-shadow: 0 4px 12px rgba(155,89,182,0.25); }
 .avatar-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-top: 12px; }
+
+/* Gift Shop */
+.gift-overlay { display: none; position: fixed; inset: 0; background: rgba(44,22,84,0.45);
+  z-index: 200; align-items: flex-end; justify-content: center; }
+.gift-overlay.open { display: flex; }
+.gift-modal { background: var(--bg); border-radius: 28px 28px 0 0; width: 100%; max-width: 520px;
+  max-height: 88vh; display: flex; flex-direction: column;
+  box-shadow: 0 -8px 40px rgba(155,89,182,0.22); animation: slideUp .28s ease; }
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.gift-modal-header { padding: 18px 20px 10px; display: flex; align-items: center;
+  justify-content: space-between; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.gift-modal-title { font-size: 18px; font-weight: 900; }
+.gift-close-btn { width: 32px; height: 32px; border-radius: 50%; background: var(--border);
+  font-size: 16px; color: var(--sub); display: flex; align-items: center; justify-content: center; }
+.gift-counter { font-size: 12px; font-weight: 700; color: var(--p);
+  background: #F5ECF9; border-radius: 20px; padding: 5px 12px; }
+.gift-tabs { display: flex; gap: 6px; padding: 10px 16px 0; overflow-x: auto;
+  flex-shrink: 0; scrollbar-width: none; }
+.gift-tabs::-webkit-scrollbar { display: none; }
+.gift-tab { white-space: nowrap; flex-shrink: 0; padding: 7px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 700; border: 1.5px solid var(--border);
+  background: white; color: var(--sub); transition: all .15s; }
+.gift-tab.active { background: var(--grad); color: white; border-color: transparent;
+  box-shadow: 0 3px 10px rgba(155,89,182,0.3); }
+.gift-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  padding: 14px 16px 28px; overflow-y: auto; flex: 1; }
+.gift-card { background: white; border-radius: 18px; padding: 14px 10px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  box-shadow: 0 3px 12px rgba(155,89,182,0.09); transition: transform .15s, box-shadow .15s; }
+.gift-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(155,89,182,0.16); }
+.gift-card-emoji { font-size: 32px; line-height: 1; }
+.gift-card-name { font-size: 12px; font-weight: 700; color: var(--text); text-align: center; }
+.gift-send-btn { width: 100%; padding: 7px 0; border-radius: 12px;
+  background: var(--grad); color: white; font-size: 11px; font-weight: 800;
+  box-shadow: 0 3px 10px rgba(155,89,182,0.3); margin-top: 2px; }
+.gift-send-btn:disabled { background: #E0D0EE; box-shadow: none; color: #B0A0C0; cursor: not-allowed; }
+.gift-paid-btn { width: 100%; padding: 7px 0; border-radius: 12px;
+  background: #F5F0FA; color: #B0A0C0; font-size: 10px; font-weight: 700;
+  border: 1.5px solid var(--border); margin-top: 2px; cursor: not-allowed; }
+.gift-success-banner { display: none; margin: 10px 16px 0; padding: 12px 16px;
+  background: linear-gradient(135deg, #E8F8F0, #F0FFF8); border-radius: 16px;
+  font-size: 13px; font-weight: 700; color: #27AE60; text-align: center;
+  border: 1.5px solid #A9DFBF; }
+.gift-success-banner.show { display: block; }
 </style>
 </head>
 <body>
@@ -248,6 +292,7 @@ input, textarea { font-family: inherit; }
       <div class="chat-kid-name" id="chatName">宝宝</div>
       <div class="chat-kid-status"><span class="online-dot"></span><span id="chatStatus">在线</span></div>
     </div>
+    <button onclick="openGiftShop()" style="padding:7px 13px;border-radius:20px;background:var(--bg);border:1.5px solid var(--border);color:var(--p);font-size:13px;font-weight:700;flex-shrink:0;margin-right:4px">🎁 礼物</button>
     <button onclick="openDiary(kid)" style="padding:7px 13px;border-radius:20px;background:var(--bg);border:1.5px solid var(--border);color:var(--p);font-size:13px;font-weight:700;flex-shrink:0">📖 日记</button>
   </div>
   <div class="msgs-area" id="msgsArea"></div>
@@ -257,6 +302,22 @@ input, textarea { font-family: inherit; }
       oninput="autoResize(this)"
       onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
     <button id="sendBtn" class="send-btn" onclick="sendMsg()">➤</button>
+  </div>
+</div>
+
+<!-- Gift Shop Overlay -->
+<div id="giftOverlay" class="gift-overlay" onclick="closeGiftShop(event)">
+  <div class="gift-modal" onclick="event.stopPropagation()">
+    <div class="gift-modal-header">
+      <div class="gift-modal-title">🎁 礼物商店</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div id="giftCounter" class="gift-counter">今日免费: 0/1</div>
+        <button class="gift-close-btn" onclick="closeGiftShop()">✕</button>
+      </div>
+    </div>
+    <div id="giftSuccessBanner" class="gift-success-banner"></div>
+    <div class="gift-tabs" id="giftTabs"></div>
+    <div class="gift-grid" id="giftGrid"></div>
   </div>
 </div>
 
@@ -598,6 +659,176 @@ function updateZodiacDisplay(value) {
 
 updateAvatarGrid();
 if(token){showScreen("homeScreen");loadKids();}
+
+// ── Gift Shop ──────────────────────────────────────────────────────────────
+
+const GIFT_CATEGORIES = [
+  {
+    id: "free",
+    label: "每日免费",
+    type: "free",
+    items: [
+      { emoji: "🍎", name: "苹果" },
+      { emoji: "🧸", name: "玩具熊" },
+      { emoji: "🌸", name: "小花" },
+      { emoji: "🍭", name: "棒棒糖" },
+      { emoji: "⭐", name: "小星星" },
+      { emoji: "🎈", name: "气球" },
+    ]
+  },
+  {
+    id: "general",
+    label: "通用礼物",
+    type: "paid",
+    items: [
+      { emoji: "🎂", name: "生日蛋糕" },
+      { emoji: "📚", name: "故事书" },
+      { emoji: "🎨", name: "画笔套装" },
+      { emoji: "🎠", name: "旋转木马" },
+      { emoji: "🍰", name: "小蛋糕" },
+      { emoji: "🎵", name: "音乐盒" },
+    ]
+  },
+  {
+    id: "sports",
+    label: "运动系列",
+    type: "paid",
+    items: [
+      { emoji: "⚽", name: "足球" },
+      { emoji: "🏀", name: "篮球" },
+      { emoji: "🎾", name: "网球拍" },
+      { emoji: "🏊", name: "游泳装备" },
+      { emoji: "🚴", name: "自行车" },
+      { emoji: "🥊", name: "拳击手套" },
+      { emoji: "🏆", name: "冠军奖杯" },
+    ]
+  },
+  {
+    id: "barbie",
+    label: "芭比系列",
+    type: "paid",
+    items: [
+      { emoji: "👗", name: "公主裙" },
+      { emoji: "👑", name: "皇冠" },
+      { emoji: "🪆", name: "芭比娃娃" },
+      { emoji: "💄", name: "化妆套装" },
+      { emoji: "🎀", name: "发饰礼盒" },
+      { emoji: "🏰", name: "梦想城堡" },
+    ]
+  },
+  {
+    id: "special",
+    label: "特别礼物",
+    type: "paid",
+    items: [
+      { emoji: "🎡", name: "游乐园" },
+      { emoji: "✈️", name: "旅行" },
+      { emoji: "🎸", name: "吉他" },
+      { emoji: "🔭", name: "望远镜" },
+      { emoji: "🎪", name: "马戏团门票" },
+    ]
+  }
+];
+
+let giftActiveCat = "free";
+let giftUsed = 0;
+let giftLimit = 1;
+
+async function openGiftShop() {
+  if (!kid) return;
+  giftActiveCat = "free";
+  document.getElementById("giftSuccessBanner").classList.remove("show");
+  document.getElementById("giftOverlay").classList.add("open");
+  await refreshGiftCounter();
+  renderGiftTabs();
+  renderGiftGrid();
+}
+
+function closeGiftShop(e) {
+  if (e && e.target !== document.getElementById("giftOverlay")) return;
+  document.getElementById("giftOverlay").classList.remove("open");
+}
+
+async function refreshGiftCounter() {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    // Fetch today's used count from the gifts list (approximate via API)
+    // We'll track it locally from send responses; initialise from a quick probe
+    const r = await req(`/api/kids/${kid.id}/gifts`);
+    const todayFree = r.filter(g => {
+      return g.gift_type === "free" && g.created_at && g.created_at.slice(0, 10) === today;
+    }).length;
+    giftUsed = todayFree;
+    // Default limit; will be updated on send response
+    updateGiftCounterUI();
+  } catch(e) { /* ignore */ }
+}
+
+function updateGiftCounterUI() {
+  document.getElementById("giftCounter").textContent = `今日免费: ${giftUsed}/${giftLimit}`;
+}
+
+function renderGiftTabs() {
+  const tabs = document.getElementById("giftTabs");
+  tabs.innerHTML = GIFT_CATEGORIES.map(cat =>
+    `<button class="gift-tab${cat.id === giftActiveCat ? " active" : ""}"
+      onclick="switchGiftTab('${cat.id}')">${cat.label}</button>`
+  ).join("");
+}
+
+function switchGiftTab(catId) {
+  giftActiveCat = catId;
+  document.getElementById("giftSuccessBanner").classList.remove("show");
+  renderGiftTabs();
+  renderGiftGrid();
+}
+
+function renderGiftGrid() {
+  const cat = GIFT_CATEGORIES.find(c => c.id === giftActiveCat);
+  if (!cat) return;
+  const isFree = cat.type === "free";
+  const limitReached = isFree && giftUsed >= giftLimit;
+  document.getElementById("giftGrid").innerHTML = cat.items.map(item => {
+    const btnHtml = isFree
+      ? `<button class="gift-send-btn" ${limitReached ? "disabled" : ""}
+           onclick="sendGift('${item.emoji}','${item.name}','free')">
+           ${limitReached ? "已用完" : "送出 ✨"}
+         </button>`
+      : `<button class="gift-paid-btn" disabled>💰 即将开放</button>`;
+    return `<div class="gift-card">
+      <div class="gift-card-emoji">${item.emoji}</div>
+      <div class="gift-card-name">${item.name}</div>
+      ${btnHtml}
+    </div>`;
+  }).join("");
+}
+
+async function sendGift(emoji, name, type) {
+  if (!kid) return;
+  // Disable all send buttons during request
+  document.querySelectorAll(".gift-send-btn").forEach(b => b.disabled = true);
+  try {
+    const d = await req(`/api/kids/${kid.id}/gifts`, {
+      method: "POST",
+      body: JSON.stringify({ gift_emoji: emoji, gift_name: name, gift_type: type })
+    });
+    if (d.status === "payment_required") {
+      showToast("💰 " + d.message);
+      return;
+    }
+    giftUsed = d.used;
+    giftLimit = d.limit;
+    updateGiftCounterUI();
+    const banner = document.getElementById("giftSuccessBanner");
+    banner.textContent = `✨ ${emoji} ${name} 已送出！宝宝会很开心的～`;
+    banner.classList.add("show");
+    setTimeout(() => banner.classList.remove("show"), 3500);
+    renderGiftGrid();
+  } catch(e) {
+    showToast(e.message || "送礼失败");
+    renderGiftGrid();
+  }
+}
 </script>
 
 </body>
