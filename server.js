@@ -169,9 +169,9 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
     }
   }
 
-  // Check if the child has been missing the parent (last chat > 2 days ago)
-  const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
-  const isMissing = kid.last_chat_at && new Date(kid.last_chat_at) < twoDaysAgo;
+  // Check if the child has been missing the parent (last chat > 1 day ago)
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const isMissing = kid.last_chat_at && new Date(kid.last_chat_at) < oneDayAgo;
 
   const histResult = await db.query(
     "SELECT role, content FROM messages WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 20",
