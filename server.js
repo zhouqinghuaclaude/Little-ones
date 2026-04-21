@@ -375,9 +375,26 @@ app.post("/api/kids/:id/gifts", auth, async (req, res) => {
 
   // Set pending_gift on kid with level prefix: "level:name"
   const level = gift_level || "free";
-  await db.query("UPDATE kids SET pending_gift=$1 WHERE id=$2", [`${level}:${gift_name}`, req.params.id]);
+     const kid = kidResult.rows[0];
+    await db.query("UPDATE kids SET pending_gift=NULL WHERE id=$1", [req.params.id]);
 
-  res.json({ status: "ok", gift: giftResult.rows[0], used: usedCount + 1, limit: dailyLimit });
+    // Generate instant thank-you message from kid
+    const giftSystem = `You are ${kid.name}, a ${kid.age}-year-old ${kid.gender === "boy" ? "boy" : "girl"}. You are ${kid.parent_role === "爸爸" ? "your dad's" : "your mom's"} beloved child. You just received a gift: ${gift_name}. React with genuine excitement and gratitude in Chinese. Be age-appropriate, warm and enthusiastic. Keep it to 2-3 sentences.`;
+    const giftResponse = await claude.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 150,
+      system: giftSystem,
+      messages: [{ role: "user", content: `${kid.parent_role}送给你${gift_name}！` }]
+    });
+    const thankMsg = giftResponse.content[0].text.trim();
+    await db.query(
+      "INSERT INTO messages (kid_id, role, content) VALUES ($1,'assistant',$2)",
+      [req.params.id, thankMsg]
+    );
+
+    res.json({ status: "ok", gift: giftResult.rows[0], used: usedCount + 1, limit: dailyLimit, thankMsg });
+});
+
 });
 
 async function initDB() {
