@@ -948,6 +948,7 @@ async function sendGift(emoji, name, type, level) {
     banner.classList.add("show");
     setTimeout(() => banner.classList.remove("show"), 3500);
     renderGiftGrid();
+    if (d.thankMsg) { renderMsgs([...await req(`/api/kids/${kid.id}/messages`), {role:"assistant", content:d.thankMsg, created_at:new Date()}]); closeGiftShop(); }
   } catch(e) {
     showToast(e.message || "送礼失败");
     renderGiftGrid();
