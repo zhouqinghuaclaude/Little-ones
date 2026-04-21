@@ -207,7 +207,6 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
       pendingGiftLevel = "free";
       pendingGiftName = pendingGiftRaw;
     }
-    await db.query("UPDATE kids SET pending_gift = NULL WHERE id = $1", [kid.id]);
   }
 
   // ── Bond score calculation ────────────────────────────────────────────────
@@ -305,6 +304,8 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
     });
 
     const reply = response.content[0].text.trim();
+    await db.query("UPDATE kids SET pending_gift = NULL WHERE id = $1", [kid.id]);
+
     const saved = await db.query(
       "INSERT INTO messages (kid_id, role, content) VALUES ($1,'assistant',$2) RETURNING id",
       [kid.id, reply]
