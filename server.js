@@ -395,7 +395,6 @@ app.post("/api/kids/:id/gifts", auth, async (req, res) => {
     res.json({ status: "ok", gift: giftResult.rows[0], used: usedCount + 1, limit: dailyLimit, thankMsg });
 });
 
-});
 
 async function initDB() {
   await db.query(`
