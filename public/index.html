@@ -953,6 +953,16 @@ async function sendGift(emoji, name, type, level) {
     renderGiftGrid();
   }
 }
+  async function deleteKid(id, name) {
+  if (!confirm(`确定要删除「${name}」吗？删除后无法恢复。`)) return;
+  try {
+    await req(`/api/kids/${id}`, { method: "DELETE" });
+    showToast(`${name} 已删除`);
+    loadKids();
+  } catch(e) {
+    showToast(e.message || "删除失败");
+  }
+}
 </script>
 
 </body>
