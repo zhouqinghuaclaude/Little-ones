@@ -116,7 +116,7 @@ app.get("/api/kids", auth, async (req, res) => {
 
 
 app.post("/api/kids", auth, async (req, res) => {
-  const { name, gender, age, parent_role, birthday, personality, avatar } = req.body;
+  const { name, gender, age, parent_role, birthday, personality, avatar, age_mode } = req.body;
   if (!name) return res.status(400).json({ error: "Please fill in child name" });
   const count = await db.query("SELECT COUNT(*) FROM kids WHERE user_id = $1", [req.user.id]);
   if (parseInt(count.rows[0].count) >= 3) return res.status(400).json({ error: "Maximum 3 children allowed" });
@@ -131,8 +131,10 @@ app.post("/api/kids", auth, async (req, res) => {
   }
 
   const r = await db.query(
-    "INSERT INTO kids (user_id, name, gender, age, parent_role, birthday, personality, avatar) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *",
-    [req.user.id, name.trim(), gender || "boy", finalAge, parent_role || "mom", birthday || null, personality || "lively", avatar || null]
+    "INSERT INTO kids (user_id, name, gender, age, parent_role, birthday, personality, avatar, age_mode) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+ RETURNING *",
+    [req.user.id, name.trim(), gender || "boy", finalAge, parent_role || "mom", birthday || null, personality || "lively", avatar || null], age_mode || "fixed"
+
   );
   res.json(r.rows[0]);
 });
@@ -500,5 +502,6 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS age_mode VARCHAR(10) DEFAULT 'fixed'").catch(() => {});
 const PORT = process.env.PORT || 3000;
 initDB().then(() => app.listen(PORT, () => console.log("Server running on port " + PORT)));
