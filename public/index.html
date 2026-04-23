@@ -476,7 +476,7 @@ async function loadKids() {
       const bl=getBondLevel(k.bond_score||0);
       const compDays=k.companion_days||0;
       return `
-      <div class="kid-card" onclick='openChat(${JSON.stringify(k).replace(/'/g,"&#39;")})'>\n        <div class="kid-face ${k.gender==="boy"?"boy-face":"girl-face"}">\n          ${k.avatar||(k.gender==="boy"?"👦":"👧")}<div class="kid-badge">✦</div>\n        </div>\n        <div class="kid-info">\n          <div class="kid-name">${k.name}</div>\n          <div class="kid-meta">${k.age}岁 · ${k.parent_role}的宝贝${getKidZodiacInfo(k)}</div>\n          <div class="kid-bond-info">${k.name}已陪伴你${compDays}天 · ${bl.emoji}${bl.name}</div>\n        </div>\n        <div class="kid-emoji">${MOODS[i%MOODS.length]}</div>\n        <button class="kid-delete-btn" onclick="deleteKid(${k.id},'${k.name.replace(/'/g,"&#39;")}');event.stopPropagation();">删除</button>\n      </div>`;
+      <div class="kid-card" onclick='openChat(${JSON.stringify(k).replace(/'/g,"&#39;")})'>\n        <div class="kid-face ${k.gender==="boy"?"boy-face":"girl-face"}">\n          ${k.avatar||(k.gender==="boy"?"👦":"👧")}<div class="kid-badge">✦</div>\n        </div>\n        <div class="kid-info">\n          <div class="kid-name">${k.name}</div>\n          <div class="kid-meta">${k.age_display||k.age+"岁"} · ${k.parent_role}的宝贝${getKidZodiacInfo(k)}</div>\n          <div class="kid-bond-info">${k.name}已陪伴你${compDays}天 · ${bl.emoji}${bl.name}</div>\n        </div>\n        <div class="kid-emoji">${MOODS[i%MOODS.length]}</div>\n        <button class="kid-delete-btn" onclick="deleteKid(${k.id},'${k.name.replace(/'/g,"&#39;")}');event.stopPropagation();">删除</button>\n      </div>`;
     }).join("")+
       (kids.length<3?`<button class="add-card" onclick="showScreen('createScreen')">＋ 添加孩子（${kids.length}/3）</button>`:"");
   } catch(e) { if(e.message.includes("登录")) logout(); }
@@ -534,7 +534,7 @@ async function openChat(k) {
   face.textContent=k.avatar||(boy?"👦":"👧");
   face.style.background=boy?"linear-gradient(135deg,#D6EAF8,#AED6F1)":"linear-gradient(135deg,#FDEBD0,#FADBD8)";
   document.getElementById("chatName").textContent=k.name;
-  document.getElementById("chatStatus").textContent=`${k.age}岁 · ${k.parent_role}的宝贝${k.birthday ? " · 生日 " + k.birthday.slice(0,10) : ""}`;
+  document.getElementById("chatStatus").textContent=`${k.age_display||k.age+"岁"} · ${k.parent_role}的宝贝${k.birthday ? " · 生日 " + k.birthday.slice(0,10) : ""}`;
   document.getElementById("quickBar").innerHTML=QUICK.map(q=>
     `<button class="qbtn" onclick="sendMsg('${q.replace(/^[^\s]+\s/,"")}')">${q}</button>`).join("");
   showScreen("chatScreen");
