@@ -103,8 +103,20 @@ app.get("/api/kids", auth, async (req, res) => {
   const kids = r.rows.map(kid => {
     const createdAt = new Date(kid.created_at);
     const companion_days = Math.floor((today - createdAt) / 86400000);
+          const ageDisplay = (() => {
+        if (kid.age_mode !== "natural" || !kid.birthday) return kid.age + "岁";
+        const born = new Date(kid.birthday);
+        const days = Math.floor((today - born) / 86400000);
+        if (days < 30) return days + "天";
+        if (days === 100) return "百日🎉";
+        const months = Math.floor(days / 30);
+        if (months < 12) return months + "个月";
+        const years = Math.floor(days / 365);
+        return years + "岁";
+      })();
     return {
       ...kid,
+              age_display: ageDisplay,
       zodiac: getZodiacSign(kid.birthday),
       companion_days,
       bond_score: kid.bond_score || 0,
