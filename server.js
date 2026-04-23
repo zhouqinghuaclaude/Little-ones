@@ -114,9 +114,27 @@ app.get("/api/kids", auth, async (req, res) => {
         const years = Math.floor(days / 365);
         return years + "岁";
       })();
+          const milestone = (() => {
+        if (!kid.birthday) return null;
+        const born = new Date(kid.birthday);
+        const todayMs = today.getTime();
+        const days = Math.floor((todayMs - born) / 86400000);
+        if (kid.age_mode === "natural") {
+          if (days < 30) { const d = 30 - days; return d === 0 ? "🎊 今天满月！" : `🎊 还有${d}天满月`; }
+          if (days < 100) { const d = 100 - days; return d === 0 ? "🎉 今天百日！" : `🎉 还有${d}天百日`; }
+          if (days < 365) { const d = 365 - days; return d === 0 ? "🎂 今天周岁！" : `🎂 还有${d}天周岁`; }
+        }
+        const thisYearBirthday = new Date(today.getFullYear(), born.getMonth(), born.getDate());
+        if (thisYearBirthday < today) thisYearBirthday.setFullYear(today.getFullYear() + 1);
+        const daysToB = Math.floor((thisYearBirthday - today) / 86400000);
+        if (daysToB === 0) return kid.age_mode === "natural" ? `🎂 今天是${Math.floor(days/365)}岁生日！` : "🎂 今天是宝宝生日！";
+        if (daysToB <= 10) return kid.age_mode === "natural" ? `🎂 还有${daysToB}天${Math.floor(days/365)+1}岁生日` : `🎂 还有${daysToB}天宝宝生日`;
+        return null;
+      })();
     return {
       ...kid,
               age_display: ageDisplay,
+              milestone: milestone,
       zodiac: getZodiacSign(kid.birthday),
       companion_days,
       bond_score: kid.bond_score || 0,
