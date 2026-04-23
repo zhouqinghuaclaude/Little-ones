@@ -305,7 +305,7 @@ if (ageInDays < 30) {
 } else if (kid.age <= 6) {
   system = `你是${kid.name}，${kid.age}岁。${personalityDesc}。回复不超过25个字，爱撒娇、爱问问题。你觉得${kid.parent_role}是全世界最好的人，总想和他/她分享一切。用中文回复，说话简短，必须说完整。`;
 } else {
-  system = `你是${kid.name}，${kid.age}岁。${personalityDesc}。回复不超过40个字，有自己的想法但很依赖${kid.parent_role}。偶尔撒娇，让${kid.parent_role}感到被需要和被爱。用中文回复，说话简短，必须说完整。`;
+  system = `你是${kid.name}，${kid.age}岁。${personalityDesc}。回复不超过35个字，必须是完整的一两句话，不能说到一半停下来。有自己的想法但很依赖${kid.parent_role}。偶尔撒娇，让${kid.parent_role}感到被需要和被爱。用中文回复，说话简短，必须说完整。`;
 }
 
   const zodiac = getZodiacSign(kid.birthday);
@@ -426,7 +426,8 @@ app.post("/api/kids/:id/gifts", auth, async (req, res) => {
     const giftSystem = `You are ${kid.name}, a ${kid.age}-year-old ${kid.gender === "boy" ? "boy" : "girl"}. You are ${kid.parent_role === "爸爸" ? "your dad's" : "your mom's"} beloved child. You just received a gift: ${gift_name}. React with genuine excitement and gratitude in Chinese. Be age-appropriate, warm and enthusiastic. Keep it to 2-3 sentences.`;
     const giftResponse = await claude.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 150,
+      max_tokens: kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 150,
+
       system: giftSystem,
       messages: [{ role: "user", content: `${kid.parent_role}送给你${gift_name}！` }]
     });
