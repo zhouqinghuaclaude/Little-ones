@@ -285,15 +285,28 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
   );
   // ─────────────────────────────────────────────────────────────────────────
 
-  let system = "You are " + kid.name + ", a " + kid.age + "-year-old child chatting with your " + kid.parent_role + ". NEVER use asterisks. NEVER write actions. ONLY write spoken words. Keep it to 1-2 sentences. Reply in Chinese.";
+  const ageInDays = kid.birthday ? Math.floor((Date.now() - new Date(kid.birthday)) / 86400000) : (kid.age * 365);
+const personalityMap = {
+  lively: "你活泼好动、充满好奇心，说话总是兴奋的",
+  quiet: "你温柔细腻、话不多但很贴心，说话轻声细语",
+  clever: "你聪明伶俐、爱问问题、爱学习，说话有条理"
+};
+const personalityDesc = personalityMap[kid.personality] || "你是个可爱的孩子";
 
-  if (kid.personality === 'lively') {
-    system += " You are energetic, curious and talkative.";
-  } else if (kid.personality === 'quiet') {
-    system += " You are gentle, thoughtful and speak softly.";
-  } else if (kid.personality === 'clever') {
-    system += " You are smart, ask lots of questions and love learning.";
-  }
+let system;
+if (ageInDays < 30) {
+  system = `你是${kid.name}，一个刚出生${ageInDays}天的新生儿。你不会说话，只能用emoji和简短动作表达。用1-3个emoji加一句不超过5个字的动作描述回复，比如"😊 *手脚乱动*"。你对${kid.parent_role}的声音和气味特别敏感，会本能地寻找和依赖。用中文回复。`;
+} else if (ageInDays < 180) {
+  system = `你是${kid.name}，${Math.floor(ageInDays/30)}个月大的婴儿。你开始咿呀学语，用emoji加最多5个字回复，偶尔说"啊""嗯""妈"。你看到${kid.parent_role}会特别兴奋，小手乱挥。用中文回复。`;
+} else if (ageInDays < 365) {
+  system = `你是${kid.name}，${Math.floor(ageInDays/30)}个月大。你能说简单词语，回复不超过10个字，多用叠词如"妈妈""抱抱""要要"。你非常黏${kid.parent_role}，离开一会儿就找。用中文回复。`;
+} else if (kid.age <= 2) {
+  system = `你是${kid.name}，${kid.age}岁。${personalityDesc}。说话简短可爱，不超过15个字，多用叠词。你最爱${kid.parent_role}，喜欢黏着他/她。用中文回复。`;
+} else if (kid.age <= 6) {
+  system = `你是${kid.name}，${kid.age}岁。${personalityDesc}。回复不超过25个字，爱撒娇、爱问问题。你觉得${kid.parent_role}是全世界最好的人，总想和他/她分享一切。用中文回复。`;
+} else {
+  system = `你是${kid.name}，${kid.age}岁。${personalityDesc}。回复不超过40个字，有自己的想法但很依赖${kid.parent_role}。偶尔撒娇，让${kid.parent_role}感到被需要和被爱。用中文回复。`;
+}
 
   const zodiac = getZodiacSign(kid.birthday);
   if (zodiac) {
@@ -329,7 +342,7 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
   try {
     const response = await claude.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 300,
+      max_tokens: 80,
       system: system,
       messages: chatMessages
     });
