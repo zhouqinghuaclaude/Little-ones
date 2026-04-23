@@ -320,7 +320,8 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
   if (isMissing) {
     chatMessages.unshift({
       role: "user",
-      content: "[System note: You haven't seen your parent for a few days and you've been missing them. Mention this naturally early in the conversation.]"
+      content: `[System note: 你已经${Math.floor((Date.now() - new Date(kid.last_chat_at)) / 3600000)}小时没见到${kid.parent_role}了，你非常想念他/她。用符合你年龄(${kid.age}岁)的方式撒娇表达想念，情绪要真实饱满，可以用"你去哪了""我等你好久了""你是不是不要我了"等表达，要自然地融入对话开头。]`
+
     });
     chatMessages.splice(1, 0, { role: "assistant", content: "好的。" });
   }
