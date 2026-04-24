@@ -255,7 +255,24 @@ input, textarea { font-family: inherit; }
 <div id="toast" class="toast"></div>
 
 <div id="loginScreen" class="screen active">
-  <div class="login-illustration">👶</div>
+  <div class="login-illustration">
+  <svg viewBox="0 0 120 120" width="120" height="120">
+    <defs>
+      <radialGradient id="glowGrad" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" style="stop-color:#fffde7;stop-opacity:1"/>
+        <stop offset="100%" style="stop-color:#a8e6cf;stop-opacity:0"/>
+      </radialGradient>
+    </defs>
+    <circle cx="60" cy="60" r="55" fill="url(#glowGrad)" opacity="0.6">
+      <animate attributeName="r" values="50;58;50" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.4;0.7;0.4" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <path d="M60 95 Q60 60 60 40" stroke="#81c784" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M60 55 Q45 45 40 30 Q55 32 60 55" fill="#a5d6a7" opacity="0.9"/>
+    <path d="M60 65 Q75 55 80 40 Q65 42 60 65" fill="#c8e6c9" opacity="0.8"/>
+    <path d="M60 40 Q58 30 60 20 Q62 30 60 40" fill="#fff9c4" opacity="0.9"/>
+  </svg>
+</div>
   <div class="login-brand">小陪芽</div>
   <div class="login-tagline">一颗小芽，在等你</div>
   <div class="login-box">
