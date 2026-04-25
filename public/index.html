@@ -591,7 +591,8 @@ async function loadKids() {
 
   (kids.length<3?`<button class="add-card" onclick="showScreen('createScreen')">＋ 添加孩子（${kids.length}/3）</button>`:"");
       (kids.length<3?`<button class="add-card" onclick="showScreen('createScreen')">＋ 添加孩子（${kids.length}/3）</button>`:"");
-  } catch(e) { if(e.message.includes("登录")) logout(); }
+  } catch(e) { showToast(e.message || "loadKids错误"); if(e.message?.includes("登录")) logout(); }
+
 }
 let createStep = 0;
 let createData = {};
