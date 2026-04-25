@@ -493,8 +493,7 @@ let selAvatar = null;
 function showScreen(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
       document.getElementById(id).classList.add("active");
-    if (id === "createScreen") { document.getElementById("kidBirthday").value = new Date().toISOString().slice(0,10); setAgeMode("fixed"); }
-
+   if (id === "createScreen") { startCreateDialog(); }
 }
 function showToast(msg) {
   const el = document.getElementById("toast");
