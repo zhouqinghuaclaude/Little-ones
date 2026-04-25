@@ -661,8 +661,10 @@ async function nextCreateStep() {
         age: 0
       })});
       showToast("✨ " + createData.name + " 出现了！");
-      showScreen("homeScreen");
-      loadKids();
+document.getElementById("homeScreen").classList.remove("empty-mode");
+showScreen("homeScreen");
+await loadKids();
+
     } catch(e) {
       err.textContent = e.message || "创建失败";
     }
