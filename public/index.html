@@ -51,7 +51,7 @@ input, textarea { font-family: inherit; }
 .login-switch { text-align: center; margin-top: 18px; font-size: 14px; color: var(--sub); }
 .login-switch span { color: var(--p); font-weight: 700; cursor: pointer; }
 .error-text { color: #E74C3C; font-size: 13px; text-align: center; margin-top: 10px; min-height: 18px; }
-#homeScreen { background: var(--bg); display: flex; flex-direction: column; }
+#homeScreen { background: var(--bg); }
 .home-header { padding: 56px 20px 16px; background: linear-gradient(160deg, #F0E6FF, #FFF0F5); }
 .home-greeting { font-size: 13px; color: var(--sub); font-weight: 600; margin-bottom: 4px; }
 .home-row { display: flex; align-items: center; justify-content: space-between; }
@@ -587,6 +587,8 @@ async function loadKids() {
     <button class="kid-delete-btn" onclick="deleteKid(${k.id},'${k.name.replace(/'/g,"&#39;")}');event.stopPropagation();">删除</button>
   </div>`;
 }).join("")+
+      showToast(list.innerHTML.substring(0, 50));
+
   (kids.length<3?`<button class="add-card" onclick="showScreen('createScreen')">＋ 添加孩子（${kids.length}/3）</button>`:"");
       (kids.length<3?`<button class="add-card" onclick="showScreen('createScreen')">＋ 添加孩子（${kids.length}/3）</button>`:"");
   } catch(e) { if(e.message.includes("登录")) logout(); }
