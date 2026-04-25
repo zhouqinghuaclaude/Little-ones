@@ -256,29 +256,81 @@ input, textarea { font-family: inherit; }
 
 /* Kid card bond info */
 .kid-bond-info { font-size: 11px; color: var(--p); margin-top: 4px; font-weight: 700; }
+.logo-wrap { position: relative; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+.logo-wrap::before { content: ''; position: absolute; inset: -30px; border-radius: 50%; background: radial-gradient(circle, rgba(230,160,220,0.30) 0%, rgba(200,130,210,0.15) 50%, transparent 75%); animation: outerGlow 3s ease-in-out infinite alternate; }
+@keyframes outerGlow { from { transform: scale(0.95); opacity: 0.7; } to { transform: scale(1.05); opacity: 1; } }
+.orb { position: relative; width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(circle at 45% 42%, rgba(180,100,160,0.80) 0%, rgba(155,80,175,0.85) 30%, rgba(130,60,165,0.88) 55%, rgba(110,45,148,0.92) 75%, rgba(85,30,128,0.96) 100%); box-shadow: inset 0 0 40px 10px rgba(220,130,200,0.35), 0 0 30px 8px rgba(220,140,210,0.55), 0 0 60px 20px rgba(185,100,195,0.35); animation: orbPulse 4s ease-in-out infinite; }
+@keyframes orbPulse { 0%,100% { box-shadow: inset 0 0 40px 10px rgba(220,130,200,0.35), 0 0 30px 8px rgba(220,140,210,0.55), 0 0 60px 20px rgba(185,100,195,0.35); } 50% { box-shadow: inset 0 0 55px 16px rgba(220,130,200,0.48), 0 0 42px 14px rgba(220,140,210,0.70), 0 0 80px 28px rgba(185,100,195,0.48); } }
+.orb::before { content: ''; position: absolute; top: 8%; left: 12%; width: 24%; height: 18%; border-radius: 50%; background: radial-gradient(ellipse at 40% 30%, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.35) 50%, transparent 100%); transform: rotate(-20deg); filter: blur(2px); }
+.orbit-ring { position: absolute; border-radius: 50%; border: 1.5px solid rgba(180,230,255,0.6); box-shadow: 0 0 8px rgba(160,220,255,0.4); animation: spin linear infinite; }
+.orbit-ring-1 { width: 178px; height: 178px; transform: rotate(-25deg) rotateX(70deg); animation-duration: 6s; }
+.orbit-ring-2 { width: 196px; height: 196px; animation-duration: 9s; animation-direction: reverse; border-color: rgba(200,180,240,0.45); }
+@keyframes spin { from { transform: rotate(-25deg) rotateX(70deg) rotateZ(0deg); } to { transform: rotate(-25deg) rotateX(70deg) rotateZ(360deg); } }
+.orbit-dot { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: rgba(220,240,255,0.95); box-shadow: 0 0 6px 2px rgba(180,230,255,0.8); top: -3px; left: 50%; transform: translateX(-50%); }
+.plant-svg { position: absolute; width: 72px; height: 72px; bottom: 22%; left: 50%; transform: translateX(-50%); filter: drop-shadow(0 0 5px rgba(210,240,60,0.95)) drop-shadow(0 0 14px rgba(180,225,40,0.75)); animation: plantFloat 3.5s ease-in-out infinite; }
+@keyframes plantFloat { 0%,100% { transform: translateX(-50%) translateY(0px); } 50% { transform: translateX(-50%) translateY(-5px); } }
+.sparkle { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: white; box-shadow: 0 0 4px 2px rgba(255,255,255,0.8); animation: sparkleAnim 2.5s ease-in-out infinite; }
+.sparkle:nth-child(1) { top: 18%; left: 22%; animation-delay: 0s; }
+.sparkle:nth-child(2) { top: 28%; right: 18%; animation-delay: 0.7s; width: 3px; height: 3px; }
+.sparkle:nth-child(3) { top: 55%; left: 14%; animation-delay: 1.2s; width: 3px; height: 3px; }
+.sparkle:nth-child(4) { top: 15%; left: 55%; animation-delay: 1.8s; }
+.sparkle:nth-child(5) { bottom: 22%; right: 20%; animation-delay: 0.4s; width: 3px; height: 3px; }
+@keyframes sparkleAnim { 0%,100% { opacity: 0; transform: scale(0.5); } 50% { opacity: 1; transform: scale(1.2); } }
 </style>
 </head>
 <body>
 <div id="toast" class="toast"></div>
 
 <div id="loginScreen" class="screen active">
-  <div class="login-illustration">
-  <svg viewBox="0 0 120 120" width="120" height="120">
-    <defs>
-      <radialGradient id="glowGrad" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" style="stop-color:#fffde7;stop-opacity:1"/>
-        <stop offset="100%" style="stop-color:#a8e6cf;stop-opacity:0"/>
-      </radialGradient>
-    </defs>
-    <circle cx="60" cy="60" r="55" fill="url(#glowGrad)" opacity="0.6">
-      <animate attributeName="r" values="50;58;50" dur="3s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.4;0.7;0.4" dur="3s" repeatCount="indefinite"/>
-    </circle>
-    <path d="M60 95 Q60 60 60 40" stroke="#81c784" stroke-width="3" fill="none" stroke-linecap="round"/>
-    <path d="M60 55 Q45 45 40 30 Q55 32 60 55" fill="#a5d6a7" opacity="0.9"/>
-    <path d="M60 65 Q75 55 80 40 Q65 42 60 65" fill="#c8e6c9" opacity="0.8"/>
-    <path d="M60 40 Q58 30 60 20 Q62 30 60 40" fill="#fff9c4" opacity="0.9"/>
-  </svg>
+ <div class="logo-wrap">
+  <div class="orbit-ring orbit-ring-1"><div class="orbit-dot"></div></div>
+  <div class="orbit-ring orbit-ring-2"><div class="orbit-dot"></div></div>
+  <div class="orb">
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
+    <div class="sparkle"></div>
+    <svg class="plant-svg" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="stemGrad" x1="36" y1="66" x2="36" y2="20" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#68b830"/><stop offset="60%" stop-color="#98d038"/><stop offset="100%" stop-color="#c8ec48"/>
+        </linearGradient>
+        <linearGradient id="leafL" x1="36" y1="46" x2="14" y2="20" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#78b828"/><stop offset="55%" stop-color="#b0d838"/><stop offset="100%" stop-color="#dcf050"/>
+        </linearGradient>
+        <linearGradient id="leafR" x1="36" y1="44" x2="58" y2="18" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#70b020"/><stop offset="55%" stop-color="#a8d030"/><stop offset="100%" stop-color="#d0e848"/>
+        </linearGradient>
+        <radialGradient id="budOuter" cx="46%" cy="40%" r="54%">
+          <stop offset="0%" stop-color="#f0f850"/><stop offset="50%" stop-color="#c8e030" stop-opacity="0.92"/><stop offset="100%" stop-color="#90c018" stop-opacity="0.70"/>
+        </radialGradient>
+        <radialGradient id="budCore" cx="40%" cy="32%" r="56%">
+          <stop offset="0%" stop-color="#fffff0"/><stop offset="40%" stop-color="#f8fc78"/><stop offset="100%" stop-color="#c8e030"/>
+        </radialGradient>
+        <filter id="softGlow"><feGaussianBlur stdDeviation="1.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="warmHalo"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <radialGradient id="careGlow" cx="50%" cy="55%" r="50%">
+          <stop offset="0%" stop-color="rgba(255,210,240,0.35)"/><stop offset="100%" stop-color="rgba(200,120,200,0.00)"/>
+        </radialGradient>
+        <radialGradient id="budMid" cx="44%" cy="36%" r="55%">
+          <stop offset="0%" stop-color="#f8fc70"/><stop offset="55%" stop-color="#d8ee48" stop-opacity="0.95"/><stop offset="100%" stop-color="#a8d028" stop-opacity="0.75"/>
+        </radialGradient>
+      </defs>
+      <ellipse cx="36" cy="54" rx="22" ry="10" fill="url(#careGlow)" filter="url(#warmHalo)"/>
+      <path d="M36 66 C36 56 36 46 36 36" stroke="url(#stemGrad)" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <path d="M36 44 C34 40 28 32 18 22 C16 20 15 22 16 25 C20 32 28 38 34 42 C35 43 36 44 36 44 Z" fill="url(#leafL)" opacity="0.93"/>
+      <path d="M36 44 C30 38 22 30 17 23" stroke="rgba(255,255,220,0.65)" stroke-width="1.0" stroke-linecap="round" fill="none"/>
+      <path d="M36 40 C38 36 44 28 54 18 C56 16 57 18 56 21 C52 28 44 34 38 39 C37 40 36 40 36 40 Z" fill="url(#leafR)" opacity="0.90"/>
+      <path d="M36 40 C42 34 50 26 55 19" stroke="rgba(255,255,220,0.60)" stroke-width="1.0" stroke-linecap="round" fill="none"/>
+      <path d="M36 36 C36 28 40 20 44 16 C48 12 53 13 54 17 C55 22 51 30 46 33 C42 36 36 34 36 36 Z" fill="url(#budOuter)"/>
+      <path d="M37 34 C37 28 40 22 44 18 C47 15 51 16 52 20 C53 24 50 30 46 32 C42 34 37 33 37 34 Z" fill="url(#budMid)"/>
+      <path d="M38 32 C38 27 41 22 44 19 C47 17 50 18 51 21 C52 25 49 29 46 31 C43 33 38 31 38 32 Z" fill="url(#budCore)"/>
+      <path d="M40 28 C41 24 44 21 47 21 C49 22 50 25 48 28" stroke="rgba(255,255,210,0.72)" stroke-width="0.85" stroke-linecap="round" fill="none"/>
+      <ellipse cx="43" cy="17" rx="3.2" ry="1.8" fill="rgba(255,255,245,0.85)" transform="rotate(-20,43,17)" filter="url(#softGlow)"/>
+      <circle cx="42" cy="16" r="1.3" fill="rgba(255,255,255,0.97)"/>
+    </svg>
+  </div>
 </div>
   <div class="login-brand">小陪芽</div>
   <div class="login-tagline">一颗小芽，在等你</div>
