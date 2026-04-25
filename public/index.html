@@ -571,6 +571,7 @@ async function loadKids() {
 </div>`; return;
     }
     document.getElementById("homeScreen").classList.remove("empty-mode");
+    showToast("加载了" + kids.length + "个孩子");
     list.innerHTML=kids.map((k,i)=>{
       const bl=getBondLevel(k.bond_score||0);
       const compDays=k.companion_days||0;
