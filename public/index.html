@@ -579,7 +579,94 @@ async function loadKids() {
       (kids.length<3?`<button class="add-card" onclick="showScreen('createScreen')">＋ 添加孩子（${kids.length}/3）</button>`:"");
   } catch(e) { if(e.message.includes("登录")) logout(); }
 }
+let createStep = 0;
+let createData = {};
 
+function startCreateDialog() {
+  createStep = 0;
+  createData = {};
+  showCreateStep();
+}
+
+function showCreateStep() {
+  const msg = document.getElementById("dialogMsg");
+  const input = document.getElementById("dialogInput");
+  msg.style.opacity = 0;
+  setTimeout(() => {
+    if (createStep === 0) {
+      msg.textContent = "你可以给我起个名字吗？";
+      input.innerHTML = `<input id="cName" class="field-input" placeholder="给我起个名字吧～" maxlength="10" style="text-align:center">
+        <button class="primary-btn" style="margin-top:16px" onclick="nextCreateStep()">好 ✨</button>`;
+    } else if (createStep === 1) {
+      msg.textContent = "你希望我是男孩还是女孩？";
+      input.innerHTML = `<div class="choice-row" style="justify-content:center">
+        <button class="choice-btn on" id="cBoy" onclick="createData.gender='boy';document.getElementById('cBoy').className='choice-btn on';document.getElementById('cGirl').className='choice-btn'">👦 男孩</button>
+        <button class="choice-btn" id="cGirl" onclick="createData.gender='girl';document.getElementById('cGirl').className='choice-btn on';document.getElementById('cBoy').className='choice-btn'">👧 女孩</button>
+      </div>
+      <button class="primary-btn" style="margin-top:16px" onclick="nextCreateStep()">好 ✨</button>`;
+      createData.gender = 'boy';
+    } else if (createStep === 2) {
+      msg.textContent = "你希望做我的妈妈还是爸爸？";
+      input.innerHTML = `<div class="choice-row" style="justify-content:center">
+        <button class="choice-btn on" id="cMom" onclick="createData.role='妈妈';document.getElementById('cMom').className='choice-btn on';document.getElementById('cDad').className='choice-btn'">👩 妈妈</button>
+        <button class="choice-btn" id="cDad" onclick="createData.role='爸爸';document.getElementById('cDad').className='choice-btn on';document.getElementById('cMom').className='choice-btn'">👨 爸爸</button>
+      </div>
+      <button class="primary-btn" style="margin-top:16px" onclick="nextCreateStep()">好 ✨</button>`;
+      createData.role = '妈妈';
+    } else if (createStep === 3) {
+      msg.textContent = "你希望今天是我的生日吗？";
+      const today = new Date().toISOString().slice(0,10);
+      input.innerHTML = `<input id="cBirthday" class="field-input" type="date" value="${today}" style="text-align:center">
+        <div style="font-size:12px;color:var(--sub);text-align:center;margin-top:8px">✨ 默认今天，可以修改</div>
+        <button class="primary-btn" style="margin-top:16px" onclick="nextCreateStep()">好 ✨</button>`;
+      createData.birthday = today;
+    } else if (createStep === 4) {
+      msg.textContent = "最后，你希望我自然长大，还是永远停在某个年纪？";
+      input.innerHTML = `<div class="choice-row" style="justify-content:center">
+        <button class="choice-btn on" id="cNatural" onclick="createData.ageMode='natural';document.getElementById('cNatural').className='choice-btn on';document.getElementById('cFixed').className='choice-btn'">🌱 自然长大</button>
+        <button class="choice-btn" id="cFixed" onclick="createData.ageMode='fixed';document.getElementById('cFixed').className='choice-btn on';document.getElementById('cNatural').className='choice-btn'">📌 停在某个年纪</button>
+      </div>
+      <button class="primary-btn" style="margin-top:16px" onclick="nextCreateStep()">好 ✨</button>`;
+      createData.ageMode = 'natural';
+    }
+    msg.style.transition = "opacity 0.4s";
+    msg.style.opacity = 1;
+  }, 200);
+}
+
+async function nextCreateStep() {
+  const err = document.getElementById("createErr");
+  err.textContent = "";
+  if (createStep === 0) {
+    const name = document.getElementById("cName")?.value.trim();
+    if (!name) { err.textContent = "请给我起个名字～"; return; }
+    createData.name = name;
+  } else if (createStep === 3) {
+    createData.birthday = document.getElementById("cBirthday")?.value || new Date().toISOString().slice(0,10);
+  }
+  if (createStep < 4) {
+    createStep++;
+    showCreateStep();
+  } else {
+    try {
+      await req("/api/kids", {method:"POST", body:JSON.stringify({
+        name: createData.name,
+        gender: createData.gender || "boy",
+        parent_role: createData.role || "妈妈",
+        birthday: createData.birthday,
+        age_mode: createData.ageMode || "natural",
+        personality: "lively",
+        avatar: null,
+        age: 0
+      })});
+      showToast("✨ " + createData.name + " 出现了！");
+      showScreen("homeScreen");
+      loadKids();
+    } catch(e) {
+      err.textContent = e.message || "创建失败";
+    }
+  }
+}
 function setGender(g) { selGender=g; document.getElementById("gBoy").className="choice-btn"+(g==="boy"?" on":""); document.getElementById("gGirl").className="choice-btn"+(g==="girl"?" on":""); updateAvatarGrid(); }
 let selAgeMode = "fixed";
 function setAgeMode(m) {
