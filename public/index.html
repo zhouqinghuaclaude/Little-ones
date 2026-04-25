@@ -281,6 +281,8 @@ input, textarea { font-family: inherit; }
 @keyframes budBreath { 0%,100% { transform: scale(0.9); opacity: 0.6; } 50% { transform: scale(1.1); opacity: 1; } }
 .bud-appear { animation: budShake 0.4s ease; }
 @keyframes budShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+#homeScreen.empty-mode .home-greeting, #homeScreen.empty-mode .home-row, #homeScreen.empty-mode .home-sub, #homeScreen.empty-mode .section-label { display: none; }
+#homeScreen.empty-mode .kids-container { display: flex; align-items: center; justify-content: center; flex: 1; }
 </style>
 </head>
 <body>
@@ -547,6 +549,7 @@ async function loadKids() {
     const kids=await req("/api/kids");
     const list=document.getElementById("kidsList");
     if(!kids.length) {
+    document.getElementById("homeScreen").classList.add("empty-mode");  
       list.innerHTML=`<div class="empty-wrap">
   <div class="bud-container" id="homeBud">
     <div class="bud-glow"></div>
@@ -577,6 +580,7 @@ async function loadKids() {
   <button class="primary-btn" style="max-width:240px;margin-top:16px" onclick="showScreen('createScreen');this.closest('.empty-wrap').classList.add('bud-appear')">让Ta出现 ✨</button>
 </div>`; return;
     }
+    document.getElementById("homeScreen").classList.remove("empty-mode");
     list.innerHTML=kids.map((k,i)=>{
       const bl=getBondLevel(k.bond_score||0);
       const compDays=k.companion_days||0;
