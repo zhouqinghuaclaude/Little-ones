@@ -534,7 +534,24 @@ async function doLogin() {
 function logout() { token=""; localStorage.clear(); showScreen("loginScreen"); }
 
 const MOODS=["😊","😄","🥰","😌","🤩","😎"];
-async function loadKids() {
+const BOND_LEVELS = [
+  { min: 0,    max: 50,   emoji: "☁️",  name: "初识" },
+  { min: 51,   max: 150,  emoji: "🌱",  name: "萌芽" },
+  { min: 151,  max: 300,  emoji: "🌸",  name: "温暖" },
+  { min: 301,  max: 500,  emoji: "⭐",  name: "亲密" },
+  { min: 501,  max: 1000, emoji: "💫",  name: "挚爱" },
+  { min: 1001, max: Infinity, emoji: "👑", name: "永恒" },
+];
+  // ── Bond System ────────────────────────────────────────────────────────────
+
+
+function getBondLevel(score) {
+  for (const lvl of BOND_LEVELS) {
+    if (score >= lvl.min && score <= lvl.max) return lvl;
+  }
+  return BOND_LEVELS[BOND_LEVELS.length - 1];
+}
+  async function loadKids() {
   try {
     const kids=await req("/api/kids");
     const list=document.getElementById("kidsList");
@@ -938,23 +955,7 @@ updateAvatarGrid();
 document.getElementById("homeScreen").classList.remove("empty-mode");
   if(token){showScreen("homeScreen");loadKids();}
 
-// ── Bond System ────────────────────────────────────────────────────────────
 
-const BOND_LEVELS = [
-  { min: 0,    max: 50,   emoji: "☁️",  name: "初识" },
-  { min: 51,   max: 150,  emoji: "🌱",  name: "萌芽" },
-  { min: 151,  max: 300,  emoji: "🌸",  name: "温暖" },
-  { min: 301,  max: 500,  emoji: "⭐",  name: "亲密" },
-  { min: 501,  max: 1000, emoji: "💫",  name: "挚爱" },
-  { min: 1001, max: Infinity, emoji: "👑", name: "永恒" },
-];
-
-function getBondLevel(score) {
-  for (const lvl of BOND_LEVELS) {
-    if (score >= lvl.min && score <= lvl.max) return lvl;
-  }
-  return BOND_LEVELS[BOND_LEVELS.length - 1];
-}
 
 function getBondProgress(score) {
   for (let i = 0; i < BOND_LEVELS.length; i++) {
