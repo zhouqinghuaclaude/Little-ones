@@ -1072,7 +1072,8 @@ const GIFT_CATEGORIES = [
   }
 ];
 
-let giftActiveCat = "free";
+let giftShopJustOpened = false;
+  let giftActiveCat = "free";
 let giftUsed = 0;
 let giftLimit = 1;
 async function openGiftShop() {
@@ -1081,16 +1082,21 @@ async function openGiftShop() {
   document.getElementById("giftSuccessBanner").classList.remove("show");
   setTimeout(() => {
     document.getElementById("giftOverlay").classList.add("open");
+    giftShopJustOpened = true; setTimeout(() => { giftShopJustOpened = false; }, 300);
+
   }, 50);
   await refreshGiftCounter();
   renderGiftTabs();
   renderGiftGrid();
   alert("渲染完成");
 }
+let giftShopJustOpened = false;
 function closeGiftShop(e) {
+  if (giftShopJustOpened) return;
   if (e && e.target !== document.getElementById("giftOverlay")) return;
   document.getElementById("giftOverlay").classList.remove("open");
 }
+
 
 async function refreshGiftCounter() {
   try {
