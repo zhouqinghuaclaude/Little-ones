@@ -1078,7 +1078,8 @@ const GIFT_CATEGORIES = [
 let giftUsed = 0;
 let giftLimit = 1;
 async function openGiftShop() {
-  if (!kid) { alert("kid is null"); return; }
+  if (!kid) return;
+
   giftActiveCat = "free";
   document.getElementById("giftSuccessBanner").classList.remove("show");
   document.getElementById("giftOverlay").classList.add("open");
