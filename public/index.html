@@ -407,7 +407,7 @@ input, textarea { font-family: inherit; }
       <div class="chat-kid-status"><span class="online-dot"></span><span id="chatStatus">在线</span></div>
     </div>
     <button onclick="openBondProfile()" style="padding:7px 13px;border-radius:20px;background:var(--bg);border:1.5px solid var(--border);color:var(--p);font-size:13px;font-weight:700;flex-shrink:0;margin-right:4px" id="bondHeaderBtn">💫 亲密</button>
-    <button onclick="openGiftShop()" style="padding:7px 13px;border-radius:20px;background:var(--bg);border:1.5px solid var(--border);color:var(--p);font-size:13px;font-weight:700;flex-shrink:0;margin-right:4px">🎁 礼物</button>
+    <button onclick="openGiftShop();event.stopPropagation()" style="padding:7px 13px;border-radius:20px;background:var(--bg);border:1.5px solid var(--border);color:var(--p);font-size:13px;font-weight:700;flex-shrink:0;margin-right:4px">🎁 礼物</button>
     <button onclick="openDiary(kid)" style="padding:7px 13px;border-radius:20px;background:var(--bg);border:1.5px solid var(--border);color:var(--p);font-size:13px;font-weight:700;flex-shrink:0">📖 日记</button>
   </div>
   <div class="msgs-area" id="msgsArea"></div>
