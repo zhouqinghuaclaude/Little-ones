@@ -603,11 +603,8 @@ function getBondLevel(score) {
     <div class="kid-emoji">${MOODS[i%MOODS.length]}</div>
     <button class="kid-delete-btn" onclick="deleteKid(${k.id},'${k.name.replace(/'/g,"&#39;")}');event.stopPropagation();">删除</button>
   </div>`;
-}).join("")+
-      showToast(list.innerHTML.substring(0, 50));
+}).join("") + (kids.length<3?`<button class="add-card" onclick="showScreen('createScreen')">＋ 添加孩子（${kids.length}/3）</button>`:"");
 
-  (kids.length<3?`<button class="add-card" onclick="showScreen('createScreen')">＋ 添加孩子（${kids.length}/3）</button>`:"");
-      (kids.length<3?`<button class="add-card" onclick="showScreen('createScreen')">＋ 添加孩子（${kids.length}/3）</button>`:"");
   } catch(e) { showToast(e.message || "loadKids错误"); if(e.message?.includes("登录")) logout(); }
 
 }
