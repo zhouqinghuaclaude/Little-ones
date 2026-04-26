@@ -1077,14 +1077,16 @@ let giftUsed = 0;
 let giftLimit = 1;
 
 async function openGiftShop() {
-  if (!kid) return;
+  if (!kid) { alert("kid is null"); return; }
   giftActiveCat = "free";
   document.getElementById("giftSuccessBanner").classList.remove("show");
   document.getElementById("giftOverlay").classList.add("open");
   await refreshGiftCounter();
   renderGiftTabs();
   renderGiftGrid();
+  alert("渲染完成");
 }
+
 
 function closeGiftShop(e) {
   if (e && e.target !== document.getElementById("giftOverlay")) return;
