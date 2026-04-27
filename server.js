@@ -149,7 +149,7 @@ app.post("/api/kids", auth, async (req, res) => {
   const { name, gender, age, parent_role, birthday, personality, avatar, age_mode } = req.body;
   if (!name) return res.status(400).json({ error: "Please fill in child name" });
   const count = await db.query("SELECT COUNT(*) FROM kids WHERE user_id = $1", [req.user.id]);
-  if (parseInt(count.rows[0].count) >= 3) return res.status(400).json({ error: "Maximum 3 children allowed" });
+  if (parseInt(count.rows[0].count) >= 1) return res.status(400).json({ error: "每位用户默认只能创建1个孩子" });
 
   let finalAge = age ? parseInt(age) : 0;
   if (birthday) {
