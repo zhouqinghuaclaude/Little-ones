@@ -660,7 +660,6 @@ function showCreateStep() {
     msg.style.opacity = 1;
   }, 200);
 }
-
 async function nextCreateStep() {
   const err = document.getElementById("createErr");
   err.textContent = "";
@@ -674,15 +673,25 @@ async function nextCreateStep() {
     showCreateStep();
   } else {
     try {
-      
-
+      const newKid = await req("/api/kids", {method:"POST", body:JSON.stringify({
+        name: createData.name,
+        gender: createData.gender || "boy",
+        parent_role: createData.role || "妈妈",
+        age: createData.ageRange === '0-1' ? 0 : createData.ageRange === '1-3' ? 1 : createData.ageRange === '3-6' ? 4 : 7,
+        age_mode: "natural",
+        personality: "lively",
+        avatar: null
+      })});
+      document.getElementById("homeScreen").classList.remove("empty-mode");
+      await loadKids();
+      showBirthMoment(newKid, createData.role || "妈妈", createData.ageRange || "3-6");
     } catch(e) {
       err.textContent = e.message || "创建失败";
     }
   }
 }
 
-const newKid = await req("/api/kids", {method:"POST", body:JSON.stringify({
+
   name: createData.name,
   gender: createData.gender || "boy",
   parent_role: createData.role || "妈妈",
