@@ -532,7 +532,8 @@ async function doLogin() {
     alert("登录成功");
 showScreen("homeScreen"); loadKids();
 
-  } catch(e) { err.textContent=e.message; }
+  } catch(e) { alert("错误：" + e.message); err.textContent=e.message; }
+
   finally { btn.textContent=isReg?"注册":"登录"; }
 }
 function logout() { token=""; localStorage.clear(); showScreen("loginScreen"); }
