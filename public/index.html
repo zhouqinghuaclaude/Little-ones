@@ -626,7 +626,7 @@ function showCreateStep() {
   setTimeout(() => {
     if (createStep === 0) {
       msg.textContent = "你可以给我起个名字吗？";
-      input.innerHTML = `<input id="cName" class="field-input" placeholder="给我起个名字吧～" maxlength="10" style="text-align:center">
+      input.innerHTML = `<input id="cName" class="field-input" placeholder="给Ta起个名字吧～" maxlength="10" style="text-align:center">
         <button class="primary-btn" style="margin-top:16px" onclick="nextCreateStep()">好 ✨</button>`;
     } else if (createStep === 1) {
       msg.textContent = "你希望我是男孩还是女孩？";
@@ -645,20 +645,16 @@ function showCreateStep() {
       <button class="primary-btn" style="margin-top:16px" onclick="nextCreateStep()">好 ✨</button>`;
       createData.role = '妈妈';
     } else if (createStep === 3) {
-      msg.textContent = "你希望今天是我的生日吗？";
-      const today = new Date().toISOString().slice(0,10);
-      input.innerHTML = `<input id="cBirthday" class="field-input" type="date" value="${today}" style="text-align:center">
-        <div style="font-size:12px;color:var(--sub);text-align:center;margin-top:8px">✨ 默认今天，可以修改</div>
-        <button class="primary-btn" style="margin-top:16px" onclick="nextCreateStep()">好 ✨</button>`;
-      createData.birthday = today;
-    } else if (createStep === 4) {
-      msg.textContent = "最后，你希望我自然长大，还是永远停在某个年纪？";
-      input.innerHTML = `<div class="choice-row" style="justify-content:center">
-        <button class="choice-btn on" id="cNatural" onclick="createData.ageMode='natural';document.getElementById('cNatural').className='choice-btn on';document.getElementById('cFixed').className='choice-btn'">🌱 自然长大</button>
-        <button class="choice-btn" id="cFixed" onclick="createData.ageMode='fixed';document.getElementById('cFixed').className='choice-btn on';document.getElementById('cNatural').className='choice-btn'">📌 停在某个年纪</button>
+      msg.textContent = "你希望我多大了？";
+      input.innerHTML = `<div class="choice-row" style="justify-content:center;flex-wrap:wrap;gap:10px">
+        <button class="choice-btn on" id="age0" onclick="createData.ageRange='0-1';setAgeRangeBtn('age0')">👶 0-1岁</button>
+        <button class="choice-btn" id="age1" onclick="createData.ageRange='1-3';setAgeRangeBtn('age1')">🐣 1-3岁</button>
+        <button class="choice-btn" id="age2" onclick="createData.ageRange='3-6';setAgeRangeBtn('age2')">🌟 3-6岁</button>
+        <button class="choice-btn" id="age3" onclick="createData.ageRange='6+';setAgeRangeBtn('age3')">📚 6岁以上</button>
       </div>
+      <div style="font-size:12px;color:var(--sub);text-align:center;margin-top:8px">✨ 年龄一旦确定无法更改哦</div>
       <button class="primary-btn" style="margin-top:16px" onclick="nextCreateStep()">好 ✨</button>`;
-      createData.ageMode = 'natural';
+      createData.ageRange = '0-1';
     }
     msg.style.transition = "opacity 0.4s";
     msg.style.opacity = 1;
@@ -672,10 +668,8 @@ async function nextCreateStep() {
     const name = document.getElementById("cName")?.value.trim();
     if (!name) { err.textContent = "请给我起个名字～"; return; }
     createData.name = name;
-  } else if (createStep === 3) {
-    createData.birthday = document.getElementById("cBirthday")?.value || new Date().toISOString().slice(0,10);
   }
-  if (createStep < 4) {
+  if (createStep < 3) {
     createStep++;
     showCreateStep();
   } else {
@@ -684,23 +678,30 @@ async function nextCreateStep() {
         name: createData.name,
         gender: createData.gender || "boy",
         parent_role: createData.role || "妈妈",
-        birthday: createData.birthday,
-        age_mode: createData.ageMode || "natural",
+        age: createData.ageRange === '0-1' ? 0 : createData.ageRange === '1-3' ? 1 : createData.ageRange === '3-6' ? 4 : 7,
+        age_mode: "natural",
         personality: "lively",
-        avatar: null,
-        age: 0
+        avatar: null
       })});
       showToast("✨ " + createData.name + " 出现了！");
-document.getElementById("homeScreen").classList.remove("empty-mode");
-showScreen("homeScreen");
-await loadKids();
-
+      document.getElementById("homeScreen").classList.remove("empty-mode");
+      showScreen("homeScreen");
+      await loadKids();
     } catch(e) {
       err.textContent = e.message || "创建失败";
     }
   }
 }
-function setGender(g) { selGender=g; document.getElementById("gBoy").className="choice-btn"+(g==="boy"?" on":""); document.getElementById("gGirl").className="choice-btn"+(g==="girl"?" on":""); updateAvatarGrid(); }
+
+
+function setAgeRangeBtn(id) {
+  ['age0','age1','age2','age3'].forEach(i => {
+    const btn = document.getElementById(i);
+    if (btn) btn.className = 'choice-btn' + (i === id ? ' on' : '');
+  });
+}
+
+  function setGender(g) { selGender=g; document.getElementById("gBoy").className="choice-btn"+(g==="boy"?" on":""); document.getElementById("gGirl").className="choice-btn"+(g==="girl"?" on":""); updateAvatarGrid(); }
 let selAgeMode = "fixed";
 function setAgeMode(m) {
   selAgeMode = m;
