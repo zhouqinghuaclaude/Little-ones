@@ -351,6 +351,13 @@ if (kid.age_mode === 'natural' && ageInDays < 365) {
     system += " You are a " + zodiac + ", so you are " + traits + ".";
   }
 
+  // 故事/儿歌特别回应
+if (message.includes('📖') && message.includes('讲故事')) {
+  system += ` ${kid.parent_role}刚给你讲了故事！用最强烈的感应卡方式回应，比如小眼睛发亮、小手乱挥、发出兴奋的声音，非常开心，用emoji加动作描述，不超过15个字。`;
+} else if (message.includes('🎵') && message.includes('唱儿歌')) {
+  system += ` ${kid.parent_role}刚给你唱了儿歌！用最强烈的感应卡方式回应，比如小身体随着音乐晃动、咧嘴笑、小手拍拍，非常陶醉，用emoji加动作描述，不超过15个字。`;
+}
+
   if (pendingGiftName) {
     if (pendingGiftLevel === "free") {
       system += ` You just received ${pendingGiftName}. React happily in 1 sentence.`;
