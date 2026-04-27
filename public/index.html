@@ -525,16 +525,14 @@ async function doLogin() {
   if(!email||!pwd) return err.textContent="请填写邮箱和密码";
   const btn=document.getElementById("loginBtn");
   btn.textContent="请稍候…";
-  alert("开始登录");
 
   try {
     const d=await req(`/api/${isReg?"register":"login"}`,{method:"POST",body:JSON.stringify({email,password:pwd})});
     token=d.token; localStorage.setItem("token",token);
     document.getElementById("homeScreen").classList.remove("empty-mode");
-    alert("登录成功");
 showScreen("homeScreen"); loadKids();
 
-  } catch(e) { alert("错误：" + e.message); err.textContent=e.message; }
+  } catch(e) { err.textContent=e.message; }
 
   finally { btn.textContent=isReg?"注册":"登录"; }
 }
