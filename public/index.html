@@ -283,7 +283,7 @@ input, textarea { font-family: inherit; }
 @keyframes budShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
 #homeScreen.empty-mode .home-greeting, #homeScreen.empty-mode .home-row, #homeScreen.empty-mode .home-sub, #homeScreen.empty-mode .section-label { display: none; }
 #homeScreen.empty-mode .kids-container { display: flex; align-items: center; justify-content: center; flex: 1; min-height: 60vh; }
-
+@keyframes fadeOut { to { opacity: 0; } }
 </style>
 </head>
 <body>
@@ -683,10 +683,10 @@ async function nextCreateStep() {
         personality: "lively",
         avatar: null
       })});
-      showToast("✨ " + createData.name + " 出现了！");
       document.getElementById("homeScreen").classList.remove("empty-mode");
-      showScreen("homeScreen");
-      await loadKids();
+await loadKids();
+showBirthMoment(createData.name, createData.gender || "boy", createData.role || "妈妈", createData.ageRange || "3-6");
+
     } catch(e) {
       err.textContent = e.message || "创建失败";
     }
@@ -694,7 +694,32 @@ async function nextCreateStep() {
 }
 
 
-function setAgeRangeBtn(id) {
+function showBirthMoment(name, gender, role, ageRange) {
+  const firstWords = {
+  '0-1': `抱..抱..宝.. *小手乱动*`,
+  '1-3': `你去哪了，我刚刚在想你`,
+  '3-6': `你来啦！我有个事情…`,
+  '6+': `你来了，我一直在这等你`
+};
+
+  const overlay = document.createElement("div");
+  overlay.style.cssText = `position:fixed;inset:0;background:linear-gradient(160deg,#F0E6FF,#FFF0F5);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;animation:fadeIn .5s ease`;
+  overlay.innerHTML = `
+    <div style="font-size:60px;margin-bottom:20px;animation:plantFloat 2s ease-in-out infinite">${gender==='boy'?'👦':'👧'}</div>
+    <div style="font-size:28px;font-weight:900;color:#9B59B6;margin-bottom:12px">${name}</div>
+    <div style="font-size:16px;color:#888;margin-bottom:32px">出现了 🌱</div>
+    <div style="background:white;border-radius:20px;padding:16px 24px;font-size:17px;color:#333;box-shadow:0 8px 30px rgba(155,89,182,0.15);max-width:280px;text-align:center">${firstWords[ageRange]}</div>
+  `;
+  document.body.appendChild(overlay);
+  setTimeout(() => {
+    overlay.style.animation = "fadeOut .5s ease forwards";
+    setTimeout(() => {
+      document.body.removeChild(overlay);
+      showScreen("homeScreen");
+    }, 500);
+  }, 2500);
+}
+  function setAgeRangeBtn(id) {
   ['age0','age1','age2','age3'].forEach(i => {
     const btn = document.getElementById(i);
     if (btn) btn.className = 'choice-btn' + (i === id ? ' on' : '');
