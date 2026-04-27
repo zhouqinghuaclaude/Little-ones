@@ -538,7 +538,16 @@ app.post("/api/kids/:id/diary", auth, async (req, res) => {
     "INSERT INTO diary (kid_id, content) VALUES ($1, $2) RETURNING id, content, created_at",
     [req.params.id, content.trim()]
   );
-  res.json(r.rows[0]);
+  const newKid = r.rows[0];
+const ageInDays = birthday ? Math.floor((Date.now() - new Date(birthday)) / 86400000) : (finalAge * 365);
+const firstMsg = ageInDays < 30 ? `抱..抱..宝.. *小手乱动*` :
+  ageInDays < 365*1 ? `你去哪了，我刚刚在想你` :
+  finalAge <= 3 ? `你去哪了，我刚刚在想你` :
+  finalAge <= 6 ? `你来啦！我有个事情…` :
+  `你来了，我一直在这等你`;
+await db.query("INSERT INTO messages (kid_id, role, content) VALUES ($1,'assistant',$2)", [newKid.id, firstMsg]);
+res.json(newKid);
+
 });
 
 app.get("*", (req, res) => {
