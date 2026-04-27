@@ -721,7 +721,69 @@ function showBirthMoment(kid, role, ageRange) {
     }, 500);
   }, 2500);
 }
-function updateGrowthBar(count) {
+function showMomentCard(type) {
+  const existing = document.getElementById("momentCard");
+  if (existing) existing.remove();
+  const title = type === 'story' ? '📖 宝宝在看着你' : '🎵 宝宝在听着呢';
+  const sub = type === 'story' ? 'Ta想听你讲故事～' : 'Ta想听你唱首儿歌～';
+  const btnText = type === 'story' ? '给Ta讲个故事 📖' : '给Ta唱首儿歌 🎵';
+  const card = document.createElement("div");
+  card.id = "momentCard";
+  card.style.cssText = `margin:8px 14px;background:white;border-radius:16px;padding:16px;box-shadow:0 4px 20px rgba(155,89,182,0.15);border:1.5px solid #E8D5F5;animation:fadeIn .3s ease`;
+  card.innerHTML = `
+    <div style="font-size:15px;font-weight:800;color:#9B59B6;margin-bottom:4px">${title}</div>
+    <div style="font-size:13px;color:#888;margin-bottom:12px">${sub}</div>
+    <div style="display:flex;gap:8px">
+      <button class="primary-btn" style="margin-top:0;padding:10px;font-size:13px" onclick="openMomentInput('${type}')">${btnText}</button>
+      <button style="padding:10px 16px;border-radius:12px;border:1.5px solid #E0D0EE;font-size:13px;color:#999" onclick="this.closest('#momentCard').remove()">下次吧</button>
+    </div>
+  `;
+  document.getElementById("msgsArea").appendChild(card);
+  scrollBot();
+}
+
+function openMomentInput(type) {
+  document.getElementById("momentCard")?.remove();
+  const title = type === 'story' ? '讲个故事给宝宝听 📖' : '唱首儿歌给宝宝听 🎵';
+  const placeholder = type === 'story' ? '从前有一只小兔子...' : '小星星，亮晶晶...';
+  const card = document.createElement("div");
+  card.id = "momentCard";
+  card.style.cssText = `margin:8px 14px;background:white;border-radius:16px;padding:16px;box-shadow:0 4px 20px rgba(155,89,182,0.15);border:1.5px solid #E8D5F5`;
+  card.innerHTML = `
+    <div style="font-size:15px;font-weight:800;color:#9B59B6;margin-bottom:12px">${title}</div>
+    <textarea id="momentText" style="width:100%;border:1.5px solid #E0D0EE;border-radius:12px;padding:12px;font-size:14px;min-height:80px;outline:none;resize:none" placeholder="${placeholder}"></textarea>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="primary-btn" style="margin-top:0;padding:10px;font-size:13px" onclick="sendMoment('${type}')">开始 ✨</button>
+      <button style="padding:10px 16px;border-radius:12px;border:1.5px solid #E0D0EE;font-size:13px;color:#999" onclick="this.closest('#momentCard').remove()">取消</button>
+    </div>
+  `;
+  document.getElementById("msgsArea").appendChild(card);
+  scrollBot();
+}
+
+async function sendMoment(type) {
+  const text = document.getElementById("momentText")?.value.trim();
+  if (!text) return;
+  document.getElementById("momentCard")?.remove();
+  const label = type === 'story' ? `📖 ${kid.parent_role}给你讲故事：${text}` : `🎵 ${kid.parent_role}给你唱儿歌：${text}`;
+  const area = document.getElementById("msgsArea");
+  area.insertAdjacentHTML("beforeend", bubble("user", label, new Date().toISOString()));
+  scrollBot();
+  showTyping();
+  try {
+    const d = await req(`/api/kids/${kid.id}/chat`, {method:"POST", body:JSON.stringify({message: label})});
+    hideTyping();
+    area.insertAdjacentHTML("beforeend", bubble("assistant", d.reply, new Date().toISOString()));
+    scrollBot();
+    if (d.msgCount !== undefined && kid.age <= 1) updateGrowthBar(d.msgCount);
+  } catch(e) {
+    hideTyping();
+    area.insertAdjacentHTML("beforeend", bubble("assistant", `（${kid.name}没有回应）`, new Date().toISOString()));
+    scrollBot();
+  }
+}
+
+  function updateGrowthBar(count) {
   const bar = document.getElementById("growthBar");
   if (!bar) return;
   if (kid.age > 1) { bar.style.display = "none"; return; }
@@ -868,6 +930,9 @@ async function sendMsg(text) {
     area.insertAdjacentHTML("beforeend",bubble("assistant",d.reply,new Date().toISOString()));
     scrollBot();
     if (d.msgCount !== undefined && kid.age <= 1) updateGrowthBar(d.msgCount);
+    if (d.storyPrompt) showMomentCard('story');
+if (d.songPrompt) showMomentCard('song');
+
 
   } catch(e) {
     hideTyping();
