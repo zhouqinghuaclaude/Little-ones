@@ -721,6 +721,17 @@ function showBirthMoment(kid, role, ageRange) {
     }, 500);
   }, 2500);
 }
+function updateGrowthBar(count) {
+  const bar = document.getElementById("growthBar");
+  if (!bar) return;
+  if (kid.age > 1) { bar.style.display = "none"; return; }
+  bar.style.display = "block";
+  if (count < 3) bar.textContent = `💕 再聊${3-count}条，宝宝会发出声音`;
+  else if (count < 5) bar.textContent = `💕 再聊${5-count}条，宝宝会咿呀学语`;
+  else if (count < 10) bar.textContent = `💕 再聊${10-count}条，宝宝会叫妈妈/爸爸`;
+  else if (count < 15) bar.textContent = `💕 再聊${15-count}条，宝宝会说短句了`;
+  else bar.textContent = `💕 宝宝越来越会说话了～`;
+}
 
   function setAgeRangeBtn(id) {
   ['age0','age1','age2','age3'].forEach(i => {
@@ -856,6 +867,8 @@ async function sendMsg(text) {
     hideTyping();
     area.insertAdjacentHTML("beforeend",bubble("assistant",d.reply,new Date().toISOString()));
     scrollBot();
+    if (d.msgCount !== undefined && kid.age <= 1) updateGrowthBar(d.msgCount);
+
   } catch(e) {
     hideTyping();
     area.insertAdjacentHTML("beforeend",bubble("assistant",`（${kid.name}没有回应，请稍后再试）`,new Date().toISOString()));
