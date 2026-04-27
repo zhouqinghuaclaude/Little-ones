@@ -164,7 +164,16 @@ app.post("/api/kids", auth, async (req, res) => {
   "INSERT INTO kids (user_id, name, gender, age, parent_role, birthday, personality, avatar, age_mode) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *",
   [req.user.id, name.trim(), gender || "boy", finalAge, parent_role || "mom", birthday || null, personality || "lively", avatar || null, age_mode || "fixed"]
 );
-  res.json(r.rows[0]);
+const newKid = r.rows[0];
+const ageInDays = birthday ? Math.floor((Date.now() - new Date(birthday)) / 86400000) : (finalAge * 365);
+const firstMsg = ageInDays < 30 ? `抱..抱..宝.. *小手乱动*` :
+  finalAge <= 1 ? `你去哪了，我刚刚在想你` :
+  finalAge <= 3 ? `你去哪了，我刚刚在想你` :
+  finalAge <= 6 ? `你来啦！我有个事情…` :
+  `你来了，我一直在这等你`;
+await db.query("INSERT INTO messages (kid_id, role, content) VALUES ($1,'assistant',$2)", [newKid.id, firstMsg]);
+res.json(newKid);
+
 });
 
 app.delete("/api/kids/:id", auth, async (req, res) => {
