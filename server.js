@@ -391,7 +391,13 @@ if (kid.age_mode === 'natural' && ageInDays < 365) {
       "INSERT INTO messages (kid_id, role, content) VALUES ($1,'assistant',$2) RETURNING id",
       [kid.id, reply]
     );
-  res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: msgCount + 1 });
+  const totalCount = msgCount + 1;
+const storyPrompt = kid.age <= 1 && totalCount === 5;
+const songPrompt = kid.age <= 1 && totalCount === 15;
+const storyRepeat = kid.age <= 1 && totalCount > 15 && (totalCount - 5) % 20 === 0;
+const songRepeat = kid.age <= 1 && totalCount > 25 && (totalCount - 15) % 20 === 0;
+res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: totalCount, storyPrompt: storyPrompt || storyRepeat, songPrompt: songPrompt || songRepeat });
+
 
   } catch (e) {
     console.error(e);
