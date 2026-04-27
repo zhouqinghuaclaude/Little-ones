@@ -686,8 +686,9 @@ async function nextCreateStep() {
         avatar: null
       })});
       document.getElementById("homeScreen").classList.remove("empty-mode");
-      await loadKids();
-      showBirthMoment(newKid, createData.role || "妈妈", createData.ageRange || "3-6");
+await loadKids();
+openChat(newKid);
+
     } catch(e) {
       err.textContent = e.message || "创建失败";
     }
