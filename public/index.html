@@ -788,8 +788,10 @@ async function openChat(k) {
   document.getElementById("msgsArea").innerHTML=`<div style="text-align:center;padding:40px;color:var(--sub);font-size:24px">⟳</div>`;
   try {
     const msgs=await req(`/api/kids/${k.id}/messages`);
-    renderMsgs(msgs.length?msgs:[{role:"assistant",content:`${k.parent_role}～（跑过来）你找我干嘛呀？`,created_at:new Date().toISOString()}]);
-  } catch { renderMsgs([{role:"assistant",content:`${k.parent_role}，你来了！`,created_at:new Date().toISOString()}]); }
+    renderMsgs(msgs);
+
+} catch { renderMsgs([]); }
+
 }
 
 function renderMsgs(msgs) {
