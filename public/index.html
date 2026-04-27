@@ -910,7 +910,8 @@ function bubble(role, content, time) {
   const t=new Date(time||Date.now()).toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"});
   const boy=kid?.gender==="boy";
   const faceBg=boy?"linear-gradient(135deg,#D6EAF8,#AED6F1)":"linear-gradient(135deg,#FDEBD0,#FADBD8)";
-  const faceEmoji=boy?"👦":"👧";
+ const faceEmoji=kid?.avatar ? kid.avatar : getBudAvatar(kid?.gender);
+ 
   const parentEmoji=kid?.parent_role?.includes("爸爸")?"👨":"👩";
   if(role==="user") {
     return `<div style="display:flex;flex-direction:row-reverse;align-items:flex-end;gap:8px;animation:fadeIn .25s ease">
@@ -937,7 +938,8 @@ function showTyping() {
   const area=document.getElementById("msgsArea");
   const boy=kid?.gender==="boy";
   const bg=boy?"linear-gradient(135deg,#D6EAF8,#AED6F1)":"linear-gradient(135deg,#FDEBD0,#FADBD8)";
-  const f=boy?"👦":"👧";
+  const f=kid?.avatar ? kid.avatar : getBudAvatar(kid?.gender);
+
   const d=document.createElement("div");
   d.id="typingRow"; d.className="typing-row";
   d.innerHTML=`<div style="width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;background:${bg}">${f}</div>
