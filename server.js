@@ -391,7 +391,8 @@ if (kid.age_mode === 'natural' && ageInDays < 365) {
       "INSERT INTO messages (kid_id, role, content) VALUES ($1,'assistant',$2) RETURNING id",
       [kid.id, reply]
     );
-    res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays });
+  res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: msgCount + 1 });
+
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "No response, please try again" });
