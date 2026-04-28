@@ -402,7 +402,7 @@ if (message.includes('📖') && message.includes('讲故事')) {
 const storyPrompt = kid.age <= 1 && (reply.includes('故') && reply.includes('事'));
 const songPrompt = kid.age <= 1 && (reply.includes('歌') || reply.includes('唱'));
 
-res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: totalCount, storyPrompt: storyPrompt || storyRepeat, songPrompt: songPrompt || songRepeat });
+res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: totalCount, storyPrompt: storyPrompt, songPrompt: songPrompt });
 
 
   } catch (e) {
