@@ -1375,7 +1375,9 @@ let giftUsed = 0;
 let giftLimit = 1;
 alert("openGiftShop called");
   async function openGiftShop() {
+  alert("in openGiftShop");
   if (!kid) return;
+
 
   giftActiveCat = "free";
   document.getElementById("giftSuccessBanner").classList.remove("show");
