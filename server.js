@@ -329,6 +329,8 @@ const msgCount = parseInt(msgCountResult.rows[0].count) || 0;
   // ─────────────────────────────────────────────────────────────────────────
 
   const ageInDays = kid.birthday ? Math.floor((Date.now() - new Date(kid.birthday)) / 86400000) : (kid.age * 365);
+  console.log(`kid age: ${kid.age}, ageInDays: ${ageInDays}, age_mode: ${kid.age_mode}`);
+
 const personalityMap = {
   lively: "你活泼好动、充满好奇心，说话总是兴奋的",
   quiet: "你温柔细腻、话不多但很贴心，说话轻声细语",
