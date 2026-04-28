@@ -505,11 +505,24 @@ function showToast(msg) {
   setTimeout(() => el.classList.remove("show"), 2500);
 }
 function req(path, opts={}) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
   return fetch(API+path, {
     headers:{"Content-Type":"application/json",...(token?{Authorization:`Bearer ${token}`}:{})},
+    signal: controller.signal,
     ...opts
-  }).then(async r => { const d=await r.json(); if(!r.ok) throw new Error(d.error||"请求失败"); return d; });
+  }).then(async r => { 
+    clearTimeout(timeout);
+    const d=await r.json(); 
+    if(!r.ok) throw new Error(d.error||"请求失败"); 
+    return d; 
+  }).catch(e => {
+    clearTimeout(timeout);
+    if (e.name === 'AbortError') throw new Error("响应超时，请重试");
+    throw e;
+  });
 }
+
 function autoResize(el) { el.style.height="auto"; el.style.height=Math.min(el.scrollHeight,100)+"px"; }
 
 function toggleReg() {
