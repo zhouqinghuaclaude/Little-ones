@@ -176,6 +176,37 @@ res.json(newKid);
 
 });
 
+app.patch("/api/kids/:id/settings", auth, async (req, res) => {
+  const { birthday, personality, personality_custom, age_mode } = req.body;
+  const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
+  const kid = kidResult.rows[0];
+  if (!kid) return res.status(404).json({ error: "孩子不存在" });
+
+  // 生日设置（锁定后不可更改）
+  if (birthday && !kid.birthday_locked) {
+    const born = new Date(birthday);
+    const today = new Date();
+    let age = today.getFullYear() - born.getFullYear();
+    const m = today.getMonth() - born.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < born.getDate())) age--;
+    await db.query("UPDATE kids SET birthday=$1, age=$2, birthday_locked=true WHERE id=$3", [birthday, age, kid.id]);
+  }
+
+  // 性格设置
+  if (personality) {
+    await db.query("UPDATE kids SET personality=$1, personality_custom=$2 WHERE id=$3", [personality, personality_custom || null, kid.id]);
+  }
+
+  // 成长模式切换（只允许一次，付费功能）
+  if (age_mode && age_mode !== kid.age_mode) {
+    if (kid.age_mode_locked) return res.status(400).json({ error: "成长模式只能切换一次" });
+    await db.query("UPDATE kids SET age_mode=$1, age_mode_locked=true WHERE id=$2", [age_mode, kid.id]);
+  }
+
+  const updated = await db.query("SELECT * FROM kids WHERE id=$1", [kid.id]);
+  res.json(updated.rows[0]);
+});
+
 app.delete("/api/kids/:id", auth, async (req, res) => {
   await db.query("DELETE FROM kids WHERE id = $1 AND user_id = $2", [req.params.id, req.user.id]);
   res.json({ ok: true });
