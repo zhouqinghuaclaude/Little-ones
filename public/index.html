@@ -1376,7 +1376,8 @@ let giftLimit = 1;
 async function openGiftShop() {
   if (!kid) return;
   giftActiveCat = "free";
-  document.getElementById("giftSuccessBanner").classList.remove("show");
+  document.getElementById("giftSuccessBanner")?.classList.remove("show");
+
   document.getElementById("giftOverlay").classList.add("open");
   alert(document.getElementById("giftOverlay").className);
 
