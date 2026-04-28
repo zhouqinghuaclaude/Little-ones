@@ -409,7 +409,9 @@ input, textarea { font-family: inherit; }
     </div>
     <button onclick="openBondProfile()" style="padding:7px 13px;border-radius:20px;background:var(--bg);border:1.5px solid var(--border);color:var(--p);font-size:13px;font-weight:700;flex-shrink:0;margin-right:4px" id="bondHeaderBtn">💫 亲密</button>
     <button onclick="event.stopImmediatePropagation();event.stopPropagation();event.preventDefault();openGiftShop();" style="padding:7px 13px;border-radius:20px;background:var(--bg);border:1.5px solid var(--border);color:var(--p);font-size:13px;font-weight:700;flex-shrink:0;margin-right:4px">🎁 礼物</button>
-    <button onclick="openDiary(kid)" style="padding:7px 13px;border-radius:20px;background:var(--bg);border:1.5px solid var(--border);color:var(--p);font-size:13px;font-weight:700;flex-shrink:0">📖 日记</button>
+    <button onclick="openDiary(kid)" style="padding:7px 13px;border-radius:20px;background:var(--bg);border:1.5px solid var(--border);color:var(--p);font-size:13px;font-weight:700;flex-shrink:0;margin-right:4px">📖 日记</button>
+<button onclick="openSettings(kid)" style="padding:7px 13px;border-radius:20px;background:var(--bg);border:1.5px solid var(--border);color:var(--p);font-size:13px;font-weight:700;flex-shrink:0">⚙️ 设置</button>
+
   </div>
   <div class="msgs-area" id="msgsArea"></div>
   <div class="quick-bar" id="quickBar"></div>
@@ -436,6 +438,42 @@ input, textarea { font-family: inherit; }
     <div id="giftSuccessBanner" class="gift-success-banner"></div>
     <div class="gift-tabs" id="giftTabs"></div>
     <div class="gift-grid" id="giftGrid"></div>
+  </div>
+</div>
+<div id="settingsScreen" class="screen">
+  <div class="page-header">
+    <button class="back-btn" onclick="showScreen('chatScreen')">‹</button>
+    <div class="page-title">高级设置 ⚙️</div>
+  </div>
+  <div class="create-body">
+    <label class="field-label">📅 精准生日</label>
+    <input id="settingsBirthday" class="field-input" type="date">
+    <div id="birthdayLockMsg" style="font-size:12px;color:var(--sub);margin-top:6px;display:none">🔒 生日已锁定，属相星座已确定</div>
+    <div id="zodiacPreview" style="font-size:13px;color:var(--p);margin-top:8px;font-weight:700"></div>
+
+    <label class="field-label" style="margin-top:20px">🌱 成长模式</label>
+    <div id="ageModeDisplay" style="font-size:13px;color:var(--sub);margin-bottom:8px"></div>
+    <div class="choice-row">
+      <button class="choice-btn" id="sNatural" onclick="selectAgeMode('natural')">🌱 自然成长</button>
+      <button class="choice-btn" id="sFixed" onclick="selectAgeMode('fixed')">📌 冻龄</button>
+    </div>
+    <div id="ageModeLockMsg" style="font-size:12px;color:#E74C3C;margin-top:6px;display:none">⚠️ 成长模式只能切换一次，请谨慎选择</div>
+    <div id="ageModeNote" style="font-size:12px;color:var(--sub);margin-top:6px"></div>
+
+    <label class="field-label" style="margin-top:20px">✨ 性格设置</label>
+    <div class="choice-row" style="flex-wrap:wrap;gap:8px">
+      <button class="choice-btn" id="sLively" onclick="selectPersonality('lively')">活泼开朗</button>
+      <button class="choice-btn" id="sQuiet" onclick="selectPersonality('quiet')">文静乖巧</button>
+      <button class="choice-btn" id="sClever" onclick="selectPersonality('clever')">聪明好学</button>
+      <button class="choice-btn" id="sCustom" onclick="selectPersonality('custom')">💎 专属定制</button>
+    </div>
+    <div id="customPersonalityBox" style="display:none;margin-top:12px">
+      <textarea id="customPersonalityText" class="field-input" placeholder="描述孩子的专属性格，比如：喜欢恐龙、爱冒险、有点胆小..." style="min-height:80px;resize:none"></textarea>
+      <div style="font-size:12px;color:var(--p);margin-top:4px">💎 专属定制为付费功能</div>
+    </div>
+
+    <button class="primary-btn" style="margin-top:28px" onclick="saveSettings()">保存设置</button>
+    <div id="settingsMsg" style="text-align:center;margin-top:12px;font-size:13px;color:var(--p)"></div>
   </div>
 </div>
 
@@ -1006,6 +1044,109 @@ function formatDiaryDate(iso) {
   const h = String(d.getHours()).padStart(2, "0");
   const mi = String(d.getMinutes()).padStart(2, "0");
   return `${y}年${mo}月${day}日 ${h}:${mi}`;
+}
+let settingsKid = null;
+let selectedAgeMode = null;
+let selectedPersonality = null;
+
+function openSettings(k) {
+  settingsKid = k;
+  selectedAgeMode = k.age_mode || 'fixed';
+  selectedPersonality = k.personality || 'lively';
+  
+  // 生日
+  const birthdayInput = document.getElementById("settingsBirthday");
+  const birthdayLockMsg = document.getElementById("birthdayLockMsg");
+  if (k.birthday_locked) {
+    birthdayInput.value = k.birthday ? k.birthday.slice(0,10) : '';
+    birthdayInput.disabled = true;
+    birthdayLockMsg.style.display = 'block';
+  } else {
+    birthdayInput.value = k.birthday ? k.birthday.slice(0,10) : '';
+    birthdayInput.disabled = false;
+    birthdayLockMsg.style.display = 'none';
+    birthdayInput.oninput = () => updateZodiacPreview(birthdayInput.value);
+  }
+  updateZodiacPreview(k.birthday ? k.birthday.slice(0,10) : '');
+
+  // 成长模式
+  const lockMsg = document.getElementById("ageModeLockMsg");
+  const note = document.getElementById("ageModeNote");
+  const display = document.getElementById("ageModeDisplay");
+  display.textContent = k.age_mode === 'natural' ? '当前：自然成长 🌱' : '当前：冻龄 📌';
+  if (k.age_mode_locked) {
+    lockMsg.style.display = 'none';
+    note.textContent = '⚠️ 成长模式已切换过，无法再次更改';
+    document.getElementById("sNatural").disabled = true;
+    document.getElementById("sFixed").disabled = true;
+  } else {
+    lockMsg.style.display = 'block';
+    note.textContent = k.age_mode === 'natural' ? '「让时光停在这一刻 ✨ 将永远停留在当前年龄」' : '「让Ta慢慢长大 🌱 解开时光的锁，见证每一个珍贵的成长瞬间」';
+    document.getElementById("sNatural").disabled = false;
+    document.getElementById("sFixed").disabled = false;
+  }
+  document.getElementById("sNatural").className = 'choice-btn' + (selectedAgeMode === 'natural' ? ' on' : '');
+  document.getElementById("sFixed").className = 'choice-btn' + (selectedAgeMode === 'fixed' ? ' on' : '');
+
+  // 性格
+  ['sLively','sQuiet','sClever','sCustom'].forEach(id => {
+    document.getElementById(id).className = 'choice-btn';
+  });
+  const personalityMap = {lively:'sLively', quiet:'sQuiet', clever:'sClever', custom:'sCustom'};
+  if (personalityMap[selectedPersonality]) {
+    document.getElementById(personalityMap[selectedPersonality]).className = 'choice-btn on';
+  }
+  document.getElementById("customPersonalityBox").style.display = selectedPersonality === 'custom' ? 'block' : 'none';
+  if (k.personality_custom) document.getElementById("customPersonalityText").value = k.personality_custom;
+
+  showScreen("settingsScreen");
+}
+
+function updateZodiacPreview(birthday) {
+  const el = document.getElementById("zodiacPreview");
+  if (!birthday) { el.textContent = ''; return; }
+  const sign = getZodiacSign(birthday);
+  const cz = getChineseZodiac(birthday);
+  el.textContent = (cz ? cz.emoji + cz.name + ' · ' : '') + (sign ? sign.emoji + sign.name : '');
+}
+
+function selectAgeMode(mode) {
+  if (settingsKid?.age_mode_locked) return;
+  selectedAgeMode = mode;
+  document.getElementById("sNatural").className = 'choice-btn' + (mode === 'natural' ? ' on' : '');
+  document.getElementById("sFixed").className = 'choice-btn' + (mode === 'fixed' ? ' on' : '');
+}
+
+function selectPersonality(p) {
+  selectedPersonality = p;
+  ['sLively','sQuiet','sClever','sCustom'].forEach(id => {
+    document.getElementById(id).className = 'choice-btn';
+  });
+  const map = {lively:'sLively', quiet:'sQuiet', clever:'sClever', custom:'sCustom'};
+  if (map[p]) document.getElementById(map[p]).className = 'choice-btn on';
+  document.getElementById("customPersonalityBox").style.display = p === 'custom' ? 'block' : 'none';
+}
+
+async function saveSettings() {
+  const msg = document.getElementById("settingsMsg");
+  msg.textContent = '保存中...';
+  try {
+    const birthday = document.getElementById("settingsBirthday").value;
+    const personalityCustom = document.getElementById("customPersonalityText").value.trim();
+    const body = {
+      personality: selectedPersonality,
+      personality_custom: personalityCustom || null,
+    };
+    if (birthday && !settingsKid.birthday_locked) body.birthday = birthday;
+    if (selectedAgeMode !== settingsKid.age_mode && !settingsKid.age_mode_locked) body.age_mode = selectedAgeMode;
+    
+    const updated = await req(`/api/kids/${settingsKid.id}/settings`, {method:'PATCH', body:JSON.stringify(body)});
+    settingsKid = {...settingsKid, ...updated};
+    msg.textContent = '✅ 保存成功';
+    setTimeout(() => { msg.textContent = ''; showScreen('chatScreen'); }, 1500);
+  } catch(e) {
+    msg.textContent = '❌ ' + (e.message || '保存失败');
+  }
 }
 
 async function openDiary(k) {
