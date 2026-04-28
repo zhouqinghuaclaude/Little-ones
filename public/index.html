@@ -972,6 +972,7 @@ if (d.songPrompt) showMomentCard('song');
   } catch(e) {
     hideTyping();
     area.insertAdjacentHTML("beforeend",bubble("assistant",`（${kid.name}没有回应，请稍后再试）`,new Date().toISOString()));
+
     scrollBot();
   } finally { document.getElementById("sendBtn").disabled=false; }
 }
