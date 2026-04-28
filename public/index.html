@@ -1375,14 +1375,15 @@ let giftUsed = 0;
 let giftLimit = 1;
 alert("openGiftShop called");
   async function openGiftShop() {
-  alert("kid: " + JSON.stringify(kid));
-
+  alert("step1");
   if (!kid) return;
 
 
   giftActiveCat = "free";
   document.getElementById("giftSuccessBanner").classList.remove("show");
   document.getElementById("giftOverlay").classList.add("open");
+    alert("step2");
+
   await refreshGiftCounter();
   renderGiftTabs();
   renderGiftGrid();
