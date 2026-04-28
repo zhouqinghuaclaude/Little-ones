@@ -1404,7 +1404,7 @@ async function refreshGiftCounter() {
     giftUsed = todayFree;
     // Default limit; will be updated on send response
     updateGiftCounterUI();
-  } catch(e) { /* ignore */ }
+  } catch(e) { alert("refreshGiftCounter error: " + e.message); }
 }
 
 function updateGiftCounterUI() {
