@@ -457,8 +457,7 @@ input, textarea { font-family: inherit; }
       <button class="choice-btn" id="sNatural" onclick="selectAgeMode('natural')">🌱 自然成长</button>
       <button class="choice-btn" id="sFixed" onclick="selectAgeMode('fixed')">📌 冻龄</button>
     </div>
-    <div id="ageModeLockMsg" style="font-size:12px;color:#E74C3C;margin-top:6px;display:none">⚠️ 成长模式只能切换一次，请谨慎选择</div>
-    <div id="ageModeNote" style="font-size:12px;color:var(--sub);margin-top:6px"></div>
+    
 
     <label class="field-label" style="margin-top:20px">✨ 性格设置</label>
     <div class="choice-row" style="flex-wrap:wrap;gap:8px">
@@ -1070,18 +1069,15 @@ function openSettings(k) {
   updateZodiacPreview(k.birthday ? k.birthday.slice(0,10) : '');
 
   // 成长模式
-  const lockMsg = document.getElementById("ageModeLockMsg");
-  const note = document.getElementById("ageModeNote");
+  
   const display = document.getElementById("ageModeDisplay");
   display.textContent = k.age_mode === 'natural' ? '当前：自然成长 🌱' : '当前：冻龄 📌';
   if (k.age_mode_locked) {
-    lockMsg.style.display = 'none';
-    note.textContent = '⚠️ 成长模式已切换过，无法再次更改';
+    
     document.getElementById("sNatural").disabled = true;
     document.getElementById("sFixed").disabled = true;
   } else {
-    lockMsg.style.display = 'block';
-    note.textContent = k.age_mode === 'natural' ? '「让时光停在这一刻 ✨ 将永远停留在当前年龄」' : '「让Ta慢慢长大 🌱 解开时光的锁，见证每一个珍贵的成长瞬间」';
+    
     document.getElementById("sNatural").disabled = false;
     document.getElementById("sFixed").disabled = false;
   }
