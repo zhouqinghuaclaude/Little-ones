@@ -1377,21 +1377,16 @@ const GIFT_CATEGORIES = [
 var giftActiveCat = "free";
 var giftUsed = 0;
 var giftLimit = 1;
-
-
 async function openGiftShop() {
-  alert("in function");
   if (!kid) return;
-  alert("kid ok");
   giftActiveCat = "free";
-  alert("cat ok");
-
   document.getElementById("giftSuccessBanner")?.classList.remove("show");
   document.getElementById("giftOverlay").classList.add("open");
   await refreshGiftCounter();
   renderGiftTabs();
   renderGiftGrid();
 }
+
 
 function closeGiftShop(e) {
   if (e && e.target !== document.getElementById("giftOverlay")) return;
@@ -1429,7 +1424,6 @@ function renderGiftTabs() {
 function switchGiftTab(catId) {
   giftActiveCat = catId;
   document.getElementById("giftSuccessBanner").classList.remove("show");
-  alert("banner ok");
 
   renderGiftTabs();
   renderGiftGrid();
