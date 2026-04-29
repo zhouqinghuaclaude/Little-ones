@@ -1429,6 +1429,8 @@ function renderGiftTabs() {
 function switchGiftTab(catId) {
   giftActiveCat = catId;
   document.getElementById("giftSuccessBanner").classList.remove("show");
+  alert("banner ok");
+
   renderGiftTabs();
   renderGiftGrid();
 }
