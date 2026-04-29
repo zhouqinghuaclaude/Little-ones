@@ -1453,7 +1453,7 @@ async function refreshGiftCounter() {
     if (!giftLimit) giftLimit = 1;
     // Default limit; will be updated on send response
     updateGiftCounterUI();
-  } catch(e) { alert("refreshGiftCounter error: " + e.message); }
+  } catch(e) { }
 }
 
 function updateGiftCounterUI() {
@@ -1479,7 +1479,7 @@ function switchGiftTab(catId) {
 
 function renderGiftGrid() {
   const cat = GIFT_CATEGORIES.find(c => c.id === giftActiveCat);
- if (!cat) { alert("cat not found: " + giftActiveCat); return; } 
+ if (!cat) { return; } 
   const isFree = cat.type === "free";
   const limitReached = isFree && giftUsed >= giftLimit;
   const level = cat.gift_level || "free";
