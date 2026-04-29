@@ -1386,7 +1386,6 @@ async function openGiftShop() {
   document.getElementById("giftOverlay").classList.add("open");
   await refreshGiftCounter();
   renderGiftTabs();
-alert(document.getElementById("giftTabs").innerHTML.substring(0,100));
 renderGiftGrid();
 
 
@@ -1410,7 +1409,7 @@ async function refreshGiftCounter() {
     if (!giftLimit) giftLimit = 1;
     // Default limit; will be updated on send response
     updateGiftCounterUI();
-  } catch(e) { alert("refreshGiftCounter error: " + e.message); }
+  } catch(e) { }
 }
 
 function updateGiftCounterUI() {
@@ -1421,13 +1420,12 @@ function renderGiftTabs() {
   try {
     const tabs = document.getElementById("giftTabs");
     const cats = GIFT_CATEGORIES;
-alert("cats length: " + cats.length);
 
     tabs.innerHTML = cats.map(cat =>
       `<button class="gift-tab${cat.id === giftActiveCat ? " active" : ""}"
         onclick="switchGiftTab('${cat.id}')">${cat.label}</button>`
     ).join("");
-  } catch(e) { alert("tabs error: " + e.message); }
+  } catch(e) { }
 }
   
 
@@ -1441,7 +1439,7 @@ function switchGiftTab(catId) {
 
 function renderGiftGrid() {
   const cat = GIFT_CATEGORIES.find(c => c.id === giftActiveCat);
- if (!cat) { alert("cat not found: " + giftActiveCat); return; } 
+ if (!cat) { return; } 
   const isFree = cat.type === "free";
   const limitReached = isFree && giftUsed >= giftLimit;
   const level = cat.gift_level || "free";
