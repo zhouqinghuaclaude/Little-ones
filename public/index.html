@@ -1439,19 +1439,29 @@ async function openBondProfile() {
     const data = await req(`/api/kids/${kid.id}/bond`);
     const bl = getBondLevel(data.bond_score);
     const prog = getBondProgress(data.bond_score);
+    
+    const emotionTexts = {
+  "初遇萌芽": `你和${kid.name}的缘分刚刚开始 🌱`,
+  "沁润青芽": `你和${kid.name}的爱正在悄悄生长 💧`,
+  "爱启灵芽": `你和${kid.name}的灵魂开始相互感应 ✨`,
+  "心芽同频": `你和${kid.name}的心跳开始同频 💫`,
+  "心芽共生": `你和${kid.name}已经彼此依存，难舍难分 🌟`,
+  "心芽永恒": `你和${kid.name}的爱已超越时空 💎`,
+};
+    
     document.getElementById("bondCompanionText").textContent = `${kid.name}已陪伴你${data.companion_days}天`;
     document.getElementById("bondLevelBadge").textContent = `${bl.emoji} ${bl.name}`;
-    document.getElementById("bondScoreVal").textContent = data.bond_score;
+    document.getElementById("bondEmotionText").textContent = emotionTexts[bl.name] || `继续陪伴${kid.name}吧 💕`;
     document.getElementById("bondStreakVal").textContent = `🔥${data.streak_days}`;
     document.getElementById("bondDaysVal").textContent = data.companion_days;
     document.getElementById("bondProgressFill").style.width = prog.pct + "%";
-    document.getElementById("bondProgressLabel").textContent = `${bl.emoji}${bl.name} · ${data.bond_score}分`;
     document.getElementById("bondProgressNext").textContent = prog.nextScore
-      ? `距${prog.nextName} ${prog.nextScore - data.bond_score}分`
-      : "已达最高等级 👑";
+      ? `继续陪伴${kid.name}，你们的连接正在加深 🌱`
+      : `你们已达到最深的羁绊 💎`;
     document.getElementById("bondOverlay").classList.add("open");
   } catch(e) { showToast("加载亲密度失败"); }
 }
+
 
 function closeBondProfile(e) {
   if (e && e.target !== document.getElementById("bondOverlay")) return;
