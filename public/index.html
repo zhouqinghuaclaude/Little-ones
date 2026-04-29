@@ -139,6 +139,18 @@ input, textarea { font-family: inherit; }
   padding-left: 4px;
   min-width: 0;
 }
+/* Row 2b: growth bar — subtle full-width text line below status */
+.chat-header-row2b {
+  display: none;
+  align-items: center;
+  padding-left: 4px;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 /* Row 3: nav buttons */
 .chat-header-row3 {
   display: flex;
@@ -499,8 +511,9 @@ z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden;
     <!-- Row 2: age / status info -->
     <div class="chat-header-row2">
       <div class="chat-kid-status"><span id="chatStatus">在线</span></div>
-      <div id="growthBar" style="display:none;font-size:11px;color:#9B59B6;margin-left:6px"></div>
     </div>
+    <!-- Row 2b: growth bar -->
+    <div class="chat-header-row2b" id="growthBar"></div>
     <!-- Row 3: scrollable nav buttons -->
     <div class="chat-header-row3">
       <button onclick="openBondProfile()" class="chat-nav-btn" id="bondHeaderBtn">💫 亲密</button>
@@ -1024,7 +1037,7 @@ function getBudAvatar(gender) {
   const bar = document.getElementById("growthBar");
   if (!bar) return;
   if (kid.age > 1) { bar.style.display = "none"; return; }
-  bar.style.display = "block";
+  bar.style.display = "flex";
   if (count < 3) bar.textContent = `💕 再聊${3-count}条，宝宝会发出声音`;
   else if (count < 5) bar.textContent = `💕 再聊${5-count}条，宝宝会咿呀学语`;
   else if (count < 10) bar.textContent = `💕 再聊${10-count}条，宝宝会叫妈妈/爸爸`;
