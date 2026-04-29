@@ -181,6 +181,8 @@ input, textarea { font-family: inherit; }
 
 /* Gift Shop */
 .gift-overlay { display: none; position: fixed; inset: 0; background: rgba(44,22,84,0.45);
+  z-index: 9999; align-items: flex-end; justify-content: center; }
+
   z-index: 200; align-items: flex-end; justify-content: center; }
 .gift-overlay.open { display: flex; }
 .gift-modal { background: var(--bg); border-radius: 28px 28px 0 0; width: 100%; max-width: 520px;
@@ -1376,22 +1378,13 @@ let giftLimit = 1;
 
 async function openGiftShop() {
   if (!kid) return;
-  alert("1");
-  try { giftActiveCat = "free"; alert("2ok"); } catch(e) { alert("2err: "+e.message); }
-
-  alert("2");
+  giftActiveCat = "free";
   document.getElementById("giftSuccessBanner")?.classList.remove("show");
-  alert("3");
   document.getElementById("giftOverlay").classList.add("open");
-  alert("4");
   await refreshGiftCounter();
-  alert("5");
   renderGiftTabs();
-  alert("6");
   renderGiftGrid();
-  alert("7");
 }
-
 
 function closeGiftShop(e) {
   if (e && e.target !== document.getElementById("giftOverlay")) return;
