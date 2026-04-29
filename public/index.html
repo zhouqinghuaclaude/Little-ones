@@ -587,26 +587,20 @@ z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden;
   <div class="bond-modal" onclick="event.stopPropagation()">
     <div class="bond-modal-handle"></div>
     <div class="bond-companion-text" id="bondCompanionText">已陪伴你0天</div>
-    <div style="display:flex;justify-content:center;margin-bottom:20px">
-      <div class="bond-level-badge" id="bondLevelBadge">☁️ 初识</div>
+    <div style="display:flex;justify-content:center;margin-bottom:8px">
+      <div class="bond-level-badge" id="bondLevelBadge">🌱 初遇萌芽</div>
     </div>
+    <div style="text-align:center;font-size:13px;color:var(--sub);margin-bottom:16px" id="bondEmotionText">你们的缘分刚刚开始 💕</div>
     <div class="bond-progress-wrap">
-      <div class="bond-progress-label">
-        <span id="bondProgressLabel">亲密值进度</span>
-        <span id="bondProgressNext"></span>
-      </div>
       <div class="bond-progress-bar">
         <div class="bond-progress-fill" id="bondProgressFill" style="width:0%"></div>
       </div>
+      <div style="text-align:center;font-size:12px;color:var(--sub);margin-top:6px" id="bondProgressNext"></div>
     </div>
     <div class="bond-stats">
       <div class="bond-stat">
-        <div class="bond-stat-value" id="bondScoreVal">0</div>
-        <div class="bond-stat-label">亲密值</div>
-      </div>
-      <div class="bond-stat">
         <div class="bond-stat-value" id="bondStreakVal">🔥0</div>
-        <div class="bond-stat-label">连续陪伴天数</div>
+        <div class="bond-stat-label">连续陪伴</div>
       </div>
       <div class="bond-stat">
         <div class="bond-stat-value" id="bondDaysVal">0</div>
