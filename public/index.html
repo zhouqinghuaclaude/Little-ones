@@ -1414,10 +1414,7 @@ function renderGiftTabs() {
   } catch(e) { alert("tabs error: " + e.message); }
 }
 
-    `<button class="gift-tab${cat.id === giftActiveCat ? " active" : ""}"
-      onclick="switchGiftTab('${cat.id}')">${cat.label}</button>`
-  ).join("");
-}
+   
 
 function switchGiftTab(catId) {
   giftActiveCat = catId;
