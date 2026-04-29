@@ -1406,17 +1406,15 @@ function updateGiftCounterUI() {
 
 function renderGiftTabs() {
   try {
-  const tabs = document.getElementById("giftTabs");
-  const cats = window.GIFT_CATEGORIES || [];
-tabs.innerHTML = cats.map(cat =>
-
-    `<button class="gift-tab${cat.id === giftActiveCat ? " active" : ""}"
-      onclick="switchGiftTab('${cat.id}')">${cat.label}</button>`
-  ).join("");
+    const tabs = document.getElementById("giftTabs");
+    const cats = window.GIFT_CATEGORIES || [];
+    tabs.innerHTML = cats.map(cat =>
+      `<button class="gift-tab${cat.id === giftActiveCat ? " active" : ""}"
+        onclick="switchGiftTab('${cat.id}')">${cat.label}</button>`
+    ).join("");
   } catch(e) { alert("tabs error: " + e.message); }
 }
-
-   
+  
 
 function switchGiftTab(catId) {
   giftActiveCat = catId;
