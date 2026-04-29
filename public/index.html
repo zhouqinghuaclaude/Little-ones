@@ -181,10 +181,11 @@ input, textarea { font-family: inherit; }
 
 /* Gift Shop */
 .gift-overlay { display: none; position: fixed; inset: 0; background: rgba(44,22,84,0.45);
-z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden; }
+z-index: 9999; align-items: flex-end; justify-content: center; overflow: visible; }
 .gift-overlay.open { display: flex !important; }
 .gift-modal { background: var(--bg); border-radius: 28px 28px 0 0; width: 100%; max-width: 520px;
-  max-height: 88vh; display: flex; flex-direction: column;
+  max-height: 70vh; min-height: 400px;
+ display: flex; flex-direction: column;
   box-shadow: 0 -8px 40px rgba(155,89,182,0.22); animation: slideUp .28s ease;
   position: relative; bottom: 0; }
 
