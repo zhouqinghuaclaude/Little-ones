@@ -1385,8 +1385,8 @@ async function openGiftShop() {
   document.getElementById("giftSuccessBanner")?.classList.remove("show");
   document.getElementById("giftOverlay").classList.add("open");
   await refreshGiftCounter();
-  document.getElementById("giftTabs").innerHTML = "<button style='background:red;color:white;padding:10px'>直接写入测试</button>";
-document.getElementById("giftGrid").innerHTML = "<div style='background:blue;color:white;padding:20px'>grid测试</div>";
+  renderGiftTabs();
+renderGiftGrid();
 
 }
 
