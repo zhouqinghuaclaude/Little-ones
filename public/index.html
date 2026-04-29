@@ -1367,9 +1367,11 @@ async function openGiftShop() {
   document.getElementById("giftSuccessBanner")?.classList.remove("show");
  alert("step1"); 
   document.getElementById("giftOverlay").classList.add("open");
-  await refreshGiftCounter();
-  renderGiftTabs();
-  renderGiftGrid();
+  alert("before refresh");
+await refreshGiftCounter();
+alert("after refresh");
+renderGiftTabs();
+renderGiftGrid();
 }
 
 
