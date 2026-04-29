@@ -1387,6 +1387,7 @@ async function refreshGiftCounter() {
       return g.gift_type === "free" && g.created_at && g.created_at.slice(0, 10) === today;
     }).length;
     giftUsed = todayFree;
+    if (!giftLimit) giftLimit = 1;
     // Default limit; will be updated on send response
     updateGiftCounterUI();
   } catch(e) { alert("refreshGiftCounter error: " + e.message); }
