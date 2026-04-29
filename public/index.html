@@ -190,7 +190,9 @@ input, textarea { font-family: inherit; }
 
 .gift-modal { background: var(--bg); border-radius: 28px 28px 0 0; width: 100%; max-width: 520px;
   max-height: 88vh; display: flex; flex-direction: column;
-  box-shadow: 0 -8px 40px rgba(155,89,182,0.22); animation: slideUp .28s ease; }
+  box-shadow: 0 -8px 40px rgba(155,89,182,0.22); animation: slideUp .28s ease;
+  position: relative; bottom: 0; }
+
 @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
 .gift-modal-header { padding: 18px 20px 10px; display: flex; align-items: center;
   justify-content: space-between; border-bottom: 1px solid var(--border); flex-shrink: 0; }
