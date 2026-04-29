@@ -1295,6 +1295,8 @@ async function openBondProfile() {
 function closeBondProfile(e) {
   if (e && e.target !== document.getElementById("bondOverlay")) return;
   document.getElementById("bondOverlay").classList.remove("open");
+  alert(document.getElementById("giftOverlay").classList.toString());
+
 }
 
 // ── Gift Shop ──────────────────────────────────────────────────────────────
