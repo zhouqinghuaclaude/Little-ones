@@ -286,19 +286,18 @@ const msgCount = parseInt(msgCountResult.rows[0].count) || 0;
   const todayStr = new Date().toISOString().slice(0, 10);
   const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
   const lastChatDate = kid.last_chat_date ? String(kid.last_chat_date).slice(0, 10) : null;
-
-  let bondDelta = 2; // base per message
+let bondDelta = 1; // base per message
   let newStreakDays = kid.streak_days || 0;
   let isFirstChatToday = false;
 
   if (lastChatDate !== todayStr) {
     // First chat of today
     isFirstChatToday = true;
-    bondDelta += 3;
+    bondDelta += 2;
     if (lastChatDate === yesterdayStr) {
       // Streak continues
       newStreakDays = (kid.streak_days || 0) + 1;
-      bondDelta += 5;
+      bondDelta += 3;
     } else if (lastChatDate === null) {
       // Very first chat ever
       newStreakDays = 1;
@@ -312,15 +311,17 @@ const msgCount = parseInt(msgCountResult.rows[0].count) || 0;
   if (kid.birthday) {
     const bday = String(kid.birthday).slice(5, 10); // MM-DD
     const todayMMDD = todayStr.slice(5, 10);
-    if (bday === todayMMDD) bondDelta += 50;
+    if (bday === todayMMDD) bondDelta += 20;
   }
 
   // Gift bonus
-  if (pendingGiftLevel === "free") bondDelta += 5;
-  else if (pendingGiftLevel === "medium") bondDelta += 15;
-  else if (pendingGiftLevel === "premium") bondDelta += 30;
+  if (pendingGiftLevel === "free") bondDelta += 3;
+  else if (pendingGiftLevel === "medium") bondDelta += 8;
+  else if (pendingGiftLevel === "premium") bondDelta += 15;
 
   const newBondScore = (kid.bond_score || 0) + bondDelta;
+
+  
 
   await db.query(
     "UPDATE kids SET bond_score=$1, streak_days=$2, last_chat_date=$3 WHERE id=$4",
