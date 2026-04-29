@@ -1285,7 +1285,7 @@ function closeBondProfile(e) {
 
 // ── Gift Shop ──────────────────────────────────────────────────────────────
 
-const GIFT_CATEGORIES = [
+var GIFT_CATEGORIES = [
   {
     id: "free",
     label: "每日免费",
@@ -1407,7 +1407,9 @@ function updateGiftCounterUI() {
 function renderGiftTabs() {
   try {
   const tabs = document.getElementById("giftTabs");
-  tabs.innerHTML = GIFT_CATEGORIES.map(cat =>
+  const cats = window.GIFT_CATEGORIES || [];
+tabs.innerHTML = cats.map(cat =>
+
     `<button class="gift-tab${cat.id === giftActiveCat ? " active" : ""}"
       onclick="switchGiftTab('${cat.id}')">${cat.label}</button>`
   ).join("");
