@@ -1405,8 +1405,15 @@ function updateGiftCounterUI() {
 }
 
 function renderGiftTabs() {
+  try {
   const tabs = document.getElementById("giftTabs");
   tabs.innerHTML = GIFT_CATEGORIES.map(cat =>
+    `<button class="gift-tab${cat.id === giftActiveCat ? " active" : ""}"
+      onclick="switchGiftTab('${cat.id}')">${cat.label}</button>`
+  ).join("");
+  } catch(e) { alert("tabs error: " + e.message); }
+}
+
     `<button class="gift-tab${cat.id === giftActiveCat ? " active" : ""}"
       onclick="switchGiftTab('${cat.id}')">${cat.label}</button>`
   ).join("");
