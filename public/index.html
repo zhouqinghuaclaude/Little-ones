@@ -1420,7 +1420,9 @@ function updateGiftCounterUI() {
 function renderGiftTabs() {
   try {
     const tabs = document.getElementById("giftTabs");
-    const cats = window.GIFT_CATEGORIES || [];
+    const cats = GIFT_CATEGORIES;
+alert("cats length: " + cats.length);
+
     tabs.innerHTML = cats.map(cat =>
       `<button class="gift-tab${cat.id === giftActiveCat ? " active" : ""}"
         onclick="switchGiftTab('${cat.id}')">${cat.label}</button>`
