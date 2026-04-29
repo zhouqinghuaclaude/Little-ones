@@ -426,23 +426,7 @@ input, textarea { font-family: inherit; }
   </div>
 </div>
 
-<!-- Gift Shop Overlay -->
-<div id="giftOverlay" class="gift-overlay">
 
-
-  <div class="gift-modal" onclick="event.stopPropagation()">
-    <div class="gift-modal-header">
-      <div class="gift-modal-title">🎁 礼物商店</div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <div id="giftCounter" class="gift-counter">今日免费: 0/1</div>
-        <button class="gift-close-btn" onclick="closeGiftShop()">✕</button>
-      </div>
-    </div>
-    <div id="giftSuccessBanner" class="gift-success-banner"></div>
-    <div class="gift-tabs" id="giftTabs"></div>
-    <div class="gift-grid" id="giftGrid"></div>
-  </div>
-</div>
 <div id="settingsScreen" class="screen">
   <div class="page-header">
     <button class="back-btn" onclick="showScreen('chatScreen')">‹</button>
@@ -1489,6 +1473,22 @@ async function sendGift(emoji, name, type, level) {
   }
 }
 </script>
+<!-- Gift Shop Overlay -->
+<div id="giftOverlay" class="gift-overlay">
 
+
+  <div class="gift-modal" onclick="event.stopPropagation()">
+    <div class="gift-modal-header">
+      <div class="gift-modal-title">🎁 礼物商店</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div id="giftCounter" class="gift-counter">今日免费: 0/1</div>
+        <button class="gift-close-btn" onclick="closeGiftShop()">✕</button>
+      </div>
+    </div>
+    <div id="giftSuccessBanner" class="gift-success-banner"></div>
+    <div class="gift-tabs" id="giftTabs"></div>
+    <div class="gift-grid" id="giftGrid"></div>
+  </div>
+</div>
 </body>
 </html>
