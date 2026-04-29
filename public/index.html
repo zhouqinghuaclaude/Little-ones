@@ -1372,9 +1372,9 @@ const GIFT_CATEGORIES = [
 ];
 
 var giftActiveCat = "free";
+var giftUsed = 0;
+var giftLimit = 1;
 
-let giftUsed = 0;
-let giftLimit = 1;
 
 async function openGiftShop() {
   if (!kid) return;
