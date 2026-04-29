@@ -181,13 +181,13 @@ input, textarea { font-family: inherit; }
 
 /* Gift Shop */
 .gift-overlay { display: none; position: fixed; inset: 0; background: rgba(44,22,84,0.45);
-z-index: 9999; align-items: flex-end; justify-content: center; overflow: visible; }
+z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden; }
 .gift-overlay.open { display: flex !important; }
 .gift-modal { background: var(--bg); border-radius: 28px 28px 0 0; width: 100%; max-width: 520px;
   height: 70vh; min-height: 400px;
  display: flex; flex-direction: column;
   box-shadow: 0 -8px 40px rgba(155,89,182,0.22); animation: slideUp .28s ease;
-  position: relative; bottom: 0; }
+  position: relative; bottom: 0;overflow: hidden; }
 
 @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
 .gift-modal-header { padding: 18px 20px 10px; display: flex; align-items: center;
@@ -206,7 +206,7 @@ z-index: 9999; align-items: flex-end; justify-content: center; overflow: visible
 .gift-tab.active { background: var(--grad); color: white; border-color: transparent;
   box-shadow: 0 3px 10px rgba(155,89,182,0.3); }
 .gift-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
-  padding: 14px 16px 28px; overflow-y: auto; flex: 1; }
+  padding: 14px 16px 28px; overflow-y: auto; flex: 1; min-height: 200px; }
 .gift-card { background: white; border-radius: 18px; padding: 14px 10px 12px;
   display: flex; flex-direction: column; align-items: center; gap: 6px;
   box-shadow: 0 3px 12px rgba(155,89,182,0.09); transition: transform .15s, box-shadow .15s; }
