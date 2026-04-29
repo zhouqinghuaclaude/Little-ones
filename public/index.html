@@ -1365,7 +1365,6 @@ async function openGiftShop() {
   giftActiveCat = "free";
   document.getElementById("giftSuccessBanner")?.classList.remove("show");
   document.getElementById("giftOverlay").classList.add("open");
-  document.getElementById("giftOverlay").style.display = "flex";
   await refreshGiftCounter();
   renderGiftTabs();
   renderGiftGrid();
@@ -1448,7 +1447,7 @@ async function sendGift(emoji, name, type, level) {
       return;
     }
     giftUsed = d.used;
-    giftLimit = d.limit;
+    giftLimit = d.limit || 1;
     updateGiftCounterUI();
     const banner = document.getElementById("giftSuccessBanner");
     banner.textContent = `✨ ${emoji} ${name} 已送出！宝宝会很开心的～`;
