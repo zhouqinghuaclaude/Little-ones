@@ -1416,7 +1416,7 @@ function switchGiftTab(catId) {
 
 function renderGiftGrid() {
   const cat = GIFT_CATEGORIES.find(c => c.id === giftActiveCat);
-  if (!cat) return;
+ if (!cat) { alert("cat not found: " + giftActiveCat); return; } 
   const isFree = cat.type === "free";
   const limitReached = isFree && giftUsed >= giftLimit;
   const level = cat.gift_level || "free";
