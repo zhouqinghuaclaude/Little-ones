@@ -63,8 +63,8 @@ input, textarea { font-family: inherit; }
 .section-label { font-size: 12px; font-weight: 700; color: var(--sub);
   letter-spacing: .8px; margin-bottom: 14px; text-transform: uppercase; }
 .kid-card { display: flex; align-items: center; gap: 14px; background: white;
-  border-radius: 22px; padding: 16px; margin-bottom: 12px; box-shadow: var(--card-shadow);
-  cursor: pointer; }
+  border-radius: 22px; padding: 16px 16px 32px; margin-bottom: 12px; box-shadow: var(--card-shadow);
+  cursor: pointer; position: relative; }
 .kid-card:active { transform: scale(0.97); }
 .kid-face { width: 58px; height: 58px; border-radius: 50%; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center; font-size: 30px; position: relative; }
@@ -76,10 +76,12 @@ input, textarea { font-family: inherit; }
 .kid-info { flex: 1; }
 .kid-name { font-size: 17px; font-weight: 800; }
 .kid-meta { font-size: 11px; color: var(--sub); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kid-zodiac { font-size: 11px; color: #999; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .kid-emoji { font-size: 20px; }
-.kid-delete-btn { padding: 6px 12px; border-radius: 12px; background: #E74C3C;
-  color: white; font-size: 12px; font-weight: 700; flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(231,76,60,0.3); }
+.kid-delete-btn { position: absolute; bottom: 7px; right: 12px;
+  padding: 3px 8px; border-radius: 8px; background: #FFE8E8;
+  color: #555; font-size: 11px; font-weight: 600;
+  box-shadow: none; }
 .add-card { display: flex; align-items: center; justify-content: center; gap: 10px;
   background: white; border-radius: 22px; padding: 18px; border: 2px dashed var(--border);
   color: var(--p); font-size: 15px; font-weight: 700; width: 100%; margin-bottom: 12px; }
@@ -821,7 +823,8 @@ function getBondLevel(score) {
     </div>
     <div class="kid-info">
       <div class="kid-name">${k.name}</div>
-      <div class="kid-meta">${k.age_display||k.age+"岁"} · ${k.parent_role}的宝贝${getKidZodiacInfo(k)}</div>
+      <div class="kid-meta">${k.age_display||k.age+"岁"} · ${k.parent_role}的宝贝</div>
+      ${getKidZodiacInfo(k) ? `<div class="kid-zodiac">${getKidZodiacInfo(k).replace(/^ · /,'')}</div>` : ''}
       <div class="kid-bond-info">${k.name}已陪伴你${compDays}天 · ${bl.emoji}${bl.name}${k.milestone ? ' · ' + k.milestone : ''}</div>
     </div>
     <button class="kid-delete-btn" onclick="deleteKid(${k.id},'${k.name.replace(/'/g,"&#39;")}');event.stopPropagation();">删除</button>
