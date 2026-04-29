@@ -760,13 +760,14 @@ function logout() { token=""; localStorage.clear(); showScreen("loginScreen"); }
 
 const MOODS=["😊","😄","🥰","😌","🤩","😎"];
 const BOND_LEVELS = [
-  { min: 0,    max: 50,   emoji: "☁️",  name: "初识" },
-  { min: 51,   max: 150,  emoji: "🌱",  name: "萌芽" },
-  { min: 151,  max: 300,  emoji: "🌸",  name: "温暖" },
-  { min: 301,  max: 500,  emoji: "⭐",  name: "亲密" },
-  { min: 501,  max: 1000, emoji: "💫",  name: "挚爱" },
-  { min: 1001, max: Infinity, emoji: "👑", name: "永恒" },
+  { min: 0,    max: 50,   emoji: "🌱",  name: "初遇萌芽", gift: "晨曦之光" },
+  { min: 51,   max: 150,  emoji: "🌿",  name: "沁润青芽", gift: "晶凝露华" },
+  { min: 151,  max: 300,  emoji: "✨",  name: "爱启灵芽", gift: "青蓝灵犀" },
+  { min: 301,  max: 500,  emoji: "💫",  name: "心芽同频", gift: "灵绪之契" },
+  { min: 501,  max: 1000, emoji: "🌟",  name: "心芽共生", gift: "星璇之曜" },
+  { min: 1001, max: Infinity, emoji: "💎", name: "心芽永恒", gift: "永恒之诺" },
 ];
+
   // ── Bond System ────────────────────────────────────────────────────────────
 
 
