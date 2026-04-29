@@ -1386,10 +1386,7 @@ async function openGiftShop() {
   document.getElementById("giftOverlay").classList.add("open");
   await refreshGiftCounter();
   renderGiftTabs();
-alert(document.getElementById("giftTabs").innerHTML.substring(0,100));
-renderGiftGrid();
-
-
+  renderGiftGrid();
 }
 
 function closeGiftShop(e) {
@@ -1418,18 +1415,13 @@ function updateGiftCounterUI() {
 }
 
 function renderGiftTabs() {
-  try {
-    const tabs = document.getElementById("giftTabs");
-    const cats = GIFT_CATEGORIES;
-alert("cats length: " + cats.length);
-
-    tabs.innerHTML = cats.map(cat =>
-      `<button class="gift-tab${cat.id === giftActiveCat ? " active" : ""}"
-        onclick="switchGiftTab('${cat.id}')">${cat.label}</button>`
-    ).join("");
-  } catch(e) { alert("tabs error: " + e.message); }
+  const tabs = document.getElementById("giftTabs");
+  const cats = GIFT_CATEGORIES;
+  tabs.innerHTML = cats.map(cat =>
+    `<button class="gift-tab${cat.id === giftActiveCat ? " active" : ""}"
+      onclick="switchGiftTab('${cat.id}')">${cat.label}</button>`
+  ).join("");
 }
-  
 
 function switchGiftTab(catId) {
   giftActiveCat = catId;
