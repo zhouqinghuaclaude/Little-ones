@@ -1420,7 +1420,8 @@ function renderGiftGrid() {
   const isFree = cat.type === "free";
   const limitReached = isFree && giftUsed >= giftLimit;
   const level = cat.gift_level || "free";
-  document.getElementById("giftGrid").innerHTML = cat.items.map(item => {
+  alert("items count: " + cat.items.length);
+document.getElementById("giftGrid").innerHTML = cat.items.map(item => {
     const btnHtml = isFree
       ? `<button class="gift-send-btn" ${limitReached ? "disabled" : ""}
            onclick="sendGift('${item.emoji}','${item.name}','free','${level}')">
