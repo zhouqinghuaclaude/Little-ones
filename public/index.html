@@ -1365,6 +1365,8 @@ async function openGiftShop() {
   giftActiveCat = "free";
   document.getElementById("giftSuccessBanner")?.classList.remove("show");
   document.getElementById("giftOverlay").classList.add("open");
+  alert("overlay class: " + document.getElementById("giftOverlay").className);
+
   await refreshGiftCounter();
   renderGiftTabs();
   renderGiftGrid();
