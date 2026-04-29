@@ -574,6 +574,79 @@ z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden;
 </div>
 
 <script>
+var GIFT_CATEGORIES = [
+  {
+    id: "free",
+    label: "每日免费",
+    type: "free",
+    gift_level: "free",
+    items: [
+      { emoji: "🍎", name: "苹果" },
+      { emoji: "🧸", name: "玩具熊" },
+      { emoji: "🌸", name: "小花" },
+      { emoji: "🍭", name: "棒棒糖" },
+      { emoji: "⭐", name: "小星星" },
+      { emoji: "🎈", name: "气球" },
+    ]
+  },
+  {
+    id: "general",
+    label: "通用礼物",
+    type: "paid",
+    gift_level: "medium",
+    items: [
+      { emoji: "🎂", name: "生日蛋糕" },
+      { emoji: "📚", name: "故事书" },
+      { emoji: "🎨", name: "画笔套装" },
+      { emoji: "🎠", name: "旋转木马" },
+      { emoji: "🍰", name: "小蛋糕" },
+      { emoji: "🎵", name: "音乐盒" },
+    ]
+  },
+  {
+    id: "sports",
+    label: "运动系列",
+    type: "paid",
+    gift_level: "medium",
+    items: [
+      { emoji: "⚽", name: "足球" },
+      { emoji: "🏀", name: "篮球" },
+      { emoji: "🎾", name: "网球拍" },
+      { emoji: "🏊", name: "游泳装备" },
+      { emoji: "🚴", name: "自行车" },
+      { emoji: "🥊", name: "拳击手套" },
+      { emoji: "🏆", name: "冠军奖杯" },
+    ]
+  },
+  {
+    id: "barbie",
+    label: "芭比系列",
+    type: "paid",
+    gift_level: "medium",
+    items: [
+      { emoji: "👗", name: "公主裙" },
+      { emoji: "👑", name: "皇冠" },
+      { emoji: "🪆", name: "芭比娃娃" },
+      { emoji: "💄", name: "化妆套装" },
+      { emoji: "🎀", name: "发饰礼盒" },
+      { emoji: "🏰", name: "梦想城堡" },
+    ]
+  },
+  {
+    id: "special",
+    label: "特别礼物",
+    type: "paid",
+    gift_level: "premium",
+    items: [
+      { emoji: "🎡", name: "游乐园" },
+      { emoji: "✈️", name: "旅行" },
+      { emoji: "🎸", name: "吉他" },
+      { emoji: "🔭", name: "望远镜" },
+      { emoji: "🎪", name: "马戏团门票" },
+    ]
+  }
+];
+
 const API = "";
 let token = localStorage.getItem("token") || "";
 let kid = null;
@@ -1348,79 +1421,6 @@ function closeBondProfile(e) {
 }
 
 // ── Gift Shop ──────────────────────────────────────────────────────────────
-
-var GIFT_CATEGORIES = [
-  {
-    id: "free",
-    label: "每日免费",
-    type: "free",
-    gift_level: "free",
-    items: [
-      { emoji: "🍎", name: "苹果" },
-      { emoji: "🧸", name: "玩具熊" },
-      { emoji: "🌸", name: "小花" },
-      { emoji: "🍭", name: "棒棒糖" },
-      { emoji: "⭐", name: "小星星" },
-      { emoji: "🎈", name: "气球" },
-    ]
-  },
-  {
-    id: "general",
-    label: "通用礼物",
-    type: "paid",
-    gift_level: "medium",
-    items: [
-      { emoji: "🎂", name: "生日蛋糕" },
-      { emoji: "📚", name: "故事书" },
-      { emoji: "🎨", name: "画笔套装" },
-      { emoji: "🎠", name: "旋转木马" },
-      { emoji: "🍰", name: "小蛋糕" },
-      { emoji: "🎵", name: "音乐盒" },
-    ]
-  },
-  {
-    id: "sports",
-    label: "运动系列",
-    type: "paid",
-    gift_level: "medium",
-    items: [
-      { emoji: "⚽", name: "足球" },
-      { emoji: "🏀", name: "篮球" },
-      { emoji: "🎾", name: "网球拍" },
-      { emoji: "🏊", name: "游泳装备" },
-      { emoji: "🚴", name: "自行车" },
-      { emoji: "🥊", name: "拳击手套" },
-      { emoji: "🏆", name: "冠军奖杯" },
-    ]
-  },
-  {
-    id: "barbie",
-    label: "芭比系列",
-    type: "paid",
-    gift_level: "medium",
-    items: [
-      { emoji: "👗", name: "公主裙" },
-      { emoji: "👑", name: "皇冠" },
-      { emoji: "🪆", name: "芭比娃娃" },
-      { emoji: "💄", name: "化妆套装" },
-      { emoji: "🎀", name: "发饰礼盒" },
-      { emoji: "🏰", name: "梦想城堡" },
-    ]
-  },
-  {
-    id: "special",
-    label: "特别礼物",
-    type: "paid",
-    gift_level: "premium",
-    items: [
-      { emoji: "🎡", name: "游乐园" },
-      { emoji: "✈️", name: "旅行" },
-      { emoji: "🎸", name: "吉他" },
-      { emoji: "🔭", name: "望远镜" },
-      { emoji: "🎪", name: "马戏团门票" },
-    ]
-  }
-];
 
 var giftActiveCat = "free";
 var giftUsed = 0;
