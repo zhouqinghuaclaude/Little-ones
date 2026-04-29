@@ -1365,19 +1365,11 @@ async function openGiftShop() {
   if (!kid) return;
   giftActiveCat = "free";
   document.getElementById("giftSuccessBanner")?.classList.remove("show");
- alert("step1"); 
   document.getElementById("giftOverlay").classList.add("open");
-  alert("before refresh");
-await refreshGiftCounter();
-alert("after refresh");
-alert("before tabs");
-renderGiftTabs();
-alert("before grid");
-renderGiftGrid();
-alert("done");
-
+  await refreshGiftCounter();
+  renderGiftTabs();
+  renderGiftGrid();
 }
-
 
 function closeGiftShop(e) {
   document.getElementById("giftOverlay").classList.remove("open");
@@ -1430,7 +1422,6 @@ function renderGiftGrid() {
   const isFree = cat.type === "free";
   const limitReached = isFree && giftUsed >= giftLimit;
   const level = cat.gift_level || "free";
-  alert("items count: " + cat.items.length);
 document.getElementById("giftGrid").innerHTML = cat.items.map(item => {
     const btnHtml = isFree
       ? `<button class="gift-send-btn" ${limitReached ? "disabled" : ""}
