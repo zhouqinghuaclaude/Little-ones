@@ -1386,7 +1386,9 @@ async function openGiftShop() {
   document.getElementById("giftOverlay").classList.add("open");
   await refreshGiftCounter();
   renderGiftTabs();
+alert(document.getElementById("giftTabs").innerHTML.substring(0,100));
 renderGiftGrid();
+
 
 }
 
