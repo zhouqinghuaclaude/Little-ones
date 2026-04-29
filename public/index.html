@@ -75,7 +75,7 @@ input, textarea { font-family: inherit; }
   display: flex; align-items: center; justify-content: center; font-size: 9px; color: white; }
 .kid-info { flex: 1; }
 .kid-name { font-size: 17px; font-weight: 800; }
-.kid-meta { font-size: 12px; color: var(--sub); margin-top: 3px; }
+.kid-meta { font-size: 11px; color: var(--sub); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .kid-emoji { font-size: 20px; }
 .kid-delete-btn { padding: 6px 12px; border-radius: 12px; background: #E74C3C;
   color: white; font-size: 12px; font-weight: 700; flex-shrink: 0;
@@ -824,7 +824,6 @@ function getBondLevel(score) {
       <div class="kid-meta">${k.age_display||k.age+"岁"} · ${k.parent_role}的宝贝${getKidZodiacInfo(k)}</div>
       <div class="kid-bond-info">${k.name}已陪伴你${compDays}天 · ${bl.emoji}${bl.name}${k.milestone ? ' · ' + k.milestone : ''}</div>
     </div>
-    <div class="kid-emoji">${MOODS[i%MOODS.length]}</div>
     <button class="kid-delete-btn" onclick="deleteKid(${k.id},'${k.name.replace(/'/g,"&#39;")}');event.stopPropagation();">删除</button>
   </div>`;
 }).join("");
