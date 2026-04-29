@@ -291,7 +291,25 @@ z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden;
 </head>
 <body>
 <div id="toast" class="toast"></div>
+<!-- Gift Shop Overlay -->
+<div id="giftOverlay" class="gift-overlay" onclick="closeGiftShop(event)">
 
+
+
+  <div class="gift-modal" onclick="event.stopPropagation()">
+    <div class="gift-modal-header">
+      <div class="gift-modal-title">🎁 礼物商店</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div id="giftCounter" class="gift-counter">今日免费: 0/1</div>
+        <button class="gift-close-btn" onclick="closeGiftShop()">✕</button>
+      </div>
+    </div>
+    <div id="giftSuccessBanner" class="gift-success-banner"></div>
+   <div class="gift-tabs" id="giftTabs">测试</div>
+ 
+    <div class="gift-grid" id="giftGrid"></div>
+  </div>
+</div>
 <div id="loginScreen" class="screen active">
  <div class="logo-wrap">
   <div class="orbit-ring orbit-ring-1"><div class="orbit-dot"></div></div>
@@ -1476,24 +1494,6 @@ async function sendGift(emoji, name, type, level) {
   }
 }
 </script>
-<!-- Gift Shop Overlay -->
-<div id="giftOverlay" class="gift-overlay" onclick="closeGiftShop(event)">
 
-
-
-  <div class="gift-modal" onclick="event.stopPropagation()">
-    <div class="gift-modal-header">
-      <div class="gift-modal-title">🎁 礼物商店</div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <div id="giftCounter" class="gift-counter">今日免费: 0/1</div>
-        <button class="gift-close-btn" onclick="closeGiftShop()">✕</button>
-      </div>
-    </div>
-    <div id="giftSuccessBanner" class="gift-success-banner"></div>
-   <div class="gift-tabs" id="giftTabs">测试</div>
- 
-    <div class="gift-grid" id="giftGrid"></div>
-  </div>
-</div>
 </body>
 </html>
