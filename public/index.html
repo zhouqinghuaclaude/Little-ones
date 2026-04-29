@@ -181,7 +181,9 @@ input, textarea { font-family: inherit; }
 
 /* Gift Shop */
 .gift-overlay { display: none; position: fixed; inset: 0; background: rgba(44,22,84,0.45);
-  z-index: 9999; align-items: flex-end; justify-content: center; }
+  z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden; }
+.gift-overlay.open { display: flex !important; }
+
 
   z-index: 200; align-items: flex-end; justify-content: center; }
 .gift-overlay.open { display: flex !important; }
@@ -1374,8 +1376,8 @@ async function openGiftShop() {
 
 
 function closeGiftShop(e) {
-  if (e && e.target !== document.getElementById("giftOverlay")) return;
   document.getElementById("giftOverlay").classList.remove("open");
+  document.getElementById("giftOverlay").style.display = "none";
 }
 
 
