@@ -1109,7 +1109,7 @@ async function openChat(k) {
   face.innerHTML = k.avatar ? k.avatar : getBudAvatar(k.gender);
   face.style.background=boy?"linear-gradient(135deg,#D6EAF8,#AED6F1)":"linear-gradient(135deg,#FDEBD0,#FADBD8)";
   document.getElementById("chatName").textContent=k.name;
-  document.getElementById("chatStatus").textContent=`${k.milestone ? k.milestone : "在线"}`;
+  document.getElementById("chatStatus").textContent=`${k.milestone ? k.milestone : ""}`;
 
   showScreen("chatScreen");
   document.getElementById("msgsArea").innerHTML=`<div style="text-align:center;padding:40px;color:var(--sub);font-size:24px">⟳</div>`;
