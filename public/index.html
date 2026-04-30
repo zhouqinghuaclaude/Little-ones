@@ -829,8 +829,6 @@ function getBondLevel(score) {
     <div class="kid-info">
       <div class="kid-name">${k.name}</div>
       <div class="kid-meta">${k.gender==="boy"?"男孩":"女孩"} · ${k.age_display||k.age+"岁"}${getKidZodiacInfo(k)}</div>
-
-      ${getKidZodiacInfo(k) ? `<div class="kid-zodiac">${getKidZodiacInfo(k).replace(/^ · /,'')}</div>` : ''}
       <div class="kid-bond-info">${k.name}已陪伴你${compDays}天 · ${bl.emoji}${bl.name}${k.milestone ? ' · ' + k.milestone : ''}</div>
     </div>
     <button class="kid-delete-btn" onclick="deleteKid(${k.id},'${k.name.replace(/'/g,"&#39;")}');event.stopPropagation();">删除</button>
