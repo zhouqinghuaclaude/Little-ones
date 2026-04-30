@@ -1044,17 +1044,19 @@ function getBudAvatar(gender) {
   </svg>`;
 }
 
-  function updateGrowthBar(count) {
+ function updateGrowthBar(count) {
   const bar = document.getElementById("growthBar");
   if (!bar) return;
-  if (kid.age > 1) { bar.style.display = "none"; return; }
-  bar.style.display = "flex";
+  if (!kid || kid.age >= 1 || kid.age_mode !== 'natural') { bar.style.display = "none"; return; }
+  bar.style.display = "block";
+  const role = kid.parent_role || "妈妈";
   if (count < 3) bar.textContent = `💕 再聊${3-count}条，宝宝会发出声音`;
   else if (count < 5) bar.textContent = `💕 再聊${5-count}条，宝宝会咿呀学语`;
-  else if (count < 10) bar.textContent = `💕 再聊${10-count}条，宝宝会叫妈妈/爸爸`;
+  else if (count < 10) bar.textContent = `💕 再聊${10-count}条，宝宝会叫${role}了`;
   else if (count < 15) bar.textContent = `💕 再聊${15-count}条，宝宝会说短句了`;
   else bar.textContent = `💕 宝宝越来越会说话了～`;
 }
+
 
   function setAgeRangeBtn(id) {
   ['age0','age1','age2','age3'].forEach(i => {
@@ -1117,6 +1119,8 @@ async function openChat(k) {
   document.getElementById("chatStatus").textContent=`${k.milestone ? k.milestone : ""}`;
 
   showScreen("chatScreen");
+ updateGrowthBar(0);
+ 
   document.getElementById("msgsArea").innerHTML=`<div style="text-align:center;padding:40px;color:var(--sub);font-size:24px">⟳</div>`;
   try {
     const msgs=await req(`/api/kids/${k.id}/messages`);
