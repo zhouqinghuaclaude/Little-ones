@@ -526,7 +526,6 @@ z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden;
   </div>
 
   <div class="msgs-area" id="msgsArea"></div>
-  <div class="quick-bar" id="quickBar"></div>
   <div class="input-row">
     <textarea id="msgInput" class="msg-input" placeholder="和宝宝说点什么…" rows="1"
       oninput="autoResize(this)"
@@ -1105,7 +1104,6 @@ async function createKid() {
   } catch(e) { err.textContent=e.message; }
 }
 
-const QUICK=["❤️ 我爱你","😊 你好吗","🍎 吃饭了吗","📚 作业写了吗","⚽ 体育课怎样","🌙 晚安宝贝"];
 async function openChat(k) {
   kid=k;
   const boy=k.gender==="boy";
@@ -1116,8 +1114,6 @@ async function openChat(k) {
   document.getElementById("chatStatus").textContent=`${k.gender==="boy"?"男孩":"女孩"} · ${k.age_display||k.age+"岁"}${k.milestone ? " · " + k.milestone : ""}`;
 
 
-  document.getElementById("quickBar").innerHTML=QUICK.map(q=>
-    `<button class="qbtn" onclick="sendMsg('${q.replace(/^[^\s]+\s/,"")}')">${q}</button>`).join("");
   showScreen("chatScreen");
   document.getElementById("msgsArea").innerHTML=`<div style="text-align:center;padding:40px;color:var(--sub);font-size:24px">⟳</div>`;
   try {
