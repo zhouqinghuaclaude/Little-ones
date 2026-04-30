@@ -177,7 +177,8 @@ res.json(newKid);
 });
 
 app.patch("/api/kids/:id/settings", auth, async (req, res) => {
-  const { birthday, personality, personality_custom, age_mode } = req.body;
+  const { birthday, personality, personality_custom, age_mode, avatar } = req.body;
+
   const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
   const kid = kidResult.rows[0];
   if (!kid) return res.status(404).json({ error: "孩子不存在" });
@@ -196,9 +197,10 @@ app.patch("/api/kids/:id/settings", auth, async (req, res) => {
   if (personality) {
     await db.query("UPDATE kids SET personality=$1, personality_custom=$2 WHERE id=$3", [personality, personality_custom || null, kid.id]);
   }
-if (body.avatar !== undefined) {
-  await db.query("UPDATE kids SET avatar=$1 WHERE id=$2", [body.avatar, kid.id]);
+if (avatar !== undefined) {
+  await db.query("UPDATE kids SET avatar=$1 WHERE id=$2", [avatar, kid.id]);
 }
+
 
   // 成长模式切换（只允许一次，付费功能）
   if (age_mode && age_mode !== kid.age_mode) {
