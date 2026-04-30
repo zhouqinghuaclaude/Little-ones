@@ -1299,8 +1299,9 @@ function selectPersonality(p) {
   document.getElementById("customPersonalityBox").style.display = p === 'custom' ? 'block' : 'none';
 }
 function renderAvatarSelectGrid(gender, currentAvatar) {
-  const boyAvatars = ["👦","🧒","👼","🐻","🦁","🐯","🐼","🐨","🦊","🐸","🚀","⚽"];
-  const girlAvatars = ["👧","🧒‍♀️","👸","🐰","🦊","🐱","🦋","🌸","🎀","🍓","🌈","💫"];
+  const boyAvatars = ["👦","🧒","👼","🐻","🦁","🐯"];
+const girlAvatars = ["👧","👸","🐰","🦊","🐱","🦋"];
+
   const avatars = gender === "boy" ? boyAvatars : girlAvatars;
   const grid = document.getElementById("avatarSelectGrid");
   grid.innerHTML = avatars.map(e =>
