@@ -1267,8 +1267,7 @@ function openSettings(k) {
   if (personalityMap[selectedPersonality]) {
     document.getElementById(personalityMap[selectedPersonality]).className = 'choice-btn on';
   }
-  document.getElementById("customPersonalityBox").style.display = selectedPersonality === 'custom' ? 'block' : 'none';
-  if (k.personality_custom) document.getElementById("customPersonalityText").value = k.personality_custom;
+ 
 renderAvatarSelectGrid(k.gender, k.avatar);
   showScreen("settingsScreen");
 }
@@ -1322,10 +1321,8 @@ async function saveSettings() {
   msg.textContent = '保存中...';
   try {
     const birthday = document.getElementById("settingsBirthday").value;
-    const personalityCustom = document.getElementById("customPersonalityText").value.trim();
     const body = {
   personality: selectedPersonality,
-  personality_custom: personalityCustom || null,
   avatar: settingsKid.avatar,
 };
 
