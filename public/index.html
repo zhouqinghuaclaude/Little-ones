@@ -1113,7 +1113,8 @@ async function openChat(k) {
   face.innerHTML = k.avatar ? k.avatar : getBudAvatar(k.gender);
   face.style.background=boy?"linear-gradient(135deg,#D6EAF8,#AED6F1)":"linear-gradient(135deg,#FDEBD0,#FADBD8)";
   document.getElementById("chatName").textContent=k.name;
-  document.getElementById("chatStatus").textContent=`${k.age_display||k.age+"岁"} · ${k.parent_role}的宝贝${k.birthday ? " · 生日 " + k.birthday.slice(0,10) : ""}${k.milestone ? " · " + k.milestone : ""}`;
+  document.getElementById("chatStatus").textContent=`${k.gender==="boy"?"男孩":"女孩"} · ${k.age_display||k.age+"岁"}${k.milestone ? " · " + k.milestone : ""}`;
+
 
   document.getElementById("quickBar").innerHTML=QUICK.map(q=>
     `<button class="qbtn" onclick="sendMsg('${q.replace(/^[^\s]+\s/,"")}')">${q}</button>`).join("");
