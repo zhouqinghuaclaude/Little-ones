@@ -564,9 +564,15 @@ z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden;
     </div>
     
  <label class="field-label" style="margin-top:20px">🖼️ 头像选择</label>
-<div id="avatarSelectGrid" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px"></div>
-<button class="choice-btn" style="margin-top:10px" onclick="showToast('上传你的照片，让孩子更像你，即将开放 📸')">📸 定制头像</button>
-<label class="field-label" style="margin-top:20px">添加孩子</label>
+<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">
+  <div id="avatarSelectGrid" style="display:contents"></div>
+  <button onclick="showToast('上传你的照片，让孩子更像你，即将开放 📸')" style="width:48px;height:48px;border-radius:50%;border:2px dashed var(--border);background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px">
+    <span style="font-size:18px">📷</span>
+    <span style="font-size:9px;color:var(--sub);font-weight:600">定制</span>
+  </button>
+</div>
+
+<label class="field-label" style="margin-top:20px">➕添加孩子</label>
 <button class="choice-btn" style="margin-top:8px" onclick="showToast('开通会员后可添加更多孩子 🌱')">添加</button>
     <button class="primary-btn" style="margin-top:28px" onclick="saveSettings()">保存设置</button>
     <div id="settingsMsg" style="text-align:center;margin-top:12px;font-size:13px;color:var(--p)"></div>
