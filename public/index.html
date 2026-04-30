@@ -556,23 +556,23 @@ z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden;
 
     <label class="field-label" style="margin-top:20px">✨ 性格设置</label>
     <div class="choice-row" style="flex-wrap:wrap;gap:8px">
-      <button class="choice-btn" id="sLively" onclick="selectPersonality('lively')">活泼开朗</button>
-      <button class="choice-btn" id="sQuiet" onclick="selectPersonality('quiet')">文静乖巧</button>
-      <button class="choice-btn" id="sClever" onclick="selectPersonality('clever')">聪明好学</button>
-      <button class="choice-btn" id="sCustom" onclick="selectPersonality('custom')">💎 专属定制</button>
+      <button class="choice-btn" id="sLively" onclick="selectPersonality('lively')">活泼</button>
+      <button class="choice-btn" id="sQuiet" onclick="selectPersonality('quiet')">文静</button>
+      <button class="choice-btn" id="sClever" onclick="selectPersonality('clever')">聪明</button>
+      <button class="choice-btn" id="sCustom" onclick="selectPersonality('custom')">💎 定制</button>
     </div>
     <div id="customPersonalityBox" style="display:none;margin-top:12px">
       <textarea id="customPersonalityText" class="field-input" placeholder="描述孩子的专属性格，比如：喜欢恐龙、爱冒险、有点胆小..." style="min-height:80px;resize:none"></textarea>
-      <div style="font-size:12px;color:var(--p);margin-top:4px">💎 专属定制为付费功能</div>
     </div>
- <label class="field-label" style="margin-top:20px">🖼️ 头像选择</label>
+ <label class="field-label" style="margin-top:20px">🖼️ 免费头像</label>
 <div id="avatarSelectGrid" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px"></div>
-<div style="font-size:12px;color:var(--p);margin-top:8px">📸 照片合成头像 · 即将开放</div>
+<div style="font-size:12px;color:var(--p);margin-top:8px">📸 定制头像</div>
 
+    <div style="font-size:15px;font-weight:700;color:var(--p);margin-bottom:6px">添加更多孩子</div>
+  <div style="font-size:13px;color:var(--sub);margin-bottom:12px">开通会员后可添加更多孩子</div>
     <button class="primary-btn" style="margin-top:28px" onclick="saveSettings()">保存设置</button>
     <div style="margin-top:24px;padding:16px;border-radius:16px;border:1.5px dashed var(--border);text-align:center">
-  <div style="font-size:15px;font-weight:700;color:var(--p);margin-bottom:6px">👶 添加第二个孩子</div>
-  <div style="font-size:13px;color:var(--sub);margin-bottom:12px">开通会员后可添加更多孩子</div>
+  
   <button style="padding:10px 24px;border-radius:20px;background:var(--grad);color:white;font-size:14px;font-weight:700" onclick="showToast('会员功能即将开放，敬请期待 🌱')">即将开放</button>
 </div>
 
