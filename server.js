@@ -196,6 +196,9 @@ app.patch("/api/kids/:id/settings", auth, async (req, res) => {
   if (personality) {
     await db.query("UPDATE kids SET personality=$1, personality_custom=$2 WHERE id=$3", [personality, personality_custom || null, kid.id]);
   }
+if (body.avatar !== undefined) {
+  await db.query("UPDATE kids SET avatar=$1 WHERE id=$2", [body.avatar, kid.id]);
+}
 
   // 成长模式切换（只允许一次，付费功能）
   if (age_mode && age_mode !== kid.age_mode) {
