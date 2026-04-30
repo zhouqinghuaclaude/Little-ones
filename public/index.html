@@ -563,18 +563,12 @@ z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden;
 
     </div>
     
- <label class="field-label" style="margin-top:20px">🖼️ 免费头像</label>
+ <label class="field-label" style="margin-top:20px">🖼️ 头像选择</label>
 <div id="avatarSelectGrid" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px"></div>
-<div style="font-size:12px;color:var(--p);margin-top:8px">📸 定制头像</div>
-
-    <div style="font-size:15px;font-weight:700;color:var(--p);margin-bottom:6px">添加更多孩子</div>
-  <div style="font-size:13px;color:var(--sub);margin-bottom:12px">开通会员后可添加更多孩子</div>
+<button class="choice-btn" style="margin-top:10px" onclick="showToast('上传你的照片，让孩子更像你，即将开放 📸')">📸 定制头像</button>
+<label class="field-label" style="margin-top:20px">添加孩子</label>
+<button class="choice-btn" style="margin-top:8px" onclick="showToast('开通会员后可添加更多孩子 🌱')">添加</button>
     <button class="primary-btn" style="margin-top:28px" onclick="saveSettings()">保存设置</button>
-    <div style="margin-top:24px;padding:16px;border-radius:16px;border:1.5px dashed var(--border);text-align:center">
-  
-  <button style="padding:10px 24px;border-radius:20px;background:var(--grad);color:white;font-size:14px;font-weight:700" onclick="showToast('会员功能即将开放，敬请期待 🌱')">即将开放</button>
-</div>
-
     <div id="settingsMsg" style="text-align:center;margin-top:12px;font-size:13px;color:var(--p)"></div>
   </div>
 </div>
