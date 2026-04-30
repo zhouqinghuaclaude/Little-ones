@@ -566,6 +566,9 @@ z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden;
       <textarea id="customPersonalityText" class="field-input" placeholder="描述孩子的专属性格，比如：喜欢恐龙、爱冒险、有点胆小..." style="min-height:80px;resize:none"></textarea>
       <div style="font-size:12px;color:var(--p);margin-top:4px">💎 专属定制为付费功能</div>
     </div>
+ <label class="field-label" style="margin-top:20px">🖼️ 头像选择</label>
+<div id="avatarSelectGrid" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px"></div>
+<div style="font-size:12px;color:var(--p);margin-top:8px">📸 照片合成头像 · 即将开放</div>
 
     <button class="primary-btn" style="margin-top:28px" onclick="saveSettings()">保存设置</button>
     <div id="settingsMsg" style="text-align:center;margin-top:12px;font-size:13px;color:var(--p)"></div>
@@ -1266,7 +1269,7 @@ function openSettings(k) {
   }
   document.getElementById("customPersonalityBox").style.display = selectedPersonality === 'custom' ? 'block' : 'none';
   if (k.personality_custom) document.getElementById("customPersonalityText").value = k.personality_custom;
-
+renderAvatarSelectGrid(k.gender, k.avatar);
   showScreen("settingsScreen");
 }
 
@@ -1294,6 +1297,24 @@ function selectPersonality(p) {
   if (map[p]) document.getElementById(map[p]).className = 'choice-btn on';
   document.getElementById("customPersonalityBox").style.display = p === 'custom' ? 'block' : 'none';
 }
+function renderAvatarSelectGrid(gender, currentAvatar) {
+  const boyAvatars = ["👦","🧒","👼","🐻","🦁","🐯","🐼","🐨","🦊","🐸","🚀","⚽"];
+  const girlAvatars = ["👧","🧒‍♀️","👸","🐰","🦊","🐱","🦋","🌸","🎀","🍓","🌈","💫"];
+  const avatars = gender === "boy" ? boyAvatars : girlAvatars;
+  const grid = document.getElementById("avatarSelectGrid");
+  grid.innerHTML = avatars.map(e =>
+    `<button onclick="selectSettingsAvatar('${e}')" style="width:48px;height:48px;border-radius:50%;border:2.5px solid ${currentAvatar===e?'var(--p)':'var(--border)'};background:${gender==='boy'?'linear-gradient(135deg,#D6EAF8,#AED6F1)':'linear-gradient(135deg,#FDEBD0,#FADBD8)'};font-size:24px;display:flex;align-items:center;justify-content:center" id="avatarBtn_${e}">${e}</button>`
+  ).join("");
+}
+
+function selectSettingsAvatar(emoji) {
+  document.querySelectorAll("[id^='avatarBtn_']").forEach(btn => {
+    btn.style.border = "2.5px solid var(--border)";
+  });
+  const btn = document.getElementById("avatarBtn_" + emoji);
+  if (btn) btn.style.border = "2.5px solid var(--p)";
+  settingsKid = {...settingsKid, avatar: emoji};
+}
 
 async function saveSettings() {
   const msg = document.getElementById("settingsMsg");
@@ -1302,9 +1323,11 @@ async function saveSettings() {
     const birthday = document.getElementById("settingsBirthday").value;
     const personalityCustom = document.getElementById("customPersonalityText").value.trim();
     const body = {
-      personality: selectedPersonality,
-      personality_custom: personalityCustom || null,
-    };
+  personality: selectedPersonality,
+  personality_custom: personalityCustom || null,
+  avatar: settingsKid.avatar,
+};
+
     if (birthday && !settingsKid.birthday_locked) body.birthday = birthday;
     if (selectedAgeMode !== settingsKid.age_mode && !settingsKid.age_mode_locked) body.age_mode = selectedAgeMode;
     
