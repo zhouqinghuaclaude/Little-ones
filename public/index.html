@@ -559,7 +559,7 @@ z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden;
       <button class="choice-btn" id="sLively" onclick="selectPersonality('lively')">活泼</button>
       <button class="choice-btn" id="sQuiet" onclick="selectPersonality('quiet')">文静</button>
       <button class="choice-btn" id="sClever" onclick="selectPersonality('clever')">聪明</button>
-      <button class="choice-btn" id="sCustom" onclick="showToast('专属定制为付费功能，即将开放 🌱')">💎 定制</button>
+      <button class="choice-btn" id="sCustom" onclick="showToast('专属定制为付费功能，即将开放 🌱')">💎定制</button>
 
     </div>
     
@@ -1301,8 +1301,9 @@ function selectPersonality(p) {
   document.getElementById("customPersonalityBox").style.display = p === 'custom' ? 'block' : 'none';
 }
 function renderAvatarSelectGrid(gender, currentAvatar) {
-  const boyAvatars = ["👦","🧒","👼","🐻","🦁","🐯"];
-const girlAvatars = ["👧","👸","🐰","🦊","🐱","🦋"];
+  const boyAvatars = ["👦","🧒","👼","🦁","🐯"];
+const girlAvatars = ["👧","👸","🐰","🐱","🦋"];
+
 
   const avatars = gender === "boy" ? boyAvatars : girlAvatars;
   const grid = document.getElementById("avatarSelectGrid");
