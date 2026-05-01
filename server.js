@@ -648,6 +648,20 @@ db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS age_mode VARCHAR(10) DEFAULT
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS age_mode_locked BOOLEAN DEFAULT false").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS personality_custom TEXT").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS birthday_locked BOOLEAN DEFAULT false").catch(() => {});
+db.query(`CREATE TABLE IF NOT EXISTS activities (
+ id SERIAL PRIMARY KEY,
+ kid_id INTEGER REFERENCES kids(id) ON DELETE CASCADE,
+ activity_type VARCHAR(50) NOT NULL,
+ activity_name VARCHAR(100) NOT NULL,
+ created_at TIMESTAMP DEFAULT NOW()
+)`).catch(() => {});
+db.query(`CREATE TABLE IF NOT EXISTS achievements (
+ id SERIAL PRIMARY KEY,
+ kid_id INTEGER REFERENCES kids(id) ON DELETE CASCADE,
+ achievement_name VARCHAR(100) NOT NULL,
+ achievement_emoji VARCHAR(10),
+ unlocked_at TIMESTAMP DEFAULT NOW()
+)`).catch(() => {});
 
 const PORT = process.env.PORT || 3000;
 initDB().then(() => app.listen(PORT, () => console.log("Server running on port " + PORT)));
