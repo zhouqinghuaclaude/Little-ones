@@ -212,6 +212,73 @@ if (avatar !== undefined) {
   res.json(updated.rows[0]);
 });
 
+const ACTIVITY_MILESTONES = {
+  football:  { count: 10, name: "⚽ Football Star" },
+  painting:  { count: 8,  name: "🎨 Little Artist" },
+  piano:     { count: 12, name: "🎹 Piano Prodigy" },
+  reading:   { count: 15, name: "📚 Bookworm" },
+  travel:    { count: 5,  name: "✈️ World Explorer" },
+  science:   { count: 10, name: "🔬 Science Whiz" },
+  dance:     { count: 8,  name: "💃 Dance Champion" },
+  baking:    { count: 6,  name: "🧁 Master Baker" },
+};
+
+app.get("/api/kids/:id/activities", auth, async (req, res) => {
+  const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
+  if (!kidResult.rows[0]) return res.status(404).json({ error: "Child not found" });
+
+  const activitiesResult = await db.query(
+    "SELECT activity_type, COUNT(*) as count FROM activities WHERE kid_id=$1 GROUP BY activity_type",
+    [req.params.id]
+  );
+
+  const achievementsResult = await db.query(
+    "SELECT * FROM achievements WHERE kid_id=$1 ORDER BY created_at DESC",
+    [req.params.id]
+  );
+
+  res.json({
+    activities: activitiesResult.rows,
+    achievements: achievementsResult.rows,
+  });
+});
+
+app.post("/api/kids/:id/activities", auth, async (req, res) => {
+  const { activity_type } = req.body;
+  if (!activity_type || !ACTIVITY_MILESTONES[activity_type]) {
+    return res.status(400).json({ error: "Invalid activity type" });
+  }
+
+  const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
+  if (!kidResult.rows[0]) return res.status(404).json({ error: "Child not found" });
+
+  await db.query(
+    "INSERT INTO activities (kid_id, activity_type) VALUES ($1, $2)",
+    [req.params.id, activity_type]
+  );
+
+  const countResult = await db.query(
+    "SELECT COUNT(*) FROM activities WHERE kid_id=$1 AND activity_type=$2",
+    [req.params.id, activity_type]
+  );
+  const count = parseInt(countResult.rows[0].count);
+
+  const milestone = ACTIVITY_MILESTONES[activity_type];
+  let newAchievement = null;
+
+  if (count === milestone.count) {
+    const achievementResult = await db.query(
+      "INSERT INTO achievements (kid_id, achievement_name, activity_type) VALUES ($1, $2, $3) RETURNING *",
+      [req.params.id, milestone.name, activity_type]
+    );
+    newAchievement = achievementResult.rows[0];
+  }
+
+  const remaining = count < milestone.count ? milestone.count - count : 0;
+
+  res.json({ count, newAchievement, remaining });
+});
+
 app.delete("/api/kids/:id", auth, async (req, res) => {
   await db.query("DELETE FROM kids WHERE id = $1 AND user_id = $2", [req.params.id, req.user.id]);
   res.json({ ok: true });
@@ -599,6 +666,21 @@ async function initDB() {
       count INTEGER DEFAULT 0
     );
     CREATE INDEX IF NOT EXISTS idx_daily_gifts_user_date ON daily_gifts(user_id, gift_date);
+    CREATE TABLE IF NOT EXISTS activities (
+      id SERIAL PRIMARY KEY,
+      kid_id INTEGER REFERENCES kids(id) ON DELETE CASCADE,
+      activity_type VARCHAR(50) NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_activities_kid ON activities(kid_id, activity_type);
+    CREATE TABLE IF NOT EXISTS achievements (
+      id SERIAL PRIMARY KEY,
+      kid_id INTEGER REFERENCES kids(id) ON DELETE CASCADE,
+      achievement_name VARCHAR(100) NOT NULL,
+      activity_type VARCHAR(50) NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_achievements_kid ON achievements(kid_id, created_at);
   `);
   console.log("Database ready");
 }
