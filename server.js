@@ -233,7 +233,7 @@ app.get("/api/kids/:id/activities", auth, async (req, res) => {
   );
 
   const achievementsResult = await db.query(
-    "SELECT * FROM achievements WHERE kid_id=$1 ORDER BY created_at DESC",
+    "SELECT * FROM achievements WHERE kid_id=$1 ORDER BY id DESC",
     [req.params.id]
   );
 
