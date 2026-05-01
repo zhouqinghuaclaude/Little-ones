@@ -670,6 +670,7 @@ async function initDB() {
       id SERIAL PRIMARY KEY,
       kid_id INTEGER REFERENCES kids(id) ON DELETE CASCADE,
       activity_type VARCHAR(50) NOT NULL,
+      activity_name VARCHAR(100) NOT NULL,
       created_at TIMESTAMP DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS idx_activities_kid ON activities(kid_id, activity_type);
