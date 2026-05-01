@@ -674,6 +674,10 @@ async function initDB() {
       created_at TIMESTAMP DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS idx_activities_kid ON activities(kid_id, activity_type);
+    `);
+  db.query("ALTER TABLE activities ADD COLUMN IF NOT EXISTS activity_name VARCHAR(100)").catch(() => {});
+  db.query("ALTER TABLE activities ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()").catch(() => {});
+  await db.query(`
     CREATE TABLE IF NOT EXISTS achievements (
       id SERIAL PRIMARY KEY,
       kid_id INTEGER REFERENCES kids(id) ON DELETE CASCADE,
@@ -681,7 +685,7 @@ async function initDB() {
       activity_type VARCHAR(50) NOT NULL,
       created_at TIMESTAMP DEFAULT NOW()
     );
-    CREATE INDEX IF NOT EXISTS idx_achievements_kid ON achievements(kid_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_achievements_kid ON achievements(kid_id);
   `);
   console.log("Database ready");
 }
