@@ -950,6 +950,151 @@ function showBirthMoment(kid, role, ageRange) {
     }, 500);
   }, 2500);
 }
+const ACTIVITY_TRIGGERS = {
+  '0-1':  [
+    { type: 'painting', name: '涂鸦', emoji: '🎨', keywords: ['画', '涂', '颜色', '画画'] },
+    { type: 'music',    name: '音乐', emoji: '🎵', keywords: ['音乐', '唱歌', '歌', '节奏'] },
+    { type: 'reading',  name: '阅读', emoji: '📚', keywords: ['书', '故事', '读', '绘本'] },
+    { type: 'game',     name: '游戏', emoji: '🎮', keywords: ['玩', '游戏', '积木', '玩具'] },
+    { type: 'nature',   name: '自然', emoji: '🌿', keywords: ['花', '草', '树', '动物', '自然'] },
+  ],
+  '1-3':  [
+    { type: 'painting', name: '涂鸦', emoji: '🎨', keywords: ['画', '涂', '颜色', '画画'] },
+    { type: 'music',    name: '音乐', emoji: '🎵', keywords: ['音乐', '唱歌', '歌', '节奏'] },
+    { type: 'reading',  name: '阅读', emoji: '📚', keywords: ['书', '故事', '读', '绘本'] },
+    { type: 'game',     name: '游戏', emoji: '🎮', keywords: ['玩', '游戏', '积木', '玩具'] },
+    { type: 'nature',   name: '自然', emoji: '🌿', keywords: ['花', '草', '树', '动物', '自然'] },
+  ],
+  '3-6':  [
+    { type: 'football', name: '踢球', emoji: '⚽', keywords: ['足球', '踢球', '球', '运动'] },
+    { type: 'painting', name: '画画', emoji: '🎨', keywords: ['画', '涂', '颜色', '画画'] },
+    { type: 'piano',    name: '钢琴', emoji: '🎹', keywords: ['钢琴', '弹琴', '琴', '音符'] },
+    { type: 'dance',    name: '跳舞', emoji: '💃', keywords: ['跳舞', '舞蹈', '舞', '律动'] },
+    { type: 'reading',  name: '阅读', emoji: '📚', keywords: ['书', '故事', '读', '绘本'] },
+    { type: 'explore',  name: '探索', emoji: '🔍', keywords: ['探索', '发现', '好奇', '为什么'] },
+  ],
+  '6+':   [
+    { type: 'football', name: '足球', emoji: '⚽', keywords: ['足球', '踢球', '球', '运动'] },
+    { type: 'travel',   name: '旅行', emoji: '✈️', keywords: ['旅行', '旅游', '出去玩', '去哪'] },
+    { type: 'science',  name: '科学', emoji: '🔬', keywords: ['科学', '实验', '发明', '研究'] },
+    { type: 'reading',  name: '阅读', emoji: '📚', keywords: ['书', '故事', '读', '阅读'] },
+    { type: 'painting', name: '画画', emoji: '🎨', keywords: ['画', '涂', '颜色', '画画'] },
+    { type: 'dance',    name: '跳舞', emoji: '💃', keywords: ['跳舞', '舞蹈', '舞', '律动'] },
+    { type: 'baking',   name: '烘焙', emoji: '🧁', keywords: ['烘焙', '烤', '蛋糕', '饼干', '做饭'] },
+    { type: 'piano',    name: '钢琴', emoji: '🎹', keywords: ['钢琴', '弹琴', '琴', '音符'] },
+  ],
+};
+
+function getAgeRangeKey(age) {
+  if (age <= 1)  return '0-1';
+  if (age <= 3)  return '1-3';
+  if (age <= 6)  return '3-6';
+  return '6+';
+}
+
+function detectActivityTrigger(reply) {
+  if (!kid || !reply) return null;
+  const key = getAgeRangeKey(kid.age);
+  const triggers = ACTIVITY_TRIGGERS[key] || [];
+  for (const trigger of triggers) {
+    for (const kw of trigger.keywords) {
+      if (reply.includes(kw)) return trigger;
+    }
+  }
+  return null;
+}
+
+async function showActivityCard(trigger) {
+  const existing = document.getElementById('activityCard');
+  if (existing) existing.remove();
+
+  let currentCount = 0;
+  let milestoneCount = 5;
+  try {
+    const data = await req(`/api/kids/${kid.id}/activities`);
+    const row = (data.activities || []).find(a => a.activity_type === trigger.type);
+    currentCount = row ? parseInt(row.count) : 0;
+    const milestones = {
+      football: 10, painting: 8, piano: 12, reading: 15,
+      travel: 5, science: 10, dance: 8, baking: 6,
+      music: 8, game: 10, nature: 8, explore: 8,
+    };
+    milestoneCount = milestones[trigger.type] || 10;
+  } catch(e) { /* use defaults */ }
+
+  const remaining = Math.max(0, milestoneCount - currentCount);
+  const isFree = remaining > 0;
+
+  const card = document.createElement('div');
+  card.id = 'activityCard';
+  card.style.cssText = `margin:8px 14px;background:white;border-radius:16px;padding:16px;box-shadow:0 4px 20px rgba(155,89,182,0.15);border:1.5px solid #E8D5F5;animation:fadeIn .3s ease`;
+  card.innerHTML = `
+    <div style="font-size:15px;font-weight:800;color:#9B59B6;margin-bottom:4px">${trigger.emoji} 要不要来一次${trigger.name}？</div>
+    <div style="font-size:13px;color:#888;margin-bottom:4px">已完成 <b style="color:#9B59B6">${currentCount}</b> 次</div>
+    <div style="font-size:13px;color:#aaa;margin-bottom:12px">
+      ${remaining > 0
+        ? `再坚持 <b style="color:#E67E22">${remaining}</b> 次就能解锁成就 🏆`
+        : `🎉 已解锁成就：${getAchievementName(trigger.type)}`}
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="primary-btn" style="margin-top:0;padding:10px;font-size:13px"
+        onclick="doActivity('${trigger.type}','${trigger.name}','${trigger.emoji}',${isFree})">一起去吧 ${trigger.emoji}</button>
+      <button style="padding:10px 16px;border-radius:12px;border:1.5px solid #E0D0EE;font-size:13px;color:#999"
+        onclick="document.getElementById('activityCard').remove()">下次吧</button>
+    </div>
+  `;
+  document.getElementById('msgsArea').appendChild(card);
+  scrollBot();
+}
+
+async function doActivity(type, name, emoji, isFree) {
+  document.getElementById('activityCard')?.remove();
+  const label = `${emoji} ${kid.parent_role}带${kid.name}去${name}了！`;
+  const area = document.getElementById('msgsArea');
+  area.insertAdjacentHTML('beforeend', bubble('user', label, new Date().toISOString()));
+  scrollBot();
+  try {
+    const result = await req(`/api/kids/${kid.id}/activities`, {
+      method: 'POST',
+      body: JSON.stringify({ activity_type: type }),
+    });
+    if (result.newAchievement) {
+      showToast(`🏆 解锁成就：${getAchievementName(type)}！`);
+    } else if (result.remaining > 0) {
+      showToast(`${emoji} 已记录！再坚持 ${result.remaining} 次解锁成就 🏆`);
+    }
+    showTyping();
+    const d = await req(`/api/kids/${kid.id}/chat`, {
+      method: 'POST',
+      body: JSON.stringify({ message: label }),
+    });
+    hideTyping();
+    area.insertAdjacentHTML('beforeend', bubble('assistant', d.reply, new Date().toISOString()));
+    scrollBot();
+  } catch(e) {
+    hideTyping();
+    showToast('记录失败，请稍后再试');
+  }
+}
+
+function getAchievementName(type) {
+  const names = {
+    football: '⚽ Football Star',
+    painting: '🎨 Little Artist',
+    piano:    '🎹 Piano Prodigy',
+    reading:  '📚 Bookworm',
+    travel:   '✈️ World Explorer',
+    science:  '🔬 Science Whiz',
+    dance:    '💃 Dance Champion',
+    baking:   '🧁 Master Baker',
+    music:    '🎵 Music Lover',
+    game:     '🎮 Play Master',
+    nature:   '🌿 Nature Friend',
+    explore:  '🔍 Little Explorer',
+  };
+  return names[type] || '🌟 Super Kid';
+}
+
 function showMomentCard(type) {
   const existing = document.getElementById("momentCard");
   if (existing) existing.remove();
@@ -1195,9 +1340,9 @@ async function sendMsg(text) {
     scrollBot();
     if (d.msgCount !== undefined && kid.age <= 1) updateGrowthBar(d.msgCount);
     if (d.storyPrompt) showMomentCard('story');
-if (d.songPrompt) showMomentCard('song');
-
-
+    if (d.songPrompt) showMomentCard('song');
+    const activityTrigger = detectActivityTrigger(d.reply);
+    if (activityTrigger && !d.storyPrompt && !d.songPrompt) showActivityCard(activityTrigger);
   } catch(e) {
     hideTyping();
     area.insertAdjacentHTML("beforeend",bubble("assistant",`（${kid.name}没有回应，请稍后再试）`,new Date().toISOString()));
