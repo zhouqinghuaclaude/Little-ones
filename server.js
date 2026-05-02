@@ -464,7 +464,10 @@ if (msgCount < 3) {
 
 
 
-system += ` 你是${genderDesc}，无论如何都不能说自己是${kid.gender === 'boy' ? '女孩' : '男孩'}。`;
+if (kid.age >= 1) {
+  system += ` 注意：你已经长大了，之前的肢体感应回复方式已经过时，现在必须用语言直接说话，完全禁止任何感应卡风格的回复。`;
+}
+  system += ` 你是${genderDesc}，无论如何都不能说自己是${kid.gender === 'boy' ? '女孩' : '男孩'}。`;
 
   const zodiac = getZodiacSign(kid.birthday);
   if (zodiac) {
