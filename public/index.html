@@ -1354,7 +1354,8 @@ async function sendMsg(text) {
     if (d.storyPrompt) showMomentCard('story');
     if (d.songPrompt) showMomentCard('song');
     const activityTrigger = detectActivityTrigger(d.reply);
-    if (activityTrigger && !d.storyPrompt && !d.songPrompt) showActivityCard(activityTrigger);
+    if (activityTrigger) showActivityCard(activityTrigger);
+
   } catch(e) {
     hideTyping();
     area.insertAdjacentHTML("beforeend",bubble("assistant",`（${kid.name}没有回应，请稍后再试）`,new Date().toISOString()));
