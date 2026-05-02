@@ -717,7 +717,7 @@ function showScreen(id) {
 function showToast(msg) {
   const el = document.getElementById("toast");
   el.textContent = msg; el.classList.add("show");
-  setTimeout(() => el.classList.remove("show"), 8000);
+  setTimeout(() => el.classList.remove("show"), 2500);
 }
 function req(path, opts={}) {
   const controller = new AbortController();
@@ -1015,8 +1015,7 @@ function detectActivityTrigger(reply) {
 
 
 async function showActivityCard(trigger) {
-  showToast('showActivityCard called: ' + trigger.name);
-
+  
   const existing = document.getElementById('activityCard');
   if (existing) existing.remove();
 
