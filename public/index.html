@@ -1046,7 +1046,7 @@ async function showActivityCard(trigger) {
     </div>
     <div style="display:flex;gap:8px">
       <button class="primary-btn" style="margin-top:0;padding:10px;font-size:13px"
-      onclick="event.stopPropagation();doActivity('${trigger.type}','${trigger.name}','${trigger.emoji}',${isFree})">一起去吧 ${trigger.emoji}</button>
+      onclick="event.stopPropagation();doActivity('${trigger.type}','${trigger.name}','${trigger.emoji}',${currentCount < FREE_LIMIT})">一起去吧 ${trigger.emoji}</button>
 
       <button style="padding:10px 16px;border-radius:12px;border:1.5px solid #E0D0EE;font-size:13px;color:#999"
         onclick="document.getElementById('activityCard').remove()">下次吧</button>
