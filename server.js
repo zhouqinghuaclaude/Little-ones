@@ -402,7 +402,6 @@ let bondDelta = 1; // base per message
   // ─────────────────────────────────────────────────────────────────────────
 
   const ageInDays = kid.birthday ? Math.floor((Date.now() - new Date(kid.birthday)) / 86400000) : (kid.age * 365);
- console.log(`kid.age: ${kid.age}, kid.age_mode: ${kid.age_mode}, ageInDays: ${ageInDays}`);
  
 const personalityMap = {
   lively: "你活泼好动、充满好奇心，说话总是兴奋的",
