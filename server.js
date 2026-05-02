@@ -518,8 +518,8 @@ if (message.includes('📖') && message.includes('讲故事')) {
       [kid.id, reply]
     );
   const totalCount = msgCount + 1;
-const storyPrompt = kid.age <= 1 && (reply.includes('故') && reply.includes('事'));
-const songPrompt = kid.age <= 1 && (reply.includes('歌') || reply.includes('唱'));
+const storyPrompt = kid.age <= 3 && (reply.includes('故') && reply.includes('事'));
+const songPrompt = kid.age <= 3 && (reply.includes('歌') || reply.includes('唱'));
 
 res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: totalCount, storyPrompt: storyPrompt, songPrompt: songPrompt });
 
