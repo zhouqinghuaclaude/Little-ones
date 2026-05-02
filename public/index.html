@@ -994,11 +994,13 @@ function getAgeRangeKey(age) {
 
 const _activityShownToday = {};
 
+
 function detectActivityTrigger(reply) {
   if (!kid || !reply) return null;
   const key = getAgeRangeKey(kid.age);
   const triggers = ACTIVITY_TRIGGERS[key] || [];
   const today = new Date().toISOString().slice(0, 10);
+  showToast('检查: ' + key + ' | ' + reply.substring(0, 10));
   for (const trigger of triggers) {
     const cacheKey = `${kid.id}_${trigger.type}_${today}`;
     if (_activityShownToday[cacheKey]) continue;
@@ -1012,7 +1014,6 @@ function detectActivityTrigger(reply) {
   }
   return null;
 }
-
 
 async function showActivityCard(trigger) {
   const existing = document.getElementById('activityCard');
