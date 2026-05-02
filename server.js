@@ -183,15 +183,20 @@ app.patch("/api/kids/:id/settings", auth, async (req, res) => {
   const kid = kidResult.rows[0];
   if (!kid) return res.status(404).json({ error: "孩子不存在" });
 
-  // 生日设置（锁定后不可更改）
-  if (birthday && !kid.birthday_locked) {
-    const born = new Date(birthday);
-    const today = new Date();
-    let age = today.getFullYear() - born.getFullYear();
-    const m = today.getMonth() - born.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < born.getDate())) age--;
-    await db.query("UPDATE kids SET birthday=$1, age=$2, birthday_locked=true WHERE id=$3", [birthday, age, kid.id]);
+ // 生日设置（锁定后不可更改）
+if (birthday && !kid.birthday_locked) {
+  const born = new Date(birthday);
+  const today = new Date();
+  let age = today.getFullYear() - born.getFullYear();
+  const m = today.getMonth() - born.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < born.getDate())) age--;
+  await db.query("UPDATE kids SET birthday=$1, age=$2, birthday_locked=true WHERE id=$3", [birthday, age, kid.id]);
+  // 如果年龄从0变成1岁以上，清除聊天历史避免感应卡风格污染
+  if (kid.age < 1 && age >= 1) {
+    await db.query("DELETE FROM messages WHERE kid_id=$1", [kid.id]);
   }
+}
+
 
   // 性格设置
   if (personality) {
