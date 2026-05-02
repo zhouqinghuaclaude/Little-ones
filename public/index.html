@@ -1485,6 +1485,7 @@ async function saveSettings() {
     
     const updated = await req(`/api/kids/${settingsKid.id}/settings`, {method:'PATCH', body:JSON.stringify(body)});
     settingsKid = {...settingsKid, ...updated};
+    kid = {...kid, ...updated};
     msg.textContent = '✅ 保存成功';
     setTimeout(() => { msg.textContent = ''; showScreen('chatScreen'); }, 1500);
   } catch(e) {
