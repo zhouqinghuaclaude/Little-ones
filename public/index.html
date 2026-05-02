@@ -717,7 +717,7 @@ function showScreen(id) {
 function showToast(msg) {
   const el = document.getElementById("toast");
   el.textContent = msg; el.classList.add("show");
-  setTimeout(() => el.classList.remove("show"), 8000);
+  setTimeout(() => el.classList.remove("show"), 2500);
 }
 function req(path, opts={}) {
   const controller = new AbortController();
@@ -1000,22 +1000,19 @@ function detectActivityTrigger(reply) {
   const key = getAgeRangeKey(kid.age);
   const triggers = ACTIVITY_TRIGGERS[key] || [];
   const today = new Date().toISOString().slice(0, 10);
-  showToast('检查: ' + key + ' | ' + reply.substring(0, 10));
-  showToast(JSON.stringify(_activityShownToday).substring(0, 30));
-
   for (const trigger of triggers) {
     const cacheKey = `${kid.id}_${trigger.type}_${today}`;
     if (_activityShownToday[cacheKey]) continue;
     for (const kw of trigger.keywords) {
       if (reply.includes(kw)) {
         _activityShownToday[cacheKey] = true;
-        showToast('触发: ' + trigger.name);
         return trigger;
       }
     }
   }
   return null;
 }
+
 
 async function showActivityCard(trigger) {
   const existing = document.getElementById('activityCard');
