@@ -1015,6 +1015,8 @@ function detectActivityTrigger(reply) {
 
 
 async function showActivityCard(trigger) {
+  showToast('showActivityCard called: ' + trigger.name);
+
   const existing = document.getElementById('activityCard');
   if (existing) existing.remove();
 
