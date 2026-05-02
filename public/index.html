@@ -1001,6 +1001,8 @@ function detectActivityTrigger(reply) {
   const triggers = ACTIVITY_TRIGGERS[key] || [];
   const today = new Date().toISOString().slice(0, 10);
   showToast('检查: ' + key + ' | ' + reply.substring(0, 10));
+  showToast(JSON.stringify(_activityShownToday).substring(0, 30));
+
   for (const trigger of triggers) {
     const cacheKey = `${kid.id}_${trigger.type}_${today}`;
     if (_activityShownToday[cacheKey]) continue;
