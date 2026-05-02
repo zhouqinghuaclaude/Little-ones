@@ -1005,6 +1005,7 @@ function detectActivityTrigger(reply) {
     for (const kw of trigger.keywords) {
       if (reply.includes(kw)) {
         _activityShownToday[cacheKey] = true;
+        showToast('触发: ' + trigger.name);
         return trigger;
       }
     }
