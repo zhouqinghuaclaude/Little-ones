@@ -849,8 +849,13 @@ let createData = {};
 function startCreateDialog() {
   createStep = 0;
   createData = {};
+  const msg = document.getElementById("dialogMsg");
+  const input = document.getElementById("dialogInput");
+  if (msg) msg.textContent = "";
+  if (input) input.innerHTML = "";
   showCreateStep();
 }
+
 
 function showCreateStep() {
   const msg = document.getElementById("dialogMsg");
