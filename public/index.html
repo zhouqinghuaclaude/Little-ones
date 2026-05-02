@@ -1193,7 +1193,9 @@ function getBudAvatar(gender) {
  function updateGrowthBar(count) {
   const bar = document.getElementById("growthBar");
   if (!bar) return;
-  if (!kid || kid.age >= 1 || kid.age_mode !== 'natural') { bar.style.display = "none"; return; }
+  const kidAgeInDays = kid.birthday ? Math.floor((Date.now() - new Date(kid.birthday)) / 86400000) : (kid.age * 365);
+if (!kid || kidAgeInDays >= 365 || kid.age_mode !== 'natural') { bar.style.display = "none"; return; }
+
   bar.style.display = "block";
   const role = kid.parent_role || "妈妈";
   if (count < 3) bar.textContent = `💕 再聊${3-count}条，宝宝会发出声音`;
