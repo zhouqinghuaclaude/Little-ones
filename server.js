@@ -559,7 +559,7 @@ console.log('kid age for activity check:', kid.age);
   } catch(e) { /* ignore */ }
 }
 
-res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: totalCount, storyPrompt: storyPrompt, songPrompt: songPrompt });
+res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: totalCount, storyPrompt: storyPrompt, songPrompt: songPrompt, activitySuggestion });
 
 
   } catch (e) {
