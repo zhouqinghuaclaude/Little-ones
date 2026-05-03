@@ -1381,7 +1381,9 @@ async function sendMsg(text) {
     if (d.storyPrompt) showMomentCard('story');
     if (d.songPrompt) showMomentCard('song');
    let activityTrigger = null;
-if (d.activitySuggestion) {
+showToast('server reply: ' + (d.activitySuggestion || 'undefined'));
+
+    if (d.activitySuggestion) {
   const key = getAgeRangeKey(kid.age);
   const triggers = ACTIVITY_TRIGGERS[key] || [];
   activityTrigger = triggers.find(t => t.type === d.activitySuggestion) || null;
