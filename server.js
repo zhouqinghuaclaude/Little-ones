@@ -546,7 +546,8 @@ console.log('kid age for activity check:', kid.age);
     const activityCheck = await claude.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 50,
-      system: `你是一个判断助手。根据孩子和用户说的话，判断是否在表达想做某个活动的明确意愿。只回答活动类型代码，如果没有明确意愿就回答"none"。可选活动：${options.join(', ')}。只输出活动代码或none，不要其他内容。`,
+      system: `你是一个判断助手。根据对话内容，判断是否涉及某个活动话题（不需要明确表示想做，只要话题相关就算）。只回答活动类型代码，如果完全不相关就回答"none"。可选活动：${options.join(', ')}。只输出活动代码或none，不要其他内容。`,
+
       messages: [{ role: "user", content: `孩子说：${reply}\n用户说：${message}` }]
     });
     const suggestion = activityCheck.content[0].text.trim().toLowerCase();
