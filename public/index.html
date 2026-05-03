@@ -1380,8 +1380,13 @@ async function sendMsg(text) {
     if (d.msgCount !== undefined && kid.age <= 1) updateGrowthBar(d.msgCount);
     if (d.storyPrompt) showMomentCard('story');
     if (d.songPrompt) showMomentCard('song');
-    const activityTrigger = detectActivityTrigger(d.reply);
-    if (activityTrigger) showActivityCard(activityTrigger);
+   let activityTrigger = null;
+if (d.activitySuggestion) {
+  const key = getAgeRangeKey(kid.age);
+  const triggers = ACTIVITY_TRIGGERS[key] || [];
+  activityTrigger = triggers.find(t => t.type === d.activitySuggestion) || null;
+}
+if (activityTrigger && !d.storyPrompt && !d.songPrompt) showActivityCard(activityTrigger);
 
   } catch(e) {
     hideTyping();
