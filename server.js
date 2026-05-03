@@ -532,7 +532,9 @@ const songPrompt = kid.age <= 3 && (reply.includes('歌') || reply.includes('唱
 
 // 用AI判断是否应该触发活动卡（仅1岁以上）
 let activitySuggestion = null;
-if (kid.age >= 1) {
+console.log('kid age for activity check:', kid.age);
+
+    if (kid.age >= 1) {
   const ACTIVITY_OPTIONS = {
     '1-3': ['painting(画画)', 'music(唱歌)', 'reading(读故事)', 'game(搭积木)', 'nature(去公园)'],
     '3-6': ['football(踢足球)', 'painting(画画)', 'piano(听音乐会)', 'dance(跳舞)', 'reading(去图书馆)', 'explore(去探险)'],
