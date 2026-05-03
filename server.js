@@ -404,6 +404,21 @@ let bondDelta = 1; // base per message
     "UPDATE kids SET bond_score=$1, streak_days=$2, last_chat_date=$3 WHERE id=$4",
     [newBondScore, newStreakDays, todayStr, kid.id]
   );
+  // 检测是否晋级
+const LEVEL_THRESHOLDS = [0, 51, 151, 301, 501, 1001];
+const LEVEL_NAMES = ['初遇萌芽', '沁润青芽', '爱启灵芽', '心芽同频', '心芽共生', '心芽永恒'];
+const LEVEL_GIFTS = ['晨曦之光', '晶凝露华', '青蓝灵犀', '灵绪之契', '星璇之曜', '永恒之诺'];
+const LEVEL_EMOJIS = ['🌱', '🌿', '✨', '💫', '🌟', '💎'];
+
+const oldLevel = LEVEL_THRESHOLDS.filter(t => (kid.bond_score || 0) >= t).length - 1;
+const newLevel = LEVEL_THRESHOLDS.filter(t => newBondScore >= t).length - 1;
+const levelUp = newLevel > oldLevel ? {
+  level: newLevel,
+  name: LEVEL_NAMES[newLevel],
+  gift: LEVEL_GIFTS[newLevel],
+  emoji: LEVEL_EMOJIS[newLevel],
+} : null;
+
   // ─────────────────────────────────────────────────────────────────────────
 
   const ageInDays = kid.birthday ? Math.floor((Date.now() - new Date(kid.birthday)) / 86400000) : (kid.age * 365);
@@ -554,7 +569,7 @@ let activitySuggestion = null;
   } catch(e) { /* ignore */ }
 }
 
-res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: totalCount, storyPrompt: storyPrompt, songPrompt: songPrompt, activitySuggestion });
+res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: totalCount, storyPrompt: storyPrompt, songPrompt: songPrompt, activitySuggestion, levelUp });
 
 
   } catch (e) {
