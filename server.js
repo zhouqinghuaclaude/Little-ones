@@ -526,9 +526,33 @@ if (message.includes('📖') && message.includes('讲故事')) {
       "INSERT INTO messages (kid_id, role, content) VALUES ($1,'assistant',$2) RETURNING id",
       [kid.id, reply]
     );
-  const totalCount = msgCount + 1;
+ const totalCount = msgCount + 1;
 const storyPrompt = kid.age <= 3 && (reply.includes('故') && reply.includes('事'));
 const songPrompt = kid.age <= 3 && (reply.includes('歌') || reply.includes('唱'));
+
+// 用AI判断是否应该触发活动卡（仅1岁以上）
+let activitySuggestion = null;
+if (kid.age >= 1) {
+  const ACTIVITY_OPTIONS = {
+    '1-3': ['painting(画画)', 'music(唱歌)', 'reading(读故事)', 'game(搭积木)', 'nature(去公园)'],
+    '3-6': ['football(踢足球)', 'painting(画画)', 'piano(听音乐会)', 'dance(跳舞)', 'reading(去图书馆)', 'explore(去探险)'],
+    '6+': ['football(踢足球)', 'travel(去旅行)', 'science(做实验)', 'reading(去书店)', 'painting(看展览)', 'dance(看表演)', 'baking(做烘焙)', 'piano(听音乐会)'],
+  };
+  const ageKey = kid.age < 3 ? '1-3' : kid.age < 6 ? '3-6' : '6+';
+  const options = ACTIVITY_OPTIONS[ageKey] || [];
+  try {
+    const activityCheck = await claude.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 50,
+      system: `你是一个判断助手。根据孩子和用户说的话，判断是否在表达想做某个活动的明确意愿。只回答活动类型代码，如果没有明确意愿就回答"none"。可选活动：${options.join(', ')}。只输出活动代码或none，不要其他内容。`,
+      messages: [{ role: "user", content: `孩子说：${reply}\n用户说：${message}` }]
+    });
+    const suggestion = activityCheck.content[0].text.trim().toLowerCase();
+    if (suggestion !== 'none' && options.some(o => o.startsWith(suggestion))) {
+      activitySuggestion = suggestion;
+    }
+  } catch(e) { /* ignore */ }
+}
 
 res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: totalCount, storyPrompt: storyPrompt, songPrompt: songPrompt });
 
