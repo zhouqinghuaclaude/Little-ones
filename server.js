@@ -548,6 +548,8 @@ if (kid.age >= 1) {
       messages: [{ role: "user", content: `孩子说：${reply}\n用户说：${message}` }]
     });
     const suggestion = activityCheck.content[0].text.trim().toLowerCase();
+    console.log('activitySuggestion:', suggestion);
+
     if (suggestion !== 'none' && options.some(o => o.startsWith(suggestion))) {
       activitySuggestion = suggestion;
     }
