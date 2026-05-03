@@ -741,11 +741,11 @@ function showScreen(id) {
    if (id === "createScreen") { startCreateDialog(); }
 }
 function showToast(msg) {
-  alert(msg);
+  
   const el = document.getElementById("toast");
   el.textContent = msg; 
   el.classList.add("show");
-  setTimeout(() => el.classList.remove("show"), 8000);
+  setTimeout(() => el.classList.remove("show"), 2500);
 }
 
 function req(path, opts={}) {
@@ -1385,14 +1385,11 @@ async function sendMsg(text) {
     if (d.storyPrompt) showMomentCard('story');
     if (d.songPrompt) showMomentCard('song');
    let activityTrigger = null;
-showToast('server reply: ' + (d.activitySuggestion || 'undefined'));
-
     if (d.activitySuggestion) {
   const key = getAgeRangeKey(kid.age);
   const triggers = ACTIVITY_TRIGGERS[key] || [];
   activityTrigger = triggers.find(t => t.type === d.activitySuggestion) || null;
-  if (activityTrigger) showToast('找到活动: ' + activityTrigger.name);
-else showToast('没找到: ' + d.activitySuggestion + ' in ' + key);
+  
 
 }
 if (activityTrigger && !d.storyPrompt && !d.songPrompt) showActivityCard(activityTrigger);
