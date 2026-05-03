@@ -544,7 +544,7 @@ let activitySuggestion = null;
     const activityCheck = await claude.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 50,
-      system: `你是一个判断助手。根据对话内容，判断是否涉及某个活动话题（不需要明确表示想做，只要话题相关就算）。只回答活动类型代码，如果完全不相关就回答"none"。可选活动：${options.join(', ')}。只输出活动代码或none，不要其他内容。`,
+     system: `你是一个判断助手。根据对话内容，判断孩子或用户是否在当前对话中表达了立刻想做某个活动的意愿（不包括将来计划、假设或随口提及）。只回答活动类型代码，如果没有立刻想做的意愿就回答"none"。可选活动：${options.join(', ')}。只输出活动代码或none，不要其他内容。`,
 
       messages: [{ role: "user", content: `孩子说：${reply}\n用户说：${message}` }]
     });
