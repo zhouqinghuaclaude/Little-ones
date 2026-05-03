@@ -1384,14 +1384,18 @@ async function sendMsg(text) {
     if (d.msgCount !== undefined && kid.age <= 1) updateGrowthBar(d.msgCount);
     if (d.storyPrompt) showMomentCard('story');
     if (d.songPrompt) showMomentCard('song');
-   let activityTrigger = null;
-    if (d.activitySuggestion) {
+  let activityTrigger = null;
+if (d.activitySuggestion) {
   const key = getAgeRangeKey(kid.age);
   const triggers = ACTIVITY_TRIGGERS[key] || [];
-  activityTrigger = triggers.find(t => t.type === d.activitySuggestion) || null;
-  
-
+  const today = new Date().toISOString().slice(0, 10);
+  const cacheKey = `${kid.id}_${d.activitySuggestion}_${today}`;
+  if (!_activityShownToday[cacheKey]) {
+    activityTrigger = triggers.find(t => t.type === d.activitySuggestion) || null;
+    if (activityTrigger) _activityShownToday[cacheKey] = true;
+  }
 }
+
 if (activityTrigger && !d.storyPrompt && !d.songPrompt) showActivityCard(activityTrigger);
 
   } catch(e) {
