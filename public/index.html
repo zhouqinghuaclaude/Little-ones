@@ -1385,6 +1385,9 @@ if (d.activitySuggestion) {
   const key = getAgeRangeKey(kid.age);
   const triggers = ACTIVITY_TRIGGERS[key] || [];
   activityTrigger = triggers.find(t => t.type === d.activitySuggestion) || null;
+  if (activityTrigger) showToast('找到活动: ' + activityTrigger.name);
+else showToast('没找到: ' + d.activitySuggestion + ' in ' + key);
+
 }
 if (activityTrigger && !d.storyPrompt && !d.songPrompt) showActivityCard(activityTrigger);
 
