@@ -1094,7 +1094,8 @@ async function doActivity(type, name, emoji) {
   try {
     const result = await req(`/api/kids/${kid.id}/activities`, {
       method: 'POST',
-      body: JSON.stringify({ activity_type: type }),
+      body: JSON.stringify({ activity_type: type, activity_name: name }),
+
     });
     if (result.newAchievement) {
       showToast(`🏆 太棒了！解锁成就：${getAchievementName(type)}！`);
