@@ -1004,13 +1004,13 @@ function showBirthMoment(kid, role, ageRange) {
         <div style="font-size:22px;font-weight:900;color:white;margin-bottom:8px">${kid.name}</div>
         <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:32px;letter-spacing:2px">🌱 初遇萌芽</div>
         <div style="font-size:20px;color:white;line-height:1.8;margin-bottom:40px;min-height:60px">${steps[stepIndex]}</div>
-        <button onclick="document.getElementById('birthOverlayNext').click()" id="birthOverlayNext"
+        <button id="birthBtn"
           style="padding:14px 32px;border-radius:24px;background:rgba(255,255,255,0.15);color:white;font-size:15px;border:1px solid rgba(255,255,255,0.3)">
           ${isLast ? '✨ 开始' : '嗯'}
         </button>
       </div>
     `;
-    document.getElementById('birthOverlayNext').onclick = () => {
+    document.getElementById('birthBtn').onclick = () => {
       if (isLast) {
         overlay.style.animation = "fadeOut .5s ease forwards";
         setTimeout(() => {
@@ -1024,7 +1024,6 @@ function showBirthMoment(kid, role, ageRange) {
     };
   }
 
-  renderStep();
   document.body.appendChild(overlay);
 }
 
