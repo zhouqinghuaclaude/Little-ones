@@ -741,10 +741,13 @@ function showScreen(id) {
    if (id === "createScreen") { startCreateDialog(); }
 }
 function showToast(msg) {
+  alert(msg);
   const el = document.getElementById("toast");
-  el.textContent = msg; el.classList.add("show");
+  el.textContent = msg; 
+  el.classList.add("show");
   setTimeout(() => el.classList.remove("show"), 8000);
 }
+
 function req(path, opts={}) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30000);
