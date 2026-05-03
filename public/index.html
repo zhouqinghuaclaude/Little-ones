@@ -126,6 +126,12 @@ input, textarea { font-family: inherit; }
   flex-direction: column;
   gap: 4px;
   box-shadow: 0 2px 12px rgba(155,89,182,0.08);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  box-sizing: border-box;
 }
 /* Row 1: back button + avatar + name + online dot */
 .chat-header-row1 {
@@ -172,15 +178,18 @@ input, textarea { font-family: inherit; }
 .online-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%;
   background: #27AE60; margin-right: 4px; vertical-align: middle; flex-shrink: 0; }
 .msgs-area { flex: 1; overflow-y: auto; padding: 14px 14px 8px;
-  display: flex; flex-direction: column; gap: 10px; }
+  display: flex; flex-direction: column; gap: 10px;
+  margin-top: 130px; padding-bottom: 110px; box-sizing: border-box; }
 .quick-bar { padding: 8px 12px 6px; overflow-x: auto; display: flex; gap: 7px;
-  background: white; border-top: 1px solid var(--border); flex-shrink: 0; scrollbar-width: none; }
+  background: white; border-top: 1px solid var(--border); flex-shrink: 0; scrollbar-width: none;
+  position: fixed; bottom: 50px; left: 0; right: 0; z-index: 99; box-sizing: border-box; }
 .quick-bar::-webkit-scrollbar { display: none; }
 .qbtn { white-space: nowrap; flex-shrink: 0; background: var(--bg);
   border: 1.5px solid var(--border); border-radius: 20px; padding: 6px 13px;
   font-size: 12px; font-weight: 600; color: var(--p); }
-.input-row { padding: 8px 12px 28px; background: white;
-  border-top: 1px solid var(--border); flex-shrink: 0; display: flex; gap: 8px; align-items: flex-end; }
+.input-row { padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); background: white;
+  border-top: 1px solid var(--border); flex-shrink: 0; display: flex; gap: 8px; align-items: flex-end;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 99; box-sizing: border-box; }
 .msg-input { flex: 1; border: 1.5px solid var(--border); border-radius: 22px;
   padding: 10px 16px; font-size: 14px; color: var(--text); resize: none;
   outline: none; max-height: 100px; line-height: 1.5; background: var(--bg); }
@@ -360,6 +369,7 @@ z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden;
   .chat-header {
     padding: 46px 10px 6px;
     gap: 3px;
+    width: 100%;
   }
   .chat-nav-btn {
     padding: 5px 10px;
@@ -528,6 +538,7 @@ z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden;
   <div class="msgs-area" id="msgsArea"></div>
   <div class="input-row">
     <textarea id="msgInput" class="msg-input" placeholder="和宝宝说点什么…" rows="1"
+      enterkeyhint="send"
       oninput="autoResize(this)"
       onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
     <button id="sendBtn" class="send-btn" onclick="sendMsg()">➤</button>
@@ -1778,6 +1789,23 @@ async function sendGift(emoji, name, type, level) {
   } catch(e) {
     showToast(e.message || "删除失败");
   }
+}
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    const inputRow = document.querySelector('.input-row');
+    const quickBar = document.querySelector('.quick-bar');
+    const msgsArea = document.getElementById('msgsArea');
+    const vh = window.visualViewport.height;
+    const keyboardHeight = window.innerHeight - vh;
+
+    if (inputRow) inputRow.style.bottom = keyboardHeight + 'px';
+    if (quickBar) quickBar.style.bottom = (keyboardHeight + 50) + 'px';
+    if (msgsArea) {
+      msgsArea.style.paddingBottom = (keyboardHeight + 100) + 'px';
+      msgsArea.scrollTop = msgsArea.scrollHeight;
+    }
+  });
 }
 </script>
 
