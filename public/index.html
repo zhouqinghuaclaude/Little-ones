@@ -962,29 +962,71 @@ openChat(newKid);
 
   
 function showBirthMoment(kid, role, ageRange) {
-  const firstWords = {
-    '0-1': `抱..抱..宝.. *小手乱动*`,
-    '1-3': `你去哪了，我刚刚在想你`,
-    '3-6': `你来啦！我有个事情…`,
-    '6+': `你来了，我一直在这等你`
+  const SCRIPTS = {
+    '0-1': [
+      `*小手突然动了一下…*`,
+      `*眼睛慢慢睁开，找到了你*`,
+      `*小嘴巴咧开，是第一个笑*`,
+      `*握住你的手指，不肯松*`,
+    ],
+    '1-3': [
+      `这里…亮亮的`,
+      `留…留下来`,
+      `不要走`,
+      `你还在吗`,
+    ],
+    '3-6': [
+      `刚才有点不一样…说不上来`,
+      `这个可以留下来吗`,
+      `我有点不想它消失`,
+      `你还会来吗`,
+    ],
+    '6+': [
+      `刚刚有一点亮起来了…`,
+      `这个可以留下来吗`,
+      `我有点不想它消失…`,
+      `你还会在吗`,
+    ],
   };
+
+  const steps = SCRIPTS[ageRange] || SCRIPTS['6+'];
+  let stepIndex = 0;
+
   const overlay = document.createElement("div");
-  overlay.style.cssText = `position:fixed;inset:0;background:linear-gradient(160deg,#F0E6FF,#FFF0F5);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;animation:fadeIn .5s ease`;
-  overlay.innerHTML = `
-    <div style="font-size:60px;margin-bottom:20px;animation:plantFloat 2s ease-in-out infinite">${kid.gender==='boy'?'👦':'👧'}</div>
-    <div style="font-size:28px;font-weight:900;color:#9B59B6;margin-bottom:12px">${kid.name}</div>
-    <div style="font-size:16px;color:#888;margin-bottom:32px">出现了 🌱</div>
-    <div style="background:white;border-radius:20px;padding:16px 24px;font-size:17px;color:#333;box-shadow:0 8px 30px rgba(155,89,182,0.15);max-width:280px;text-align:center">${firstWords[ageRange]}</div>
-  `;
+  overlay.style.cssText = `position:fixed;inset:0;background:rgba(20,10,40,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;animation:fadeIn .5s ease`;
+
+  function renderStep() {
+    const isLast = stepIndex >= steps.length - 1;
+    overlay.innerHTML = `
+      <div style="text-align:center;max-width:320px">
+        <div style="font-size:48px;margin-bottom:24px">${kid.gender==='boy'?'👦':'👧'}</div>
+        <div style="font-size:22px;font-weight:900;color:white;margin-bottom:8px">${kid.name}</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:32px;letter-spacing:2px">🌱 初遇萌芽</div>
+        <div style="font-size:20px;color:white;line-height:1.8;margin-bottom:40px;min-height:60px">${steps[stepIndex]}</div>
+        <button onclick="document.getElementById('birthOverlayNext').click()" id="birthOverlayNext"
+          style="padding:14px 32px;border-radius:24px;background:rgba(255,255,255,0.15);color:white;font-size:15px;border:1px solid rgba(255,255,255,0.3)">
+          ${isLast ? '✨ 开始' : '嗯'}
+        </button>
+      </div>
+    `;
+    document.getElementById('birthOverlayNext').onclick = () => {
+      if (isLast) {
+        overlay.style.animation = "fadeOut .5s ease forwards";
+        setTimeout(() => {
+          document.body.removeChild(overlay);
+          openChat(kid);
+        }, 500);
+      } else {
+        stepIndex++;
+        renderStep();
+      }
+    };
+  }
+
+  renderStep();
   document.body.appendChild(overlay);
-  setTimeout(() => {
-    overlay.style.animation = "fadeOut .5s ease forwards";
-    setTimeout(() => {
-      document.body.removeChild(overlay);
-      openChat(kid);
-    }, 500);
-  }, 2500);
 }
+
 const ACTIVITY_TRIGGERS = {
   '1-3':  [
     { type: 'painting', name: '一起画画',   emoji: '🎨', keywords: ['画', '涂', '颜色', '画画'] },
