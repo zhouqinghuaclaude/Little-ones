@@ -583,7 +583,8 @@ res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: n
 
 
   } catch (e) {
-    console.error(e);
+   console.error('Chat error:', e.message, e.status);
+ 
     res.status(500).json({ error: "No response, please try again" });
   }
 });
