@@ -1572,8 +1572,14 @@ if (kid.age >= 1) {
  
 showToast('bond:' + d.bond_score + ' levelUp:' + (d.levelUp ? d.levelUp.name : 'null'));
 
-    if (d.levelUp) showLevelUpMoment(d.levelUp);
-
+if (d.levelUp) {
+  try {
+    showLevelUpMoment(d.levelUp);
+  } catch(e) {
+    showToast('levelUp error: ' + e.message);
+  }
+}
+ 
 
   } catch(e) {
     hideTyping();
