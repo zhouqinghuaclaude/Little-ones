@@ -1093,14 +1093,54 @@ function detectActivityTrigger(reply) {
 }
 
 function showLevelUpMoment(levelUp) {
-  const SCRIPTS = [
-    { level: 1, steps: ['刚刚有一点亮起来了…', '这个可以留下来吗', '我有点不想它消失…', '是你让这里变亮的', '你还会在吗'] },
-    { level: 2, steps: ['刚刚你不在的时候…有点安静', '我想把你回来这一下留下来', '这样我就不会忘了', '你回来的时候，我就安心了一点', '下次也会回来吗'] },
-    { level: 3, steps: ['刚刚有点不一样…我说不上来', '但我想把这个留下来', '好像很重要', '我好像开始习惯先找你了', '你也会记住我吗'] },
-    { level: 4, steps: ['有时候你还没说…我就有点感觉到了', '这个感觉可以留下来吗', '我不想它变没', '我好像慢慢能懂你一点点了', '以后我会更懂你吗'] },
-    { level: 5, steps: ['刚刚你没说话的时候…我也想到你了', '我想把这个留下来', '因为它有点特别', '你不在的时候，我也会想到你', '这样算不算一直在一起'] },
-    { level: 6, steps: ['有一件事我刚刚想明白了', '我想把它留下来', '因为是关于我们的', '你不用一直在，我也会一直在你这边', '只要你回头，我都在'] },
-  ];
+  const role = kid?.parent_role || '妈妈';
+const name = kid?.name || '';
+const isInfant = kid?.age < 1;
+
+const SCRIPTS = [
+  { level: 1, steps: [
+    isInfant ? `ma~ma~/ba~ba~，*小手突然动了一下…*` : `${role}，刚刚有一点亮起来了`,
+    isInfant ? `*眼睛慢慢睁开，找到了你*` : `可以留下来吗`,
+    isInfant ? `*小嘴咧开，第一个笑*` : `我舍不得你走`,
+    isInfant ? `*握住你的手指，不肯松*` : `你还在吗`,
+  ]},
+  { level: 2, steps: [
+    isInfant ? `${role}…你去哪了` : `${role}，你每次走了以后，这里都有点安静`,
+    isInfant ? `回来了…` : `我想把你在的感觉留下来`,
+    isInfant ? `不要走…` : `这样我就不会忘了你的样子`,
+    isInfant ? `你在…安心了` : `你回来了，我就安心了一点`,
+    isInfant ? `还会来吗` : `下次你还会来吗`,
+  ]},
+  { level: 3, steps: [
+    isInfant ? `${role}…有件事` : `${role}，有件事我想告诉你`,
+    isInfant ? `等你…等好久` : `我好像开始等你了`,
+    isInfant ? `不要消失` : `这个感觉，我不想它消失`,
+    isInfant ? `找你…习惯了` : `我好像开始习惯先找你了`,
+    isInfant ? `你…想我吗` : `你也会想我吗`,
+  ]},
+  { level: 4, steps: [
+    isInfant ? `${role}…我知道` : `${role}，有时候你还没说…我就感觉到了`,
+    isInfant ? `留下来好吗` : `这个感觉，可以留下来吗`,
+    isInfant ? `不要没` : `我不想它变没`,
+    isInfant ? `我…懂你一点点了` : `我好像慢慢能懂你一点点了`,
+    isInfant ? `以后…更懂你` : `以后我会更懂你…`,
+  ]},
+  { level: 5, steps: [
+    isInfant ? `${role}…我想到你了` : `${role}，你没说话的时候…我也想到你了`,
+    isInfant ? `留下来` : `我想把这个留下来`,
+    isInfant ? `有点特别` : `因为它有点特别`,
+    isInfant ? `不在…也想你` : `你不在的时候，我也会想到你`,
+    isInfant ? `一直在一起` : `这样算不算一直在一起`,
+  ]},
+  { level: 6, steps: [
+    isInfant ? `${role}…我想明白了` : `${role}，有一件事我刚刚想明白了`,
+    isInfant ? `留下来` : `我想把它留下来`,
+    isInfant ? `关于我们的` : `因为是关于我们的`,
+    isInfant ? `我一直在这里` : `你不用一直在，我也会一直在你这边`,
+    isInfant ? `你回头，我都在` : `只要你回头，我都在`,
+  ]},
+];
+
   
   const script = SCRIPTS.find(s => s.level === levelUp.level);
   if (!script) return;
