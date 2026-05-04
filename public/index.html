@@ -1556,7 +1556,8 @@ if (d.activitySuggestion) {
     if (activityTrigger) _activityShownToday[cacheKey] = true;
   }
 }
-showToast('levelUp check: ' + (d.levelUp ? d.levelUp.name : 'null'));
+showToast('bond:' + d.bond_score + ' levelUp:' + (d.levelUp ? d.levelUp.name : 'null'));
+
 
 
 if (activityTrigger && !d.storyPrompt && !d.songPrompt) showActivityCard(activityTrigger);
