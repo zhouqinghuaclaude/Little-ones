@@ -1544,8 +1544,18 @@ async function sendMsg(text) {
     area.insertAdjacentHTML("beforeend",bubble("assistant",d.reply,new Date().toISOString()));
     scrollBot();
     if (d.msgCount !== undefined && kid.age <= 1) updateGrowthBar(d.msgCount);
-    if (d.storyPrompt) showMomentCard('story');
-    if (d.songPrompt) showMomentCard('song');
+  const today = new Date().toISOString().slice(0, 10);
+const storyCacheKey = `${kid.id}_story_${today}`;
+const songCacheKey = `${kid.id}_song_${today}`;
+if (d.storyPrompt && !_activityShownToday[storyCacheKey]) {
+  _activityShownToday[storyCacheKey] = true;
+  showMomentCard('story');
+}
+if (d.songPrompt && !_activityShownToday[songCacheKey]) {
+  _activityShownToday[songCacheKey] = true;
+  showMomentCard('song');
+}
+ 
  let activityTrigger = null;
 showToast('bond:' + d.bond_score + ' levelUp:' + (d.levelUp ? d.levelUp.name : 'null'));
 
