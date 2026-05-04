@@ -443,7 +443,8 @@ const LEVEL_EMOJIS = ['🌱', '🌿', '✨', '💫', '🌟', '💎'];
 const oldLevel = LEVEL_THRESHOLDS.filter(t => (kid.bond_score || 0) >= t).length - 1;
 const newLevel = LEVEL_THRESHOLDS.filter(t => newBondScore >= t).length - 1;
 const levelUp = newLevel > oldLevel ? {
-  level: newLevel,
+level: newLevel + 1,
+
   name: LEVEL_NAMES[newLevel],
   gift: LEVEL_GIFTS[newLevel],
   emoji: LEVEL_EMOJIS[newLevel],
