@@ -1207,11 +1207,18 @@ const SCRIPTS = [
 const closingLines = CLOSING_LINES[levelUp.level] || [];
 const area = document.getElementById('msgsArea');
 closingLines.forEach((line, i) => {
-  setTimeout(() => {
+  setTimeout(async () => {
     area.insertAdjacentHTML('beforeend', bubble('assistant', line, new Date().toISOString()));
     scrollBot();
+    try {
+      await req(`/api/kids/${kid.id}/messages/save`, {
+        method: 'POST',
+        body: JSON.stringify({ role: 'assistant', content: line })
+      });
+    } catch(e) {}
   }, i * 1500);
 });
+
 
         }, 500);
       } else if (isLast) {
