@@ -1556,7 +1556,8 @@ if (d.activitySuggestion) {
     if (activityTrigger) _activityShownToday[cacheKey] = true;
   }
 }
-if (d.levelUp) showToast('levelUp: ' + d.levelUp.name);
+showToast('levelUp check: ' + (d.levelUp ? d.levelUp.name : 'null'));
+
 
 if (activityTrigger && !d.storyPrompt && !d.songPrompt) showActivityCard(activityTrigger);
     if (d.levelUp) showLevelUpMoment(d.levelUp);
