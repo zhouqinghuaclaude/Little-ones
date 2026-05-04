@@ -1026,6 +1026,7 @@ const SCRIPTS = {
       }
     };
   }
+document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
 
     document.body.appendChild(overlay);
   renderStep();
@@ -1105,7 +1106,8 @@ function showLevelUpMoment(levelUp) {
   let stepIndex = 0;
   const overlay = document.createElement('div');
   overlay.id = 'levelUpOverlay';
-  overlay.style.cssText = `position:fixed;inset:0;background:rgba(20,10,40,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px`;
+  overlay.style.cssText = `position:fixed;inset:0;background:rgba(20,10,40,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;animation:fadeIn .5s ease`;
+
   
   function showStep() {
     const isLast = stepIndex >= script.steps.length;
