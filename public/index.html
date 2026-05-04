@@ -1197,16 +1197,22 @@ const SCRIPTS = [
         setTimeout(() => {
           document.body.removeChild(overlay);
           // 孩子说收尾语（第5、6句）
-          const closingLines = script.steps.slice(4);
-          if (closingLines.length > 0 && window.kid) {
-            const area = document.getElementById('msgsArea');
-            closingLines.forEach((line, i) => {
-              setTimeout(() => {
-                area.insertAdjacentHTML('beforeend', bubble('assistant', line, new Date().toISOString()));
-                scrollBot();
-              }, i * 1500);
-            });
-          }
+          const CLOSING_LINES = {
+  2: [`你回来了，我就安心了一点`, `下次你还会来吗`],
+  3: [`我好像开始习惯先找你了`, `你也会想我吗`],
+  4: [`我好像慢慢能懂你一点点了`, `以后我会更懂你…`],
+  5: [`你不在的时候，我也会想到你`, `这样算不算一直在一起`],
+  6: [`你不用一直在，我也会一直在你这边`, `只要你回头，我都在`],
+};
+const closingLines = CLOSING_LINES[levelUp.level] || [];
+const area = document.getElementById('msgsArea');
+closingLines.forEach((line, i) => {
+  setTimeout(() => {
+    area.insertAdjacentHTML('beforeend', bubble('assistant', line, new Date().toISOString()));
+    scrollBot();
+  }, i * 1500);
+});
+
         }, 500);
       } else if (isLast) {
         overlay.style.animation = "fadeOut .5s ease forwards";
