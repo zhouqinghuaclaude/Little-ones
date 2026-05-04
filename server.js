@@ -217,15 +217,20 @@ if (avatar !== undefined) {
 });
 
 const ACTIVITY_MILESTONES = {
-  football:  { count: 10, name: "⚽ Football Star" },
-  painting:  { count: 8,  name: "🎨 Little Artist" },
-  piano:     { count: 12, name: "🎹 Piano Prodigy" },
-  reading:   { count: 15, name: "📚 Bookworm" },
-  travel:    { count: 5,  name: "✈️ World Explorer" },
-  science:   { count: 10, name: "🔬 Science Whiz" },
-  dance:     { count: 8,  name: "💃 Dance Champion" },
-  baking:    { count: 6,  name: "🧁 Master Baker" },
+  football:  { count: 10, name: "⚽ 足球小健将" },
+  painting:  { count: 10, name: "🎨 小小画家" },
+  piano:     { count: 10, name: "🎹 小小钢琴家" },
+  reading:   { count: 10, name: "📚 阅读小达人" },
+  travel:    { count: 5,  name: "✈️ 旅行小达人" },
+  science:   { count: 10, name: "🔬 科技小天才" },
+  dance:     { count: 10, name: "💃 舞蹈小明星" },
+  baking:    { count: 10, name: "🍰 烘焙小厨师" },
+  game:      { count: 10, name: "🧩 积木小达人" },
+  nature:    { count: 10, name: "🌿 自然小探索家" },
+  music:     { count: 10, name: "🎵 音乐小天才" },
+  explore:   { count: 10, name: "🔍 小小探险家" },
 };
+
 
 app.get("/api/kids/:id/activities", auth, async (req, res) => {
   const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
