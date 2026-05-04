@@ -1153,6 +1153,16 @@ const SCRIPTS = [
   function showStep() {
     const isGiftStep = stepIndex === 3;
     const isLast = stepIndex >= script.steps.length;
+    
+    const GIFT_BTNS = {
+      2: `帮${name}留住这一刻 · 晶凝露华 ✨`,
+      3: `为${name}保存这个感觉 · 青蓝灵犀 ✨`,
+      4: `锁住这份连接 · 灵绪之契 ✨`,
+      5: `记录这段美好 · 星璇之曜 ✨`,
+      6: `守护这份挚爱 · 永恒之诺 ✨`,
+    };
+    const giftBtnText = GIFT_BTNS[levelUp.level] || `帮${name}留下这一刻 ✨`;
+
     overlay.innerHTML = `
       <div style="text-align:center;max-width:320px">
         <div style="font-size:48px;margin-bottom:20px">${levelUp.emoji}</div>
@@ -1163,25 +1173,42 @@ const SCRIPTS = [
             <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:8px">见证这一刻</div>
             <div style="font-size:20px;font-weight:800;color:#FFD700;margin-bottom:20px">${levelUp.emoji} ${levelUp.gift}</div>
             <button id="lvlBtn" style="padding:14px 32px;border-radius:24px;background:linear-gradient(135deg,#9B59B6,#F1948A);color:white;font-size:15px;font-weight:700;margin-bottom:12px">
-              帮${name}留下这一刻 ✨
+              ${giftBtnText}
             </button>
             <div id="lvlSkip" style="font-size:13px;color:rgba(255,255,255,0.4);cursor:pointer;margin-top:8px">下次再说</div>
           ` : `
             <button id="lvlBtn" style="padding:14px 32px;border-radius:24px;background:rgba(255,255,255,0.15);color:white;font-size:15px;border:1px solid rgba(255,255,255,0.3)">
-              ${stepIndex === 0 ? '嗯' : '继续'}
+              嗯
             </button>
           `}
         ` : `
           <div style="font-size:20px;color:white;line-height:1.8;margin-bottom:32px">${script.steps[script.steps.length-1]}</div>
           <button id="lvlBtn" style="padding:14px 32px;border-radius:24px;background:rgba(255,255,255,0.15);color:white;font-size:15px;border:1px solid rgba(255,255,255,0.3)">
-            好
+            嗯
           </button>
         `}
       </div>
     `;
-
+    
     document.getElementById('lvlBtn').onclick = () => {
-      if (isLast) {
+      if (isGiftStep) {
+        // 点击礼物按钮后关闭overlay，孩子在聊天框说收尾语
+        overlay.style.animation = "fadeOut .5s ease forwards";
+        setTimeout(() => {
+          document.body.removeChild(overlay);
+          // 孩子说收尾语（第5、6句）
+          const closingLines = script.steps.slice(4);
+          if (closingLines.length > 0 && window.kid) {
+            const area = document.getElementById('msgsArea');
+            closingLines.forEach((line, i) => {
+              setTimeout(() => {
+                area.insertAdjacentHTML('beforeend', bubble('assistant', line, new Date().toISOString()));
+                scrollBot();
+              }, i * 1500);
+            });
+          }
+        }, 500);
+      } else if (isLast) {
         overlay.style.animation = "fadeOut .5s ease forwards";
         setTimeout(() => { document.body.removeChild(overlay); }, 500);
       } else {
@@ -1198,6 +1225,7 @@ const SCRIPTS = [
       };
     }
   }
+
 
    document.body.appendChild(overlay);
   showStep();
