@@ -1150,43 +1150,60 @@ const SCRIPTS = [
   overlay.id = 'levelUpOverlay';
   overlay.style.cssText = `position:fixed;inset:0;background:rgba(20,10,40,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;animation:fadeIn .5s ease`;
 
-  
   function showStep() {
+    const isGiftStep = stepIndex === 3;
     const isLast = stepIndex >= script.steps.length;
     overlay.innerHTML = `
       <div style="text-align:center;max-width:320px">
-        <div style="font-size:48px;margin-bottom:24px">${levelUp.emoji}</div>
+        <div style="font-size:48px;margin-bottom:20px">${levelUp.emoji}</div>
         <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:16px;letter-spacing:2px">${levelUp.name}</div>
         ${!isLast ? `
-          <div style="font-size:20px;color:white;line-height:1.8;margin-bottom:40px;min-height:60px">${script.steps[stepIndex]}</div>
-          <button onclick="document.getElementById('levelUpOverlay').dispatchEvent(new Event('next'))" 
-            style="padding:14px 32px;border-radius:24px;background:rgba(255,255,255,0.15);color:white;font-size:15px;border:1px solid rgba(255,255,255,0.3)">
-            ${stepIndex === 0 ? '嗯' : stepIndex < script.steps.length - 2 ? '继续' : '好'}
-          </button>
+          <div style="font-size:20px;color:white;line-height:1.8;margin-bottom:32px;min-height:60px">${script.steps[stepIndex]}</div>
+          ${isGiftStep ? `
+            <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:8px">见证这一刻</div>
+            <div style="font-size:20px;font-weight:800;color:#FFD700;margin-bottom:20px">${levelUp.emoji} ${levelUp.gift}</div>
+            <button id="lvlBtn" style="padding:14px 32px;border-radius:24px;background:linear-gradient(135deg,#9B59B6,#F1948A);color:white;font-size:15px;font-weight:700;margin-bottom:12px">
+              帮${name}留下这一刻 ✨
+            </button>
+            <div id="lvlSkip" style="font-size:13px;color:rgba(255,255,255,0.4);cursor:pointer;margin-top:8px">下次再说</div>
+          ` : `
+            <button id="lvlBtn" style="padding:14px 32px;border-radius:24px;background:rgba(255,255,255,0.15);color:white;font-size:15px;border:1px solid rgba(255,255,255,0.3)">
+              ${stepIndex === 0 ? '嗯' : '继续'}
+            </button>
+          `}
         ` : `
-          <div style="font-size:18px;color:white;line-height:1.8;margin-bottom:16px">${script.steps[script.steps.length-1]}</div>
-          <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:8px">见证这一刻</div>
-          <div style="font-size:22px;font-weight:800;color:#FFD700;margin-bottom:24px">${levelUp.emoji} ${levelUp.gift}</div>
-          <button onclick="document.getElementById('levelUpOverlay').remove()" 
-            style="padding:14px 32px;border-radius:24px;background:linear-gradient(135deg,#9B59B6,#F1948A);color:white;font-size:15px;font-weight:700">
-            帮Ta留下这一刻 ✨
+          <div style="font-size:20px;color:white;line-height:1.8;margin-bottom:32px">${script.steps[script.steps.length-1]}</div>
+          <button id="lvlBtn" style="padding:14px 32px;border-radius:24px;background:rgba(255,255,255,0.15);color:white;font-size:15px;border:1px solid rgba(255,255,255,0.3)">
+            好
           </button>
-          <div onclick="document.getElementById('levelUpOverlay').remove()" 
-            style="margin-top:16px;font-size:13px;color:rgba(255,255,255,0.4);cursor:pointer">下次再说</div>
         `}
       </div>
     `;
+
+    document.getElementById('lvlBtn').onclick = () => {
+      if (isLast) {
+        overlay.style.animation = "fadeOut .5s ease forwards";
+        setTimeout(() => { document.body.removeChild(overlay); }, 500);
+      } else {
+        stepIndex++;
+        showStep();
+      }
+    };
+
+    const skipBtn = document.getElementById('lvlSkip');
+    if (skipBtn) {
+      skipBtn.onclick = () => {
+        overlay.style.animation = "fadeOut .5s ease forwards";
+        setTimeout(() => { document.body.removeChild(overlay); }, 500);
+      };
+    }
   }
-  
-  overlay.addEventListener('next', () => {
-    stepIndex++;
-    showStep();
-  });
-  
+
   showStep();
   document.body.appendChild(overlay);
 }
 
+ 
 async function showActivityCard(trigger) {
   
   const existing = document.getElementById('activityCard');
