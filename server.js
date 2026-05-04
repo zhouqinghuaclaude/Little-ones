@@ -169,9 +169,8 @@ const ageInDays = birthday ? Math.floor((Date.now() - new Date(birthday)) / 8640
 
 const ageRange = finalAge < 1 ? '0-1' : finalAge <= 3 ? '1-3' : finalAge <= 6 ? '3-6' : '6+';
 const firstMsg = ageRange === '0-1' ? `*握住你的手指，不肯松*` :
-  ageRange === '1-3' ? `你还在吗` :
-  ageRange === '3-6' ? `你还会来吗` :
-  `你还会在吗`;
+  `${parent_role || '妈妈'}，你还在吗？`;
+
 await db.query("INSERT INTO messages (kid_id, role, content) VALUES ($1,'assistant',$2)", [newKid.id, firstMsg]);
 res.json(newKid);
 });
