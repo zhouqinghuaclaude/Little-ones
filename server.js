@@ -422,6 +422,7 @@ const levelUp = newLevel > oldLevel ? {
   gift: LEVEL_GIFTS[newLevel],
   emoji: LEVEL_EMOJIS[newLevel],
 } : null;
+console.log('bond:', kid.bond_score, '->', newBondScore, 'oldLevel:', oldLevel, 'newLevel:', newLevel, 'levelUp:', levelUp?.name);
 
   // ─────────────────────────────────────────────────────────────────────────
 
