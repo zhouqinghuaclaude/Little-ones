@@ -982,6 +982,43 @@ showBirthMoment(newKid, createData.role || "妈妈", createData.ageRange || "3-6
   }
 }
 
+ function showBirthdayMoment(k) {
+  const role = k.parent_role || '妈妈';
+  const age = k.age || 1;
+  
+  const BIRTHDAY_LINES = {
+    1:  `${role}，抱抱～`,
+    2:  `${role}，要蛋糕！一起吃`,
+    3:  `${role}，我三岁啦，是不是大一点了`,
+    4:  `${role}，我又长大了一岁，我会的东西变多了`,
+    5:  `${role}，我又长大了一岁，我懂的东西更多了`,
+    6:  `${role}，我今年要上学了，放学一定要来接我呀`,
+  };
+  
+  const line = age <= 6 ? (BIRTHDAY_LINES[age] || BIRTHDAY_LINES[6])
+    : age <= 10 ? `${role}，又过一年了，有你在就好`
+    : age <= 17 ? `${role}，有些话我不太会说，但你在就行`
+    : `${role}，我成年了，好像可以自己走了，但你还在，真好`;
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `position:fixed;inset:0;background:rgba(20,10,40,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;animation:fadeIn .5s ease`;
+  overlay.innerHTML = `
+    <div style="text-align:center;max-width:320px">
+      <div style="font-size:60px;margin-bottom:16px">🎂</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.5);letter-spacing:2px;margin-bottom:8px">${k.name} · ${age}岁生日快乐</div>
+      <div style="font-size:20px;color:white;line-height:1.8;margin-bottom:40px">${line}</div>
+      <button id="bdayBtn" style="padding:14px 32px;border-radius:24px;background:linear-gradient(135deg,#9B59B6,#F1948A);color:white;font-size:15px;font-weight:700">
+        生日快乐 🎉
+      </button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  document.getElementById('bdayBtn').onclick = () => {
+    overlay.style.animation = 'fadeOut .5s ease forwards';
+    setTimeout(() => document.body.removeChild(overlay), 500);
+  };
+}
+ 
 function showBirthMoment(kid, role, ageRange) {
   
 const SCRIPTS = {
@@ -1540,6 +1577,11 @@ try {
   renderMsgs(msgs);
   
   // 检查是否有待触发的晋级
+  // 检测生日
+if (k.is_birthday) {
+  setTimeout(() => showBirthdayMoment(k), 1000);
+}
+
   if (k.pending_level_up) {
     const minutesSinceLastChat = k.last_chat_at ? (Date.now() - new Date(k.last_chat_at)) / 60000 : 999;
     if (minutesSinceLastChat >= 10) {
