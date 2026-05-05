@@ -850,6 +850,7 @@ db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_levelup_date DATE DEFAU
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar_customized_at TIMESTAMP DEFAULT NULL").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar_age_at_update INTEGER DEFAULT NULL").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_birthday_celebrated INTEGER DEFAULT NULL").catch(() => {});
+db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar_prompt_sent BOOLEAN DEFAULT false").catch(() => {});
 
 db.query(`CREATE TABLE IF NOT EXISTS activities (
  id SERIAL PRIMARY KEY,
