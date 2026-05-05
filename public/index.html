@@ -1581,6 +1581,30 @@ try {
 if (k.is_birthday) {
   setTimeout(() => showBirthdayMoment(k), 1000);
 }
+// 检测六一儿童节（1-12岁）
+const today = new Date();
+if (today.getMonth() === 5 && today.getDate() === 1 && k.age >= 1 && k.age <= 12) {
+  const childrenDayCacheKey = `childrensday_${k.id}_${today.getFullYear()}`;
+  if (!_activityShownToday[childrenDayCacheKey]) {
+    _activityShownToday[childrenDayCacheKey] = true;
+    setTimeout(async () => {
+      const role = k.parent_role || '妈妈';
+      const line = k.age <= 3 ? `${role}，今天是我的节日！` 
+        : k.age <= 6 ? `${role}，今天六一，我有礼物吗` 
+        : `${role}，今天儿童节，我还算小孩吗`;
+      const area = document.getElementById('msgsArea');
+      area.insertAdjacentHTML('beforeend', bubble('assistant', line, new Date().toISOString()));
+      scrollBot();
+      try {
+        await req(`/api/kids/${k.id}/messages/save`, {
+          method: 'POST',
+          body: JSON.stringify({ role: 'assistant', content: line })
+        });
+      } catch(e) {}
+    }, 2000);
+  }
+}
+
 
   if (k.pending_level_up) {
     const minutesSinceLastChat = k.last_chat_at ? (Date.now() - new Date(k.last_chat_at)) / 60000 : 999;
