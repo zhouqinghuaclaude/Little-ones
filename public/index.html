@@ -1515,17 +1515,35 @@ async function openChat(k) {
   document.getElementById("chatName").textContent=k.name;
   document.getElementById("chatStatus").textContent=`${k.milestone ? k.milestone : ""}`;
 
-  showScreen("chatScreen");
- updateGrowthBar(0);
- 
-  document.getElementById("msgsArea").innerHTML=`<div style="text-align:center;padding:40px;color:var(--sub);font-size:24px">⟳</div>`;
-  try {
-    const msgs=await req(`/api/kids/${k.id}/messages`);
-    renderMsgs(msgs);
+ showScreen("chatScreen");
+updateGrowthBar(0);
 
+document.getElementById("msgsArea").innerHTML=`<div style="text-align:center;padding:40px;color:var(--sub);font-size:24px">⟳</div>`;
+try {
+  const msgs=await req(`/api/kids/${k.id}/messages`);
+  renderMsgs(msgs);
+  
+  // 检查是否有待触发的晋级
+  if (k.pending_level_up) {
+    const minutesSinceLastChat = k.last_chat_at ? (Date.now() - new Date(k.last_chat_at)) / 60000 : 999;
+    if (minutesSinceLastChat >= 10) {
+      setTimeout(() => {
+        const LEVEL_NAMES = ['初遇萌芽','沁润青芽','爱启灵芽','心芽同频','心芽共生','心芽永恒'];
+        const LEVEL_GIFTS = ['晨曦之光','晶凝露华','青蓝灵犀','灵绪之契','星璇之曜','永恒之诺'];
+        const LEVEL_EMOJIS = ['🌱','🌿','✨','💫','🌟','💎'];
+        const lvl = k.pending_level_up;
+        showLevelUpMoment({
+          level: lvl,
+          name: LEVEL_NAMES[lvl-1],
+          gift: LEVEL_GIFTS[lvl-1],
+          emoji: LEVEL_EMOJIS[lvl-1],
+        });
+      }, 1000);
+    }
+  }
 } catch { renderMsgs([]); }
-
 }
+
 
 function renderMsgs(msgs) {
   document.getElementById("msgsArea").innerHTML=msgs.map(m=>bubble(m.role,m.content,m.created_at)).join("");
