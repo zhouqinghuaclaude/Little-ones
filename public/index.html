@@ -621,30 +621,49 @@ z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden;
 <div id="bondOverlay" class="bond-overlay" onclick="closeBondProfile(event)">
   <div class="bond-modal" onclick="event.stopPropagation()">
     <div class="bond-modal-handle"></div>
-    <div class="bond-companion-text" id="bondCompanionText">已陪伴你0天</div>
-    <div style="display:flex;justify-content:center;margin-bottom:8px">
-      <div class="bond-level-badge" id="bondLevelBadge">🌱 初遇萌芽</div>
-    </div>
-    <div style="text-align:center;font-size:13px;color:var(--sub);margin-bottom:16px" id="bondEmotionText">你们的缘分刚刚开始 💕</div>
-    <div class="bond-progress-wrap">
-      <div class="bond-progress-bar">
-        <div class="bond-progress-fill" id="bondProgressFill" style="width:0%"></div>
-      </div>
-      <div style="text-align:center;font-size:12px;color:var(--sub);margin-top:6px" id="bondProgressNext"></div>
-    </div>
-    <div class="bond-stats">
-      <div class="bond-stat">
-        <div class="bond-stat-value" id="bondStreakVal">🔥0</div>
-        <div class="bond-stat-label">连续陪伴</div>
-      </div>
-      <div class="bond-stat">
-        <div class="bond-stat-value" id="bondDaysVal">0</div>
-        <div class="bond-stat-label">陪伴总天数</div>
+    <div style="text-align:center;font-size:22px;font-weight:800;color:#9B59B6;margin-bottom:6px" id="bondLevelBadge">🌱 初遇萌芽</div>
+    <div style="text-align:center;font-size:13px;color:#C39BD3;margin-bottom:24px;line-height:1.6" id="bondEmotionText">你们的缘分刚刚开始 💕</div>
+
+    <!-- 亲密旅程 -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:#C39BD3;letter-spacing:1.5px;margin-bottom:8px">亲密旅程</div>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:3px;border-radius:12px;overflow:hidden" id="levelTrack"></div>
+      <div style="margin-top:10px;padding:10px 14px;background:linear-gradient(135deg,rgba(155,89,182,0.06),rgba(195,155,211,0.06));border-radius:10px;border:1px solid rgba(155,89,182,0.1)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <div style="flex:1;height:6px;background:#EDE0F7;border-radius:3px;overflow:visible;position:relative">
+            <div id="bondProgressFill" style="height:100%;background:linear-gradient(90deg,#9B59B6,#D7BDE2);border-radius:3px;width:0%;position:relative">
+              <span style="position:absolute;right:-8px;top:50%;transform:translateY(-50%);font-size:12px">🌱</span>
+            </div>
+          </div>
+          <span id="bondProgressPct" style="font-size:11px;font-weight:700;color:#9B59B6;min-width:28px"></span>
+        </div>
+        <div style="font-size:11px;color:#B09CC0" id="bondProgressNext"></div>
       </div>
     </div>
+
+    <!-- 见证礼物 -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:#C39BD3;letter-spacing:1.5px;margin-bottom:8px">见证礼物</div>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:3px;border-radius:12px;overflow:hidden" id="giftTrack"></div>
+      <div style="font-size:11px;color:#D4A84B;font-weight:600;margin-top:6px" id="giftHint"></div>
+    </div>
+
+    <!-- 统计 -->
+    <div style="display:flex;gap:12px;margin-bottom:20px">
+      <div style="flex:1;text-align:center;padding:12px 8px;background:#FAF5FF;border-radius:14px">
+        <div style="font-size:20px;font-weight:900;color:#9B59B6" id="bondStreakVal">🔥0</div>
+        <div style="font-size:11px;color:#B09CC0;margin-top:2px">连续陪伴</div>
+      </div>
+      <div style="flex:1;text-align:center;padding:12px 8px;background:#FAF5FF;border-radius:14px">
+        <div style="font-size:20px;font-weight:900;color:#9B59B6" id="bondDaysVal">0</div>
+        <div style="font-size:11px;color:#B09CC0;margin-top:2px">陪伴总天数</div>
+      </div>
+    </div>
+
     <button class="bond-close-btn" onclick="closeBondProfile()">关闭</button>
   </div>
 </div>
+
 
 <script>
 var GIFT_CATEGORIES = [
@@ -1929,28 +1948,82 @@ async function openBondProfile() {
     const data = await req(`/api/kids/${kid.id}/bond`);
     const bl = getBondLevel(data.bond_score);
     const prog = getBondProgress(data.bond_score);
-    
+
     const emotionTexts = {
-  "初遇萌芽": `你和${kid.name}的缘分刚刚开始 🌱`,
-  "沁润青芽": `你和${kid.name}的爱正在悄悄生长 💧`,
-  "爱启灵芽": `你和${kid.name}的灵魂开始相互感应 ✨`,
-  "心芽同频": `你和${kid.name}的心跳开始同频 💫`,
-  "心芽共生": `你和${kid.name}已经彼此依存，难舍难分 🌟`,
-  "心芽永恒": `你和${kid.name}的爱已超越时空 💎`,
-};
-    
-    document.getElementById("bondCompanionText").textContent = `${kid.name}已陪伴你${data.companion_days}天`;
+      "初遇萌芽": `你和${kid.name}的缘分刚刚开始 🌱`,
+      "沁润青芽": `你和${kid.name}的爱正在悄悄生长 💧`,
+      "爱启灵芽": `你和${kid.name}的灵魂开始相互感应 ✨`,
+      "心芽同频": `你和${kid.name}的心跳开始同频 💫`,
+      "心芽共生": `你和${kid.name}已经彼此依存，难舍难分 🌟`,
+      "心芽永恒": `你和${kid.name}的爱已超越时空 💎`,
+    };
+
+    const LEVELS = [
+      { emoji:'🌱', name:'初遇\n萌芽' },
+      { emoji:'🌿', name:'沁润\n青芽' },
+      { emoji:'✨', name:'爱启\n灵芽' },
+      { emoji:'💫', name:'心芽\n同频' },
+      { emoji:'🌟', name:'心芽\n共生' },
+      { emoji:'💎', name:'心芽\n永恒' },
+    ];
+
+    const GIFTS = [
+      { emoji:'🌅', name:'晨曦\n之光' },
+      { emoji:'💧', name:'晶凝\n露华' },
+      { emoji:'💙', name:'青蓝\n灵犀' },
+      { emoji:'💜', name:'灵绪\n之契' },
+      { emoji:'⭐', name:'星璇\n之曜' },
+      { emoji:'💎', name:'永恒\n之诺' },
+    ];
+
+    const THRESHOLDS = [0, 51, 151, 301, 501, 1001];
+    const currentLevel = THRESHOLDS.filter(t => data.bond_score >= t).length - 1;
+
+    // 渲染亲密旅程
+    const levelTrack = document.getElementById('levelTrack');
+    levelTrack.innerHTML = LEVELS.map((l, i) => {
+      const state = i < currentLevel ? 'achieved' : i === currentLevel ? 'current' : 'locked';
+      const bg = state === 'achieved' ? 'background:linear-gradient(135deg,#9B59B6,#C39BD3)' 
+               : state === 'current' ? 'background:linear-gradient(135deg,#7D3C98,#9B59B6);box-shadow:inset 0 0 8px rgba(255,255,255,0.15)'
+               : 'background:#F0E8F5';
+      const textColor = state === 'locked' ? '#D0B0E0' : 'white';
+      return `<div style="padding:10px 4px 8px;text-align:center;${bg}">
+        <span style="font-size:14px;display:block;margin-bottom:3px;color:${textColor}">${l.emoji}</span>
+        <span style="font-size:9px;font-weight:700;line-height:1.3;color:${textColor === 'white' ? 'rgba(255,255,255,0.9)' : textColor};white-space:pre-line">${l.name}</span>
+      </div>`;
+    }).join('');
+
+    // 渲染见证礼物
+    const giftTrack = document.getElementById('giftTrack');
+    const giftsReceived = currentLevel;
+    giftTrack.innerHTML = GIFTS.map((g, i) => {
+      const received = i < giftsReceived;
+      const bg = received ? 'background:linear-gradient(135deg,#F0C060,#E8954A)' : 'background:#FDF4E3';
+      const textColor = received ? 'rgba(255,255,255,0.95)' : '#E8D0A0';
+      return `<div style="padding:8px 4px;text-align:center;${bg}">
+        <span style="font-size:13px;display:block;margin-bottom:2px;color:${textColor}">${g.emoji}</span>
+        <span style="font-size:8px;font-weight:700;line-height:1.4;color:${textColor};white-space:pre-line">${g.name}</span>
+      </div>`;
+    }).join('');
+
+    document.getElementById('giftHint').textContent = giftsReceived > 0 
+      ? `${kid.name}已收到 ${giftsReceived} 份见证礼物 🎁` 
+      : '完成第一个阶段，送出第一份见证礼物 🎁';
+
     document.getElementById("bondLevelBadge").textContent = `${bl.emoji} ${bl.name}`;
     document.getElementById("bondEmotionText").textContent = emotionTexts[bl.name] || `继续陪伴${kid.name}吧 💕`;
     document.getElementById("bondStreakVal").textContent = `🔥${data.streak_days}`;
     document.getElementById("bondDaysVal").textContent = data.companion_days;
     document.getElementById("bondProgressFill").style.width = prog.pct + "%";
+    document.getElementById("bondProgressPct").textContent = prog.pct + "%";
     document.getElementById("bondProgressNext").textContent = prog.nextScore
       ? `继续陪伴${kid.name}，你们的连接正在加深 🌱`
       : `你们已达到最深的羁绊 💎`;
+
     document.getElementById("bondOverlay").classList.add("open");
   } catch(e) { showToast("加载亲密度失败"); }
 }
+
 
 
 function closeBondProfile(e) {
