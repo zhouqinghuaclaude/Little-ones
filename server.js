@@ -133,7 +133,7 @@ app.get("/api/kids", auth, async (req, res) => {
       })();
     const born = new Date(kid.birthday);
 const thisYearBirthday = new Date(today.getFullYear(), born.getMonth(), born.getDate());
-const isBirthday = kid.birthday && Math.floor((today - thisYearBirthday) / 86400000) === 0;
+const isBirthday = kid.birthday && Math.floor((today - thisYearBirthday) / 86400000) === 0 && kid.age >= 1;
 
 return {
   ...kid,
