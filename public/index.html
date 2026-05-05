@@ -1604,7 +1604,7 @@ if (d.songPrompt && !_activityShownToday[songCacheKey]) {
 }
  
  let activityTrigger = null;
-showToast('bond:' + d.bond_score + ' levelUp:' + (d.levelUp ? d.levelUp.name : 'null'));
+
 
 // 异步请求活动判断，不阻塞主流程
 if (kid.age >= 1) {
@@ -1628,7 +1628,6 @@ if (kid.age >= 1) {
   }).catch(() => {});
 }
  
-showToast('bond:' + d.bond_score + ' levelUp:' + (d.levelUp ? d.levelUp.name : 'null'));
 
 if (d.levelUp) {
   try {
