@@ -623,8 +623,17 @@ const songPrompt = kid.age <= 3 && (reply.includes('歌') || reply.includes('唱
 // 用AI判断是否应该触发活动卡（仅1岁以上）
 
 const activitySuggestion = null;
+// 检测「我想长得更像你」触发条件
+let avatarPrompt = null;
+if (newBondScore >= 230 && !kid.avatar_prompt_sent && !kid.avatar_customized_at) {
+  const oldScore = kid.bond_score || 0;
+  if (oldScore < 230) {
+    await db.query("UPDATE kids SET avatar_prompt_sent=true WHERE id=$1", [kid.id]);
+    avatarPrompt = true;
+  }
+}
 
-res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: totalCount, storyPrompt: storyPrompt, songPrompt: songPrompt, activitySuggestion, levelUp });
+res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: totalCount, storyPrompt: storyPrompt, songPrompt: songPrompt, activitySuggestion, levelUp, avatarPrompt });
 
 
   } catch (e) {
