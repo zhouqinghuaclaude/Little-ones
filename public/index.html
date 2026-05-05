@@ -982,6 +982,29 @@ showBirthMoment(newKid, createData.role || "妈妈", createData.ageRange || "3-6
   }
 }
 
+ function showAvatarPrompt() {
+  const role = kid?.parent_role || '妈妈';
+  const name = kid?.name || '';
+  const card = document.createElement('div');
+  card.id = 'avatarPromptCard';
+  card.style.cssText = `margin:8px 14px;background:white;border-radius:16px;padding:16px;box-shadow:0 4px 20px rgba(155,89,182,0.15);border:1.5px solid #E8D5F5;animation:fadeIn .3s ease`;
+  card.innerHTML = `
+    <div style="font-size:15px;font-weight:800;color:#9B59B6;margin-bottom:6px">💝 ${name}有个心愿</div>
+    <div style="font-size:14px;color:#555;margin-bottom:12px;line-height:1.6">${role}，我想长得更像你一点</div>
+    <div style="display:flex;gap:8px">
+      <button class="primary-btn" style="margin-top:0;padding:10px;font-size:13px" onclick="openAvatarUpload()">上传你的照片 📷</button>
+      <button style="padding:10px 16px;border-radius:12px;border:1.5px solid #E0D0EE;font-size:13px;color:#999" onclick="document.getElementById('avatarPromptCard').remove()">下次再说</button>
+    </div>
+  `;
+  document.getElementById('msgsArea').appendChild(card);
+  scrollBot();
+}
+
+function openAvatarUpload() {
+  document.getElementById('avatarPromptCard')?.remove();
+  showToast('定制头像功能即将开放 📸');
+}
+ 
  function showBirthdayMoment(k) {
   const role = k.parent_role || '妈妈';
   const age = k.age || 1;
@@ -1741,6 +1764,7 @@ if (d.levelUp) {
     showToast('levelUp error: ' + e.message);
   }
 }
+if (d.avatarPrompt) showAvatarPrompt();
  
 
   } catch(e) {
