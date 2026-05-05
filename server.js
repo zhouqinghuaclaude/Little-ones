@@ -131,15 +131,21 @@ app.get("/api/kids", auth, async (req, res) => {
         if (daysToB <= 10) return kid.age_mode === "natural" ? `🎂 还有${daysToB}天${Math.floor(days/365)+1}岁生日` : `🎂 还有${daysToB}天宝宝生日`;
         return null;
       })();
-    return {
-      ...kid,
-              age_display: ageDisplay,
-              milestone: milestone,
-      zodiac: getZodiacSign(kid.birthday),
-      companion_days,
-      bond_score: kid.bond_score || 0,
-      streak_days: kid.streak_days || 0,
-    };
+    const born = new Date(kid.birthday);
+const thisYearBirthday = new Date(today.getFullYear(), born.getMonth(), born.getDate());
+const isBirthday = kid.birthday && Math.floor((today - thisYearBirthday) / 86400000) === 0;
+
+return {
+  ...kid,
+  age_display: ageDisplay,
+  milestone: milestone,
+  zodiac: getZodiacSign(kid.birthday),
+  companion_days,
+  bond_score: kid.bond_score || 0,
+  streak_days: kid.streak_days || 0,
+  is_birthday: isBirthday,
+};
+
   });
   res.json(kids);
 });
