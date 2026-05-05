@@ -1579,8 +1579,13 @@ try {
   // 检查是否有待触发的晋级
   // 检测生日
 if (k.is_birthday) {
-  setTimeout(() => showBirthdayMoment(k), 1000);
+  const bdayCacheKey = `birthday_${k.id}_${new Date().getFullYear()}`;
+  if (!_activityShownToday[bdayCacheKey]) {
+    _activityShownToday[bdayCacheKey] = true;
+    setTimeout(() => showBirthdayMoment(k), 1000);
+  }
 }
+
 // 检测六一儿童节（1-12岁）
 const today = new Date();
 if (today.getMonth() === 5 && today.getDate() === 1 && k.age >= 1 && k.age <= 12) {
