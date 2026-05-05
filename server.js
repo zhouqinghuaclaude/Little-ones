@@ -821,6 +821,9 @@ db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS age_mode_locked BOOLEAN DEFA
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS personality_custom TEXT").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS birthday_locked BOOLEAN DEFAULT false").catch(() => {});
 db.query("ALTER TABLE activities ALTER COLUMN activity_name DROP NOT NULL").catch(() => {});
+db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS pending_level_up INTEGER DEFAULT NULL").catch(() => {});
+db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_levelup_date DATE DEFAULT NULL").catch(() => {});
+
 db.query(`CREATE TABLE IF NOT EXISTS activities (
  id SERIAL PRIMARY KEY,
  kid_id INTEGER REFERENCES kids(id) ON DELETE CASCADE,
