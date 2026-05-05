@@ -462,14 +462,32 @@ const LEVEL_EMOJIS = ['🌱', '🌿', '✨', '💫', '🌟', '💎'];
 
 const oldLevel = LEVEL_THRESHOLDS.filter(t => (kid.bond_score || 0) >= t).length - 1;
 const newLevel = LEVEL_THRESHOLDS.filter(t => newBondScore >= t).length - 1;
-const levelUp = newLevel > oldLevel ? {
-level: newLevel + 1,
 
-  name: LEVEL_NAMES[newLevel],
-  gift: LEVEL_GIFTS[newLevel],
-  emoji: LEVEL_EMOJIS[newLevel],
-} : null;
-console.log('bond:', kid.bond_score, '->', newBondScore, 'oldLevel:', oldLevel, 'newLevel:', newLevel, 'levelUp:', levelUp?.name);
+// 延迟触发晋级：存入pending_level_up，不立刻触发
+let levelUp = null;
+if (newLevel > oldLevel) {
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const lastLevelupDate = kid.last_levelup_date ? String(kid.last_levelup_date).slice(0, 10) : null;
+  if (lastLevelupDate !== todayStr) {
+    await db.query("UPDATE kids SET pending_level_up=$1 WHERE id=$2", [newLevel + 1, kid.id]);
+  }
+}
+
+// 检查是否有待触发的晋级（距离上次聊天超过10分钟）
+if (kid.pending_level_up && kid.last_chat_at) {
+  const minutesSinceLastChat = (Date.now() - new Date(kid.last_chat_at)) / 60000;
+  if (minutesSinceLastChat >= 10) {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    levelUp = {
+      level: kid.pending_level_up,
+      name: LEVEL_NAMES[kid.pending_level_up - 1],
+      gift: LEVEL_GIFTS[kid.pending_level_up - 1],
+      emoji: LEVEL_EMOJIS[kid.pending_level_up - 1],
+    };
+    await db.query("UPDATE kids SET pending_level_up=NULL, last_levelup_date=$1 WHERE id=$2", [todayStr, kid.id]);
+  }
+}
+
 
   // ─────────────────────────────────────────────────────────────────────────
 
