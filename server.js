@@ -217,19 +217,30 @@ if (avatar !== undefined) {
 });
 
 const ACTIVITY_MILESTONES = {
-  football:  { count: 10, name: "⚽ 足球小健将" },
-  painting:  { count: 10, name: "🎨 小小画家" },
-  piano:     { count: 10, name: "🎹 小小钢琴家" },
-  reading:   { count: 10, name: "📚 阅读小达人" },
-  travel:    { count: 5,  name: "✈️ 旅行小达人" },
-  science:   { count: 10, name: "🔬 科技小天才" },
-  dance:     { count: 10, name: "💃 舞蹈小明星" },
-  baking:    { count: 10, name: "🍰 烘焙小厨师" },
-  game:      { count: 10, name: "🧩 积木小达人" },
-  nature:    { count: 10, name: "🌿 自然小探索家" },
-  music:     { count: 10, name: "🎵 音乐小天才" },
-  explore:   { count: 10, name: "🔍 小小探险家" },
+  blocks:      { count: 10, name: "🧩 积木小达人" },
+  puzzle:      { count: 10, name: "🧩 拼图小能手" },
+  hideseek:    { count: 10, name: "🙈 捉迷藏冠军" },
+  drawing:     { count: 10, name: "🎨 小小画家" },
+  nursery:     { count: 10, name: "🎵 儿歌小达人" },
+  picturebook: { count: 10, name: "📚 绘本小书虫" },
+  park:        { count: 10, name: "🌿 自然小探索家" },
+  football:    { count: 10, name: "⚽ 足球小健将" },
+  painting:    { count: 10, name: "🎨 小小画家" },
+  concert:     { count: 10, name: "🎹 音乐小达人" },
+  dance:       { count: 10, name: "💃 舞蹈小明星" },
+  library:     { count: 10, name: "📚 阅读小达人" },
+  museum:      { count: 10, name: "🏛️ 小小探索家" },
+  cycling:     { count: 10, name: "🚴 骑行小健将" },
+  swimming:    { count: 10, name: "🏊 游泳小健将" },
+  basketball:  { count: 10, name: "🏀 篮球小健将" },
+  travel:      { count: 5,  name: "✈️ 旅行小达人" },
+  science:     { count: 10, name: "🔬 科技小天才" },
+  bookstore:   { count: 10, name: "📖 阅读小达人" },
+  artexhibit:  { count: 10, name: "🖼️ 艺术小鉴赏家" },
+  theater:     { count: 10, name: "🎭 表演小达人" },
+  baking:      { count: 10, name: "🍰 烘焙小厨师" },
 };
+
 
 
 app.get("/api/kids/:id/activities", auth, async (req, res) => {
@@ -292,10 +303,11 @@ app.post("/api/kids/:id/activity-check", auth, async (req, res) => {
   if (!message || !reply || age < 1) return res.json({ activitySuggestion: null });
   
   const ACTIVITY_OPTIONS = {
-    '1-3': ['painting(画画)', 'music(唱歌)', 'reading(读故事)', 'game(搭积木)', 'nature(去公园)'],
-    '3-6': ['football(踢足球)', 'painting(画画)', 'piano(听音乐会)', 'dance(跳舞)', 'reading(去图书馆)', 'explore(去探险)'],
-    '6+': ['football(踢足球)', 'travel(去旅行)', 'science(做实验)', 'reading(去书店)', 'painting(看展览)', 'dance(看表演)', 'baking(做烘焙)', 'piano(听音乐会)'],
-  };
+  '1-3': ['blocks(搭积木)', 'puzzle(拼图)', 'hideseek(捉迷藏)', 'drawing(画画)', 'nursery(唱儿歌)', 'picturebook(读绘本)', 'park(去公园)'],
+  '3-6': ['football(踢足球)', 'painting(画画)', 'concert(听音乐会)', 'dance(跳舞)', 'library(去图书馆)', 'museum(去博物馆)', 'cycling(骑自行车)'],
+  '6+':  ['football(踢足球)', 'swimming(游泳)', 'basketball(打篮球)', 'travel(去旅行)', 'science(做科学实验)', 'bookstore(去书店)', 'artexhibit(看展览)', 'theater(看表演)', 'baking(做烘焙)', 'concert(听音乐会)'],
+};
+
   const ageKey = age < 3 ? '1-3' : age < 6 ? '3-6' : '6+';
   const options = ACTIVITY_OPTIONS[ageKey] || [];
   
