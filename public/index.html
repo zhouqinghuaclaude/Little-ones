@@ -2087,7 +2087,7 @@ async function openBondProfile() {
     ];
 
     const THRESHOLDS = [0, 51, 151, 301, 501, 1001];
-    const currentLevel = THRESHOLDS.filter(t => data.bond_score >= t).length - 1;
+    const currentLevel = data.gifts_received || 0;
 
     // 渲染亲密旅程
     const levelTrack = document.getElementById('levelTrack');
