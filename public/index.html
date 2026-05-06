@@ -874,7 +874,8 @@ function getBondLevel(score) {
     }
     document.getElementById("homeScreen").classList.remove("empty-mode");
     list.innerHTML=kids.map((k,i)=>{
-  const bl=getBondLevel(k.bond_score||0);
+  const bl=BOND_LEVELS[Math.min((k.gifts_received||0), BOND_LEVELS.length-1)] || BOND_LEVELS[0];
+
   const compDays=k.companion_days||0;
   return `<div class="kid-card" onclick='openChat(${JSON.stringify(k).replace(/'/g,"&#39;")})'>
     <div class="kid-face ${k.gender==="boy"?"boy-face":"girl-face"}">
