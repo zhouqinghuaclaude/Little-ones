@@ -830,7 +830,9 @@ app.get("/api/kids/:id/bond", auth, async (req, res) => {
     bond_score: kid.bond_score || 0,
     streak_days: kid.streak_days || 0,
     companion_days,
+    gifts_received: kid.gifts_received || 0,
   });
+
 });
 
 app.get("/api/kids/:id/diary", auth, async (req, res) => {
