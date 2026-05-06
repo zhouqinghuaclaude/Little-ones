@@ -2091,22 +2091,24 @@ async function openBondProfile() {
       </div>`;
     }).join('');
 
-    // 渲染见证礼物
-    const giftTrack = document.getElementById('giftTrack');
-    const giftsReceived = currentLevel;
-    giftTrack.innerHTML = GIFTS.map((g, i) => {
-      const received = i < giftsReceived;
-      const bg = received ? 'background:linear-gradient(135deg,#F0C060,#E8954A)' : 'background:#FDF4E3';
-      const textColor = received ? 'rgba(255,255,255,0.95)' : '#E8D0A0';
-      return `<div style="padding:8px 4px;text-align:center;${bg}">
-        <span style="font-size:13px;display:block;margin-bottom:2px;color:${textColor}">${g.emoji}</span>
-        <span style="font-size:8px;font-weight:700;line-height:1.4;color:${textColor};white-space:pre-line">${g.name}</span>
-      </div>`;
-    }).join('');
+   // 渲染见证礼物（根据实际bond_score计算已达到的阶段）
+const giftTrack = document.getElementById('giftTrack');
+const GIFT_THRESHOLDS = [0, 51, 151, 301, 501, 1001];
+const giftsReceived = GIFT_THRESHOLDS.filter(t => data.bond_score >= t).length - 1;
+giftTrack.innerHTML = GIFTS.map((g, i) => {
+  const received = i < giftsReceived;
+  const bg = received ? 'background:linear-gradient(135deg,#F0C060,#E8954A)' : 'background:#FDF4E3';
+  const textColor = received ? 'rgba(255,255,255,0.95)' : '#E8D0A0';
+  return `<div style="padding:8px 4px;text-align:center;${bg}">
+    <span style="font-size:13px;display:block;margin-bottom:2px;color:${textColor}">${g.emoji}</span>
+    <span style="font-size:8px;font-weight:700;line-height:1.4;color:${textColor};white-space:pre-line">${g.name}</span>
+  </div>`;
+}).join('');
 
-    document.getElementById('giftHint').textContent = giftsReceived > 0 
-      ? `${kid.name}已收到 ${giftsReceived} 份见证礼物 🎁` 
-      : '完成第一个阶段，送出第一份见证礼物 🎁';
+document.getElementById('giftHint').textContent = giftsReceived > 0 
+  ? `${kid.name}已收到 ${giftsReceived} 份见证礼物 🎁` 
+  : '完成第一个阶段，送出第一份见证礼物 🎁';
+
 
     document.getElementById("bondLevelBadge").textContent = `${bl.emoji} ${bl.name}`;
     document.getElementById("bondEmotionText").textContent = emotionTexts[bl.name] || `继续陪伴${kid.name}吧 💕`;
