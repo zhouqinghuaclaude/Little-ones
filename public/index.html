@@ -1089,7 +1089,7 @@ const SCRIPTS = {
         <div style="font-size:20px;color:white;line-height:1.8;margin-bottom:40px;min-height:60px">${steps[stepIndex]}</div>
         <button id="birthBtn"
           style="padding:14px 32px;border-radius:24px;background:rgba(255,255,255,0.15);color:white;font-size:15px;border:1px solid rgba(255,255,255,0.3)">
-          ${isLast ? `和${kid.name}回家 🏠` : '嗯'}
+         ${isLast ? `带${kid.name}回家 · 送${kid.gender==='boy'?'他':'她'}见面礼 晨曦之光 🌅` : '嗯'}
 
         </button>
       </div>
@@ -1097,11 +1097,19 @@ const SCRIPTS = {
     document.getElementById('birthBtn').onclick = () => {
       if (isLast) {
         overlay.style.animation = "fadeOut .5s ease forwards";
-        setTimeout(() => {
+        setTimeout(async () => {
           document.body.removeChild(overlay);
+          try {
+            await req(`/api/kids/${kid.id}/gifts-received`, {
+              method: 'POST',
+              body: JSON.stringify({ level: 1 })
+            });
+            kid.gifts_received = 1;
+          } catch(e) {}
           openChat(kid);
         }, 500);
       } else {
+
         stepIndex++;
         renderStep();
       }
