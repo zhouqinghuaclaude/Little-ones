@@ -507,6 +507,12 @@ if (kid.pending_level_up && kid.last_chat_at) {
 
 
   // ─────────────────────────────────────────────────────────────────────────
+// 获取孩子的记忆
+const memoriesResult = await db.query(
+  "SELECT content FROM memories WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 10",
+  [kid.id]
+);
+const memories = memoriesResult.rows.map(r => r.content);
 
   const ageInDays = kid.birthday ? Math.floor((Date.now() - new Date(kid.birthday)) / 86400000) : (kid.age * 365);
  
@@ -572,6 +578,10 @@ if (kid.age >= 1) {
   system += ` 注意：你已经长大了，之前的肢体感应回复方式已经过时，现在必须用语言直接说话，完全禁止任何感应卡风格的回复。`;
 }
   system += ` 你是${genderDesc}，无论如何都不能说自己是${kid.gender === 'boy' ? '女孩' : '男孩'}。`;
+  if (memories.length > 0) {
+  system += ` 你记得和${kid.parent_role}之间发生过这些事：${memories.join('；')}。在对话中自然地提及这些记忆，让${kid.parent_role}感到被记住。`;
+}
+
 system += ` 不要主动提到恐龙，除非用户先提到恐龙。`;
 system += ` 严格控制回复长度，绝对不超过规定字数，宁可说得少也不说长句。`;
 
