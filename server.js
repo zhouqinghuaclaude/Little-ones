@@ -645,6 +645,23 @@ if (newBondScore >= 230 && kid.age >= 1 && !kid.avatar_prompt_sent && !kid.avata
     avatarPrompt = true;
   }
 }
+// 每20条消息提取一次记忆
+if (totalCount % 20 === 0) {
+  const recentMessages = history.slice(-20).map(m => `${m.role === 'user' ? kid.parent_role : kid.name}：${m.content}`).join('\n');
+  claude.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 200,
+    system: `你是一个记忆提取助手。从以下亲子对话中提取1-3条重要的事件或信息，用简短的中文句子表达，每条不超过20个字。只输出记忆内容，每条一行，不要编号或其他内容。`,
+    messages: [{ role: "user", content: recentMessages }]
+  }).then(async result => {
+    const memories = result.content[0].text.trim().split('\n').filter(m => m.trim());
+    for (const memory of memories) {
+      await db.query("INSERT INTO memories (kid_id, content) VALUES ($1, $2)", [kid.id, memory.trim()]);
+    }
+    // 只保留最近50条记忆
+    await db.query("DELETE FROM memories WHERE kid_id=$1 AND id NOT IN (SELECT id FROM memories WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 50)", [kid.id]);
+  }).catch(() => {});
+}
 
 res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: totalCount, storyPrompt: storyPrompt, songPrompt: songPrompt, activitySuggestion, levelUp, avatarPrompt });
 
