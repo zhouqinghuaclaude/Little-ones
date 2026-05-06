@@ -474,7 +474,9 @@ const LEVEL_EMOJIS = ['🌱', '🌿', '✨', '💫', '🌟', '💎'];
 
 
 const LEVEL_DAY_REQUIREMENTS = [0, 1, 7, 14, 30, 60];
-const companionDays = Math.floor((Date.now() - new Date(kid.created_at)) / 86400000);
+const createdDate = new Date(kid.created_at).toISOString().slice(0, 10);
+const todayDate = new Date().toISOString().slice(0, 10);
+const companionDays = Math.floor((new Date(todayDate) - new Date(createdDate)) / 86400000);
 
 const oldLevel = LEVEL_THRESHOLDS.filter((t, i) => (kid.bond_score || 0) >= t && companionDays >= LEVEL_DAY_REQUIREMENTS[i]).length - 1;
 const newLevel = LEVEL_THRESHOLDS.filter((t, i) => newBondScore >= t && companionDays >= LEVEL_DAY_REQUIREMENTS[i]).length - 1;
