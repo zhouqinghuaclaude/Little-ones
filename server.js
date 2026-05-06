@@ -865,6 +865,7 @@ async function initDB() {
   content TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT NOW()
 )`);
+db.query("UPDATE kids SET gifts_received = 1 WHERE gifts_received = 0 AND bond_score > 0").catch(() => {});
 
   console.log("Database ready");
 }
