@@ -1299,6 +1299,15 @@ setTimeout(async () => {
     });
   } catch(e) {}
   kid.pending_level_up = null;
+  // 更新gifts_received
+try {
+  await req(`/api/kids/${kid.id}/gifts-received`, {
+    method: 'POST',
+    body: JSON.stringify({ level: levelUp.level })
+  });
+  kid.gifts_received = (kid.gifts_received || 0) + 1;
+} catch(e) {}
+
 }, 500);
 
         }, 500);
