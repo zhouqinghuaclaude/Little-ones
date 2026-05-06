@@ -573,6 +573,7 @@ if (kid.age >= 1) {
 }
   system += ` 你是${genderDesc}，无论如何都不能说自己是${kid.gender === 'boy' ? '女孩' : '男孩'}。`;
 system += ` 不要主动提到恐龙，除非用户先提到恐龙。`;
+system += ` 严格控制回复长度，绝对不超过规定字数，宁可说得少也不说长句。`;
 
   const zodiac = getZodiacSign(kid.birthday);
   if (zodiac) {
