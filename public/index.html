@@ -1643,11 +1643,14 @@ if (today.getMonth() === 5 && today.getDate() === 1 && k.age >= 1 && k.age <= 12
         const LEVEL_EMOJIS = ['🌱','🌿','✨','💫','🌟','💎'];
         const lvl = k.pending_level_up;
         showLevelUpMoment({
-          level: lvl,
-          name: LEVEL_NAMES[lvl-1],
-          gift: LEVEL_GIFTS[lvl-1],
-          emoji: LEVEL_EMOJIS[lvl-1],
-        });
+  level: lvl,
+  name: LEVEL_NAMES[lvl-1],
+  gift: LEVEL_GIFTS[lvl-1],
+  emoji: LEVEL_EMOJIS[lvl-1],
+});
+k.pending_level_up = null;
+kid.pending_level_up = null;
+
       }, 1000);
     }
   }
