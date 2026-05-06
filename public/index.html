@@ -2096,13 +2096,13 @@ async function openBondProfile() {
     ];
 
     const THRESHOLDS = [0, 51, 151, 301, 501, 1001];
-    const currentLevel = Math.max(0, (data.gifts_received || 1) - 1);
+    const currentLevel = (data.gifts_received || 1) - 1;
 
 
     // 渲染亲密旅程
     const levelTrack = document.getElementById('levelTrack');
     levelTrack.innerHTML = LEVELS.map((l, i) => {
-     const state = i < currentLevel ? 'achieved' : i === currentLevel - 1 ? 'current' : 'locked';
+    const state = i < currentLevel ? 'achieved' : i === currentLevel ? 'current' : 'locked';
 
       const bg = state === 'achieved' ? 'background:linear-gradient(135deg,#9B59B6,#C39BD3)' 
                : state === 'current' ? 'background:linear-gradient(135deg,#7D3C98,#9B59B6);box-shadow:inset 0 0 8px rgba(255,255,255,0.15)'
