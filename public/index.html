@@ -1165,7 +1165,29 @@ function getAgeRangeKey(age) {
 }
 
 
-const _activityShownToday = {};
+// 从localStorage恢复冷却记录
+function getActivityCache() {
+  try {
+    const cached = localStorage.getItem('activityShownToday');
+    if (cached) {
+      const { date, data } = JSON.parse(cached);
+      if (date === new Date().toISOString().slice(0, 10)) return data;
+    }
+  } catch(e) {}
+  return {};
+}
+
+function saveActivityCache(cache) {
+  try {
+    localStorage.setItem('activityShownToday', JSON.stringify({
+      date: new Date().toISOString().slice(0, 10),
+      data: cache
+    }));
+  } catch(e) {}
+}
+
+const _activityShownToday = getActivityCache();
+
 
 
 function detectActivityTrigger(reply) {
@@ -1178,7 +1200,9 @@ function detectActivityTrigger(reply) {
     if (_activityShownToday[cacheKey]) continue;
     for (const kw of trigger.keywords) {
       if (reply.includes(kw)) {
-        _activityShownToday[cacheKey] = true;
+       _activityShownToday[cacheKey] = true;
+saveActivityCache(_activityShownToday);
+
         return trigger;
       }
     }
