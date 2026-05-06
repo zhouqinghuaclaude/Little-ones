@@ -339,6 +339,12 @@ app.post("/api/kids/:id/messages/save", auth, async (req, res) => {
   await db.query("INSERT INTO messages (kid_id, role, content) VALUES ($1,$2,$3)", [req.params.id, role, content.trim()]);
   res.json({ ok: true });
 });
+app.post("/api/kids/:id/gifts-received", auth, async (req, res) => {
+  const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
+  if (!kidResult.rows[0]) return res.status(404).json({ error: "Child not found" });
+  await db.query("UPDATE kids SET gifts_received = COALESCE(gifts_received, 0) + 1 WHERE id=$1", [req.params.id]);
+  res.json({ ok: true });
+});
 
 app.delete("/api/kids/:id", auth, async (req, res) => {
   await db.query("DELETE FROM kids WHERE id = $1 AND user_id = $2", [req.params.id, req.user.id]);
