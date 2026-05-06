@@ -2106,7 +2106,8 @@ async function openBondProfile() {
    // 渲染见证礼物（根据实际bond_score计算已达到的阶段）
 const giftTrack = document.getElementById('giftTrack');
 const GIFT_THRESHOLDS = [0, 51, 151, 301, 501, 1001];
-const giftsReceived = GIFT_THRESHOLDS.filter(t => data.bond_score >= t).length - 1;
+const giftsReceived = data.gifts_received || 0;
+
 giftTrack.innerHTML = GIFTS.map((g, i) => {
   const received = i < giftsReceived;
   const bg = received ? 'background:linear-gradient(135deg,#F0C060,#E8954A)' : 'background:#FDF4E3';
