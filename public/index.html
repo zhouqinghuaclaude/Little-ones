@@ -1769,15 +1769,16 @@ const storyCacheKey = `${kid.id}_story_${today}`;
 const songCacheKey = `${kid.id}_song_${today}`;
 if (d.storyPrompt && !_activityShownToday[storyCacheKey]) {
   _activityShownToday[storyCacheKey] = true;
+  saveActivityCache(_activityShownToday);
   showMomentCard('story');
 }
 if (d.songPrompt && !_activityShownToday[songCacheKey]) {
   _activityShownToday[songCacheKey] = true;
+  saveActivityCache(_activityShownToday);
   showMomentCard('song');
 }
- 
- let activityTrigger = null;
 
+let activityTrigger = null;
 
 // 异步请求活动判断，不阻塞主流程
 if (kid.age >= 1) {
@@ -1788,18 +1789,19 @@ if (kid.age >= 1) {
     if (actData.activitySuggestion) {
       const key = getAgeRangeKey(kid.age);
       const triggers = ACTIVITY_TRIGGERS[key] || [];
-      const today = new Date().toISOString().slice(0, 10);
       const cacheKey = `${kid.id}_${actData.activitySuggestion}_${today}`;
       if (!_activityShownToday[cacheKey]) {
         const trigger = triggers.find(t => t.type === actData.activitySuggestion) || null;
         if (trigger) {
           _activityShownToday[cacheKey] = true;
+          saveActivityCache(_activityShownToday);
           if (!d.storyPrompt && !d.songPrompt) showActivityCard(trigger);
         }
       }
     }
   }).catch(() => {});
 }
+
  
 
 if (d.levelUp) {
