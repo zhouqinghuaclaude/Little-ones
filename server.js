@@ -625,7 +625,8 @@ const songPrompt = kid.age <= 3 && (reply.includes('歌') || reply.includes('唱
 const activitySuggestion = null;
 // 检测「我想长得更像你」触发条件
 let avatarPrompt = null;
-if (newBondScore >= 230 && !kid.avatar_prompt_sent && !kid.avatar_customized_at) {
+if (newBondScore >= 230 && kid.age >= 1 && !kid.avatar_prompt_sent && !kid.avatar_customized_at) {
+
   const oldScore = kid.bond_score || 0;
   if (oldScore < 230) {
     await db.query("UPDATE kids SET avatar_prompt_sent=true WHERE id=$1", [kid.id]);
