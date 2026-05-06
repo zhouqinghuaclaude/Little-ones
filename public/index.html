@@ -1764,8 +1764,11 @@ if (d.levelUp) {
     showToast('levelUp error: ' + e.message);
   }
 }
-if (d.avatarPrompt) showAvatarPrompt();
- 
+if (d.avatarPrompt) {
+  showAvatarPrompt();
+  return; // 阻止后续活动卡触发
+}
+
 
   } catch(e) {
     hideTyping();
