@@ -691,8 +691,9 @@ console.log('daily check - date:', kid.daily_msg_date, 'today:', todayStr, 'coun
 
 // 检查消息限制（推广期：免费20条，VIP/SVIP不限）
 const userResult = await db.query("SELECT membership_type FROM users WHERE id=$1", [req.user.id]);
-const membershipType = userResult.rows[0]?.membership_type || 'free';
-const dailyLimit = membershipType === 'free' ? 20 : null;
+const userMembership = userResult.rows[0]?.membership_type || 'free';
+const dailyLimit = userMembership === 'free' ? 20 : null;
+
 
 if (dailyLimit && kid.daily_msg_count >= dailyLimit) {
   return res.status(403).json({ 
