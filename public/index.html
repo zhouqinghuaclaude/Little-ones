@@ -1894,6 +1894,17 @@ function openSettings(k) {
   if (personalityMap[selectedPersonality]) {
     document.getElementById(personalityMap[selectedPersonality]).className = 'choice-btn on';
   }
+// 兴趣渲染
+document.getElementById("interestLabel").textContent = `💝 让${k.name}更懂你`;
+const INTERESTS = ['🏃跑步','🧘瑜伽','💪健身','🚴骑行','🏊游泳','🏔登山','📷摄影','🎨绘画','✍️写作','🎭手工','📚读书','🌱历史','💭心理学','🌍外语','🔬科普','🍳烹饪','🍞烘焙','🍷品酒','☕咖啡','🌸园艺','✈️旅行','🎬电影','🎵音乐','📺追剧','🎲桌游','💻编程','🤖AI','💰理财','🎨设计','🤔哲学','⚽足球','🏀篮球','🎾网球','🎮游戏','🎤唱歌','💃舞蹈'];
+const selectedInterests = (k.parent_interests || '').split(',').map(s => s.trim()).filter(s => s);
+const interestGrid = document.getElementById("interestGrid");
+interestGrid.innerHTML = INTERESTS.map(item => {
+  const isSelected = selectedInterests.includes(item);
+  return `<button class="choice-btn${isSelected ? ' on' : ''}" style="font-size:13px;padding:6px 10px" onclick="toggleInterest(this, '${item}')">${item}</button>`;
+}).join('');
+const customField = selectedInterests.find(i => !INTERESTS.includes(i));
+document.getElementById("customInterest").value = customField || '';
  
 renderAvatarSelectGrid(k.gender, k.avatar);
   showScreen("settingsScreen");
@@ -1943,6 +1954,9 @@ function selectSettingsAvatar(emoji) {
   if (btn) btn.style.border = "2.5px solid var(--p)";
   settingsKid = {...settingsKid, avatar: emoji};
 }
+function toggleInterest(btn, item) {
+  btn.classList.toggle('on');
+}
 
 async function saveSettings() {
   const msg = document.getElementById("settingsMsg");
@@ -1950,7 +1964,15 @@ async function saveSettings() {
   try {
     const birthday = document.getElementById("settingsBirthday").value;
     const body = {
-  personality: selectedPersonality,
+ const interests = [];
+document.querySelectorAll('#interestGrid .choice-btn.on').forEach(btn => {
+  interests.push(btn.textContent.trim());
+});
+const customInterest = document.getElementById("customInterest").value.trim();
+if (customInterest) interests.push(customInterest);
+body.parent_interests = interests.join(',');
+
+      personality: selectedPersonality,
   avatar: settingsKid.avatar,
 };
 
