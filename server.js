@@ -687,7 +687,7 @@ if (kid.daily_msg_date !== todayStr) {
   await db.query("UPDATE kids SET daily_msg_count=0, daily_msg_date=$1 WHERE id=$2", [todayStr, kid.id]);
   kid.daily_msg_count = 0;
 }
-console.log('daily check - date:', kid.daily_msg_date, 'today:', todayStr, 'count:', kid.daily_msg_count, 'membership:', membershipType);
+console.log('daily check - date:', kid.daily_msg_date, 'today:', todayStr, 'count:', kid.daily_msg_count, 'membership:', userMembership);
 
 // 检查消息限制（推广期：免费20条，VIP/SVIP不限）
 const userResult = await db.query("SELECT membership_type FROM users WHERE id=$1", [req.user.id]);
