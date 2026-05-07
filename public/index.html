@@ -1897,6 +1897,8 @@ function openSettings(k) {
   }
 // 兴趣渲染
 document.getElementById("interestLabel").textContent = `💝 让${k.name}更懂你`;
+document.getElementById("interestSubtitle").textContent = `选择你的爱好，让${k.name}找到和你共鸣的话题`;
+document.getElementById("customInterest").placeholder = `也想分享其他爱好？告诉${k.name}吧`;
 const INTERESTS = ['🏃跑步','🧘瑜伽','💪健身','🚴骑行','🏊游泳','🏔登山','📷摄影','🎨绘画','✍️写作','🎭手工','📚读书','🌱历史','💭心理学','🌍外语','🔬科普','🍳烹饪','🍞烘焙','🍷品酒','☕咖啡','🌸园艺','✈️旅行','🎬电影','🎵音乐','📺追剧','🎲桌游','💻编程','🤖AI','💰理财','🎨设计','🤔哲学','⚽足球','🏀篮球','🎾网球','🎮游戏','🎤唱歌','💃舞蹈'];
 const selectedInterests = (k.parent_interests || '').split(',').map(s => s.trim()).filter(s => s);
 const interestGrid = document.getElementById("interestGrid");
