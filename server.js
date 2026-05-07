@@ -480,6 +480,7 @@ const companionDays = Math.floor((new Date(todayDate) - new Date(createdDate)) /
 
 const oldLevel = LEVEL_THRESHOLDS.filter((t, i) => (kid.bond_score || 0) >= t && companionDays >= LEVEL_DAY_REQUIREMENTS[i]).length - 1;
 const newLevel = LEVEL_THRESHOLDS.filter((t, i) => newBondScore >= t && companionDays >= LEVEL_DAY_REQUIREMENTS[i]).length - 1;
+console.log('levelCheck - companionDays:', companionDays, 'oldLevel:', oldLevel, 'newLevel:', newLevel, 'pending:', kid.pending_level_up);
 
 // 延迟触发晋级：存入pending_level_up，不立刻触发
 let levelUp = null;
