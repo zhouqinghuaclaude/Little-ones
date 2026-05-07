@@ -681,7 +681,29 @@ if (message.includes('📖') && message.includes('讲故事')) {
       "INSERT INTO messages (kid_id, role, content) VALUES ($1,'assistant',$2) RETURNING id",
       [kid.id, reply]
     );
- const totalCount = msgCount + 1;
+// 每日消息计数
+const todayStr = new Date().toISOString().slice(0, 10);
+if (kid.daily_msg_date !== todayStr) {
+  await db.query("UPDATE kids SET daily_msg_count=0, daily_msg_date=$1 WHERE id=$2", [todayStr, kid.id]);
+  kid.daily_msg_count = 0;
+}
+
+// 检查消息限制（推广期：免费20条，VIP/SVIP不限）
+const userResult = await db.query("SELECT membership_type FROM users WHERE id=$1", [req.user.id]);
+const membershipType = userResult.rows[0]?.membership_type || 'free';
+const dailyLimit = membershipType === 'free' ? 20 : null;
+
+if (dailyLimit && kid.daily_msg_count >= dailyLimit) {
+  return res.status(403).json({ 
+    error: `今天和${kid.name}的聊天次数已用完`,
+    upgrade: true
+  });
+}
+
+// 更新每日计数
+await db.query("UPDATE kids SET daily_msg_count=daily_msg_count+1 WHERE id=$1", [kid.id]);
+
+    const totalCount = msgCount + 1;
 const storyPrompt = kid.age <= 3 && (reply.includes('故') && reply.includes('事'));
 const songPrompt = kid.age <= 3 && (reply.includes('歌') || reply.includes('唱'));
 
