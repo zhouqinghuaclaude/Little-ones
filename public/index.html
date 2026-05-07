@@ -1963,18 +1963,19 @@ async function saveSettings() {
   msg.textContent = '保存中...';
   try {
     const birthday = document.getElementById("settingsBirthday").value;
-    const body = {
- const interests = [];
-document.querySelectorAll('#interestGrid .choice-btn.on').forEach(btn => {
-  interests.push(btn.textContent.trim());
-});
-const customInterest = document.getElementById("customInterest").value.trim();
-if (customInterest) interests.push(customInterest);
-body.parent_interests = interests.join(',');
+    
+    const interests = [];
+    document.querySelectorAll('#interestGrid .choice-btn.on').forEach(btn => {
+      interests.push(btn.textContent.trim());
+    });
+    const customInterest = document.getElementById("customInterest").value.trim();
+    if (customInterest) interests.push(customInterest);
 
+    const body = {
       personality: selectedPersonality,
-  avatar: settingsKid.avatar,
-};
+      avatar: settingsKid.avatar,
+      parent_interests: interests.join(','),
+    };
 
     if (birthday && !settingsKid.birthday_locked) body.birthday = birthday;
     if (selectedAgeMode !== settingsKid.age_mode && !settingsKid.age_mode_locked) body.age_mode = selectedAgeMode;
@@ -1988,6 +1989,7 @@ body.parent_interests = interests.join(',');
     msg.textContent = '❌ ' + (e.message || '保存失败');
   }
 }
+
 
 async function openDiary(k) {
   if (!k) return;
