@@ -988,7 +988,25 @@ showBirthMoment(newKid, createData.role || "妈妈", createData.ageRange || "3-6
   }
 }
 
- function showAvatarPrompt() {
+ function showAvatarUpdatePrompt() {
+  const role = kid?.parent_role || '妈妈';
+  const name = kid?.name || '';
+  const area = document.getElementById('msgsArea');
+  const card = document.createElement('div');
+  card.style.cssText = `margin:8px 14px;background:white;border-radius:16px;padding:16px;box-shadow:0 4px 20px rgba(155,89,182,0.15);border:1.5px solid #E8D5F5;animation:fadeIn .3s ease`;
+  card.innerHTML = `
+    <div style="font-size:15px;font-weight:800;color:#9B59B6;margin-bottom:6px">📷 ${name}想更新了</div>
+    <div style="font-size:14px;color:#555;margin-bottom:12px;line-height:1.6">${role}，我长大了，你想看看我现在的样子吗</div>
+    <div style="display:flex;gap:8px">
+      <button class="primary-btn" style="margin-top:0;padding:10px;font-size:13px" onclick="openAvatarUpload()">想看看 📷</button>
+      <button style="padding:10px 16px;border-radius:12px;border:1.5px solid #E0D0EE;font-size:13px;color:#999" onclick="this.closest('div[style]').remove()">下次再说</button>
+    </div>
+  `;
+  area.appendChild(card);
+  scrollBot();
+}
+
+  function showAvatarPrompt() {
   const role = kid?.parent_role || '妈妈';
   const name = kid?.name || '';
   const card = document.createElement('div');
@@ -1820,6 +1838,7 @@ if (d.avatarPrompt) {
   showAvatarPrompt();
   return; // 阻止后续活动卡触发
 }
+if (d.avatarUpdatePrompt) showAvatarUpdatePrompt();
 
 
   } catch(e) {
