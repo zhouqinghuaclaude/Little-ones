@@ -478,8 +478,23 @@ const createdDate = new Date(kid.created_at).toISOString().slice(0, 10);
 const todayDate = new Date().toISOString().slice(0, 10);
 const companionDays = Math.floor((new Date(todayDate) - new Date(createdDate)) / 86400000);
 
-const oldLevel = LEVEL_THRESHOLDS.filter((t, i) => (kid.bond_score || 0) >= t && companionDays >= LEVEL_DAY_REQUIREMENTS[i]).length - 1;
-const newLevel = LEVEL_THRESHOLDS.filter((t, i) => newBondScore >= t && companionDays >= LEVEL_DAY_REQUIREMENTS[i]).length - 1;
+// 用gifts_received判断已触发的等级（稳定的真相来源）
+const lastTriggeredLevel = kid.gifts_received || 1; // 1代表L1已触发
+const nextLevel = lastTriggeredLevel + 1; // 下一个待触发等级
+const nextIdx = nextLevel - 1; // 数组索引
+
+// 检查下一级条件是否满足
+let canTriggerNext = false;
+if (nextLevel <= 6) {
+  if (newBondScore >= LEVEL_THRESHOLDS[nextIdx] && 
+      companionDays >= LEVEL_DAY_REQUIREMENTS[nextIdx]) {
+    canTriggerNext = true;
+  }
+}
+
+const oldLevel = lastTriggeredLevel - 1;
+const newLevel = canTriggerNext ? nextLevel - 1 : oldLevel;
+
 console.log('levelCheck - companionDays:', companionDays, 'oldLevel:', oldLevel, 'newLevel:', newLevel, 'pending:', kid.pending_level_up);
 
 // 延迟触发晋级：存入pending_level_up，不立刻触发
