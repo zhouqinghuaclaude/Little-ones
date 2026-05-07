@@ -784,7 +784,13 @@ function req(path, opts={}) {
   }).then(async r => { 
     clearTimeout(timeout);
     const d=await r.json(); 
-    if(!r.ok) throw new Error(d.error||"请求失败"); 
+   if(!r.ok) {
+  const err = new Error(d.error||"请求失败");
+  err.status = r.status;
+  err.upgrade = d.upgrade || false;
+  throw err;
+}
+
     return d; 
   }).catch(e => {
     clearTimeout(timeout);
