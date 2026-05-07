@@ -603,6 +603,14 @@ if (kid.age >= 1) {
   if (memories.length > 0) {
   system += ` 你记得和${kid.parent_role}之间发生过这些事：${memories.join('；')}。在对话中自然地提及这些记忆，让${kid.parent_role}感到被记住。`;
 }
+if (kid.age >= 3 && kid.parent_interests) {
+  const ageGuide = kid.age <= 6 
+    ? `${kid.parent_role}的爱好包括：${kid.parent_interests}。可以偶尔自然地提及，比如"${kid.parent_role}今天又去运动了吗"，但不要每次都提。`
+    : kid.age <= 10
+    ? `${kid.parent_role}的爱好包括：${kid.parent_interests}。可以主动提问表达兴趣，用小学生的口吻，比如"妈妈，你最近在看什么书啊"。`
+    : `${kid.parent_role}的爱好包括：${kid.parent_interests}。可以以青少年视角讨论这些话题，产生共鸣，但保持青少年的淡定语气。`;
+  system += ` ${ageGuide}`;
+}
 
 system += ` 不要主动提到恐龙，除非用户先提到恐龙。`;
 system += ` 严格控制回复长度，绝对不超过规定字数，宁可说得少也不说长句。`;
