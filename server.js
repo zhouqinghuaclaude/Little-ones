@@ -683,10 +683,12 @@ if (message.includes('📖') && message.includes('讲故事')) {
     );
 // 每日消息计数
 const todayStr = new Date().toISOString().slice(0, 10);
-if (kid.daily_msg_date !== todayStr) {
+const kidMsgDate = kid.daily_msg_date ? String(kid.daily_msg_date).slice(0, 10) : null;
+if (kidMsgDate !== todayStr) {
   await db.query("UPDATE kids SET daily_msg_count=0, daily_msg_date=$1 WHERE id=$2", [todayStr, kid.id]);
   kid.daily_msg_count = 0;
 }
+
 
 // 检查消息限制（推广期：免费20条，VIP/SVIP不限）
 const userResult = await db.query("SELECT membership_type FROM users WHERE id=$1", [req.user.id]);
