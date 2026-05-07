@@ -716,7 +716,18 @@ if (totalCount % 20 === 0) {
   }).catch(() => {});
 }
 
-res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: totalCount, storyPrompt: storyPrompt, songPrompt: songPrompt, activitySuggestion, levelUp, avatarPrompt });
+// 检测头像提示（6个月触发）
+let avatarUpdatePrompt = null;
+if (kid.age >= 1 && totalCount === 1) { // 第一条消息时检测
+  const baseDate = kid.avatar_customized_at || kid.avatar_prompt_date || kid.created_at;
+  const monthsSince = (Date.now() - new Date(baseDate)) / (1000 * 60 * 60 * 24 * 30);
+  if (monthsSince >= 6) {
+    avatarUpdatePrompt = true;
+    await db.query("UPDATE kids SET avatar_prompt_date=NOW() WHERE id=$1", [kid.id]);
+  }
+}
+
+  res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: totalCount, storyPrompt: storyPrompt, songPrompt: songPrompt, activitySuggestion, levelUp, avatarPrompt, avatarUpdatePrompt });
 
 
   } catch (e) {
