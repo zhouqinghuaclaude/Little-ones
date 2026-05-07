@@ -1005,6 +1005,21 @@ showBirthMoment(newKid, createData.role || "妈妈", createData.ageRange || "3-6
   area.appendChild(card);
   scrollBot();
 }
+function showUpgradePrompt() {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `position:fixed;inset:0;background:rgba(20,10,40,0.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px`;
+  overlay.innerHTML = `
+    <div style="background:white;border-radius:24px;padding:28px 24px;max-width:320px;text-align:center">
+      <div style="font-size:40px;margin-bottom:12px">🌱</div>
+      <div style="font-size:18px;font-weight:800;color:#9B59B6;margin-bottom:8px">今日聊天已结束</div>
+      <div style="font-size:14px;color:#888;margin-bottom:20px;line-height:1.6">升级会员，让${kid?.name}的陪伴永不中断</div>
+      <button style="width:100%;padding:14px;border-radius:16px;background:linear-gradient(135deg,#9B59B6,#C39BD3);color:white;font-size:15px;font-weight:700;margin-bottom:10px" onclick="showToast('会员功能即将开放 🌱');this.closest('[style*=fixed]').remove()">升级VIP 🌿</button>
+      <button style="width:100%;padding:14px;border-radius:16px;background:linear-gradient(135deg,#F0C060,#E8954A);color:white;font-size:15px;font-weight:700;margin-bottom:10px" onclick="showToast('芽豆功能即将开放 🫘');this.closest('[style*=fixed]').remove()">用芽豆继续 🫘</button>
+      <div style="font-size:13px;color:#ccc;cursor:pointer" onclick="this.closest('[style*=fixed]').remove()">明天再来</div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
 
   function showAvatarPrompt() {
   const role = kid?.parent_role || '妈妈';
@@ -1541,11 +1556,17 @@ async function sendMoment(type) {
     area.insertAdjacentHTML("beforeend", bubble("assistant", d.reply, new Date().toISOString()));
     scrollBot();
     if (d.msgCount !== undefined && kid.age <= 1) updateGrowthBar(d.msgCount);
-  } catch(e) {
+ } catch(e) {
     hideTyping();
-    area.insertAdjacentHTML("beforeend", bubble("assistant", `（${kid.name}没有回应）`, new Date().toISOString()));
+    if (e.status === 403 && e.upgrade) {
+      area.insertAdjacentHTML("beforeend", bubble("assistant", `今天和${kid.name}的聊天次数已用完 😢`, new Date().toISOString()));
+      setTimeout(() => showUpgradePrompt(), 1000);
+    } else {
+      area.insertAdjacentHTML("beforeend", bubble("assistant", `（${kid.name}没有回应，请稍后再试）`, new Date().toISOString()));
+    }
     scrollBot();
   }
+
 }
 function getBudAvatar(gender) {
   if (gender === 'boy') return `<svg viewBox="0 0 72 72" width="100%" height="100%" fill="none">
