@@ -210,6 +210,9 @@ if (birthday && !kid.birthday_locked) {
 if (avatar !== undefined) {
   await db.query("UPDATE kids SET avatar=$1 WHERE id=$2", [avatar, kid.id]);
 }
+if (req.body.parent_interests !== undefined) {
+  await db.query("UPDATE kids SET parent_interests=$1 WHERE id=$2", [req.body.parent_interests, kid.id]);
+}
 
 
   // 成长模式切换（只允许一次，付费功能）
