@@ -708,6 +708,8 @@ if (dailyLimit && kid.daily_msg_count >= dailyLimit) {
 
 // 更新每日计数
 await db.query("UPDATE kids SET daily_msg_count=daily_msg_count+1 WHERE id=$1", [kid.id]);
+const checkAfter = await db.query("SELECT daily_msg_count FROM kids WHERE id=$1", [kid.id]);
+console.log('after update count:', checkAfter.rows[0].daily_msg_count);
 
     const totalCount = msgCount + 1;
 const storyPrompt = kid.age <= 3 && (reply.includes('故') && reply.includes('事'));
