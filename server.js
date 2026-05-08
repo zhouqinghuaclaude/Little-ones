@@ -688,6 +688,9 @@ if (kidMsgDate !== todayStr) {
   await db.query("UPDATE kids SET daily_msg_count=0, daily_msg_date=$1 WHERE id=$2", [todayStr, kid.id]);
   kid.daily_msg_count = 0;
 }
+const kidCheck = await db.query("SELECT daily_msg_count, daily_msg_date FROM kids WHERE id=$1", [kid.id]);
+kid.daily_msg_count = kidCheck.rows[0].daily_msg_count;
+kid.daily_msg_date = kidCheck.rows[0].daily_msg_date;
 
 
 // 检查消息限制（推广期：免费20条，VIP/SVIP不限）
