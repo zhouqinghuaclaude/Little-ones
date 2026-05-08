@@ -688,17 +688,16 @@ if (kidMsgDate !== todayStr) {
   await db.query("UPDATE kids SET daily_msg_count=0, daily_msg_date=$1 WHERE id=$2", [todayStr, kid.id]);
   kid.daily_msg_count = 0;
 }
-const kidCheck = await db.query("SELECT daily_msg_count, daily_msg_date FROM kids WHERE id=$1", [kid.id]);
-kid.daily_msg_count = kidCheck.rows[0].daily_msg_count;
-kid.daily_msg_date = kidCheck.rows[0].daily_msg_date;
-console.log('daily check - date:', kid.daily_msg_date, 'today:', todayStr, 'count:', kid.daily_msg_count, 'membership:', userMembership);
-
-
-// 检查消息限制（推广期：免费20条，VIP/SVIP不限）
+// 检查消息限制
 const userResult = await db.query("SELECT membership_type FROM users WHERE id=$1", [req.user.id]);
 const userMembership = userResult.rows[0]?.membership_type || 'free';
 const dailyLimit = userMembership === 'free' ? 20 : null;
 
+const kidCheck = await db.query("SELECT daily_msg_count, daily_msg_date FROM kids WHERE id=$1", [kid.id]);
+kid.daily_msg_count = kidCheck.rows[0].daily_msg_count;
+kid.daily_msg_date = kidCheck.rows[0].daily_msg_date;
+
+console.log('daily check - date:', kid.daily_msg_date, 'today:', todayStr, 'count:', kid.daily_msg_count, 'membership:', userMembership);
 
 if (dailyLimit && kid.daily_msg_count >= dailyLimit) {
   return res.status(403).json({ 
