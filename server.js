@@ -521,7 +521,8 @@ if (kid.pending_level_up && kid.last_chat_at) {
       gift: LEVEL_GIFTS[kid.pending_level_up - 1],
       emoji: LEVEL_EMOJIS[kid.pending_level_up - 1],
     };
-    await db.query("UPDATE kids SET pending_level_up=NULL, last_levelup_date=$1 WHERE id=$2", [todayStr, kid.id]);
+  await db.query("UPDATE kids SET pending_level_up=NULL, last_levelup_date=$1, last_chat_at=NOW() WHERE id=$2", [todayStr, kid.id]);
+ 
   }
 }
 
