@@ -1867,13 +1867,19 @@ if (d.avatarPrompt) {
 }
 if (d.avatarUpdatePrompt) showAvatarUpdatePrompt();
 
-
-  } catch(e) {
+} catch(e) {
     hideTyping();
-    area.insertAdjacentHTML("beforeend",bubble("assistant",`（${kid.name}没有回应，请稍后再试）`,new Date().toISOString()));
-
+    if (e.status === 403 && e.upgrade) {
+      area.insertAdjacentHTML("beforeend", bubble("assistant", `今天和${kid.name}的聊天次数已用完 😢`, new Date().toISOString()));
+      setTimeout(() => showUpgradePrompt(), 1000);
+    } else {
+      area.insertAdjacentHTML("beforeend", bubble("assistant", `（${kid.name}没有回应，请稍后再试）`, new Date().toISOString()));
+    }
     scrollBot();
-  } finally { document.getElementById("sendBtn").disabled=false; }
+  }
+
+  
+  finally { document.getElementById("sendBtn").disabled=false; }
 }
 
 async function saveToDiary(kidId, content) {
