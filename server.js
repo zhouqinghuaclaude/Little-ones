@@ -324,7 +324,17 @@ app.post("/api/kids/:id/activity-check", auth, async (req, res) => {
     const activityCheck = await claude.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 50,
-      system: `你是一个判断助手。判断对话中孩子和用户是否在就某个活动进行互动或共同讨论（比如一起计划、相互邀请、讨论要一起做某事）。如果只是孩子单方面表达喜好、随口提及、或是将来计划，回答"none"。只有双方都涉及某个活动话题时才触发。可选活动：${options.join(', ')}。只输出活动代码或none，不要其他内容。`,
+    system: `你是一个活动判断助手。严格判断对话中是否明确提到了以下具体活动之一，且双方都在讨论要一起做这件事。
+
+规则：
+1. 必须是双方互动，不能只是单方面提及
+2. 必须精确匹配活动，不能模糊联想（比如"讲故事"不是"唱儿歌"，"捉蝴蝶"不是"捉迷藏"）
+3. 如果不确定，输出none
+
+可选活动：${options.join(', ')}
+
+只输出活动代码或none，不要其他内容。`,
+
       messages: [{ role: "user", content: `孩子说：${reply}\n用户说：${message}` }]
     });
     const suggestion = activityCheck.content[0].text.trim().toLowerCase();
