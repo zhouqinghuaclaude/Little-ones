@@ -1407,13 +1407,13 @@ try {
 
         }, 500);
 
-     } else if (isLast) {
+    
+} else if (isLast) {
         overlay.style.animation = "fadeOut .5s ease forwards";
         setTimeout(() => {
           document.body.removeChild(overlay);
           if (levelUp.level === 4 || levelUp.level === 5) showLevelUpgradePrompt(levelUp.level);
         }, 500);
-
       } else {
         stepIndex++;
         showStep();
