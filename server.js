@@ -1032,6 +1032,14 @@ db.query(`CREATE TABLE IF NOT EXISTS achievements (
  achievement_emoji VARCHAR(10),
  unlocked_at TIMESTAMP DEFAULT NOW()
 )`).catch(() => {});
+db.query(`CREATE TABLE IF NOT EXISTS wish_pool (
+  id SERIAL PRIMARY KEY,
+  kid_id INTEGER REFERENCES kids(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  emoji TEXT DEFAULT '🌟',
+  created_at TIMESTAMP DEFAULT NOW(),
+  fulfilled_at TIMESTAMP DEFAULT NULL
+)`).catch(() => {});
 
 const PORT = process.env.PORT || 3000;
 initDB().then(() => app.listen(PORT, () => console.log("Server running on port " + PORT)));
