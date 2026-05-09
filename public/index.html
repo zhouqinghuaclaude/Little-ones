@@ -1127,7 +1127,7 @@ function openAvatarUpload() {
     setTimeout(() => document.body.removeChild(overlay), 500);
   };
 }
- async function saveWish(content, emoji, btn) {
+async function saveWish(content, emoji, btn) {
   try {
     await req(`/api/kids/${kid.id}/wishes`, {
       method: 'POST',
@@ -1135,7 +1135,7 @@ function openAvatarUpload() {
     });
     btn.closest('div[style]').remove();
     showToast(`已帮${kid.name}记下心愿 💝`);
- } catch(e) {
+  } catch(e) {
     if (e.status === 403 && e.upgrade) {
       btn.closest('div[style]').remove();
       showToast(`${kid.name}的心愿池已满，升级VIP记录更多心愿 🌿`);
@@ -1144,6 +1144,8 @@ function openAvatarUpload() {
       showToast('记录失败，请重试');
     }
   }
+}
+
 
 
 function showBirthMoment(kid, role, ageRange) {
