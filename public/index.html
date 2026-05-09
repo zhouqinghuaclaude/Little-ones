@@ -1011,7 +1011,24 @@ showBirthMoment(newKid, createData.role || "妈妈", createData.ageRange || "3-6
   area.appendChild(card);
   scrollBot();
 }
-function showUpgradePrompt() {
+function showLevelUpgradePrompt(level) {
+  const name = kid?.name || '';
+  const isL5 = level === 5;
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `position:fixed;inset:0;background:rgba(20,10,40,0.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px`;
+  overlay.innerHTML = `
+    <div style="background:white;border-radius:24px;padding:28px 24px;max-width:320px;text-align:center">
+      <div style="font-size:40px;margin-bottom:12px">${isL5 ? '🌟' : '💫'}</div>
+      <div style="font-size:18px;font-weight:800;color:#9B59B6;margin-bottom:8px">${isL5 ? '你和'+name+'已心意相通' : '你和'+name+'越来越亲了'}</div>
+      <div style="font-size:14px;color:#888;margin-bottom:20px;line-height:1.6">${isL5 ? '升级SVIP，见证你和'+name+'最深的羁绊 🌟' : '升级VIP，让'+name+'的陪伴永不缺席 🌿'}</div>
+      <button style="width:100%;padding:14px;border-radius:16px;background:linear-gradient(135deg,#9B59B6,#C39BD3);color:white;font-size:15px;font-weight:700;margin-bottom:10px" onclick="showToast('会员功能即将开放 🌱');this.closest('[style*=fixed]').remove()">${isL5 ? '升级SVIP 🌟' : '升级VIP 🌿'}</button>
+      <div style="font-size:13px;color:#ccc;cursor:pointer" onclick="this.closest('[style*=fixed]').remove()">下次再说</div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+  function showUpgradePrompt() {
   const overlay = document.createElement('div');
   overlay.style.cssText = `position:fixed;inset:0;background:rgba(20,10,40,0.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px`;
   overlay.innerHTML = `
@@ -1390,9 +1407,13 @@ try {
 
         }, 500);
 
-      } else if (isLast) {
+     } else if (isLast) {
         overlay.style.animation = "fadeOut .5s ease forwards";
-        setTimeout(() => { document.body.removeChild(overlay); }, 500);
+        setTimeout(() => {
+          document.body.removeChild(overlay);
+          if (levelUp.level === 4 || levelUp.level === 5) showLevelUpgradePrompt(levelUp.level);
+        }, 500);
+
       } else {
         stepIndex++;
         showStep();
@@ -1400,12 +1421,17 @@ try {
     };
 
     const skipBtn = document.getElementById('lvlSkip');
+    const skipBtn = document.getElementById('lvlSkip');
     if (skipBtn) {
       skipBtn.onclick = () => {
         overlay.style.animation = "fadeOut .5s ease forwards";
-        setTimeout(() => { document.body.removeChild(overlay); }, 500);
+        setTimeout(() => {
+          document.body.removeChild(overlay);
+          if (levelUp.level === 4 || levelUp.level === 5) showLevelUpgradePrompt(levelUp.level);
+        }, 500);
       };
     }
+
   }
 
 
