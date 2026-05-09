@@ -2270,14 +2270,17 @@ async function openWishPool() {
     const overlay = document.createElement('div');
     overlay.id = 'wishPoolOverlay';
     overlay.style.cssText = `position:fixed;inset:0;background:rgba(20,10,40,0.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px`;
-    const wishHTML = wishes.length === 0 
+   const wishHTML = wishes.length === 0 
       ? `<div style="text-align:center;color:rgba(255,255,255,0.5);padding:20px">还没有心愿，和${kid.name}聊聊吧 🌱</div>`
-      : wishes.map(w => `
-        <div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,0.08);border-radius:12px;margin-bottom:8px">
-          <span style="font-size:24px">${w.emoji}</span>
-          <span style="flex:1;color:white;font-size:14px">${w.content}</span>
-          <span style="font-size:11px;color:rgba(255,255,255,0.4)">${w.fulfilled_at ? '✅已实现' : '🌟心愿中'}</span>
-        </div>`).join('');
+      : wishes.map(w => {
+          const status = w.fulfilled_at ? '✅已实现' : '🌟心愿中';
+          return `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,0.08);border-radius:12px;margin-bottom:8px">
+            <span style="font-size:24px">${w.emoji}</span>
+            <span style="flex:1;color:white;font-size:14px">${w.content}</span>
+            <span style="font-size:11px;color:rgba(255,255,255,0.4)">${status}</span>
+          </div>`;
+        }).join('');
+ 
     overlay.innerHTML = `
       <div style="background:rgba(30,15,50,0.95);border-radius:24px;padding:24px;max-width:360px;width:100%;max-height:80vh;overflow-y:auto">
         <div style="text-align:center;font-size:18px;font-weight:800;color:white;margin-bottom:6px">🌟 ${kid.name}的心愿池</div>
