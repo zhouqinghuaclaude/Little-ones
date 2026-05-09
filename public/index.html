@@ -546,6 +546,8 @@ z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden;
     <!-- Row 3: scrollable nav buttons -->
     <div class="chat-header-row3">
       <button onclick="openBondProfile()" class="chat-nav-btn" id="bondHeaderBtn">💫 亲密</button>
+      <button onclick="openWishPool()" class="chat-nav-btn" id="wishPoolBtn">🌟 心愿</button>
+
       <button onclick="openGiftShop();" class="chat-nav-btn">🎁 愿望</button>
       <button onclick="openDiary(kid)" class="chat-nav-btn">📖 日记</button>
       <button onclick="openSettings(kid)" class="chat-nav-btn">⚙️ 设置</button>
@@ -2260,6 +2262,34 @@ function getBondProgress(score) {
     }
   }
   return { pct: 100, nextScore: null, nextName: null };
+}
+async function openWishPool() {
+  if (!kid) return;
+  try {
+    const wishes = await req(`/api/kids/${kid.id}/wishes`);
+    const overlay = document.createElement('div');
+    overlay.id = 'wishPoolOverlay';
+    overlay.style.cssText = `position:fixed;inset:0;background:rgba(20,10,40,0.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px`;
+    const wishHTML = wishes.length === 0 
+      ? `<div style="text-align:center;color:rgba(255,255,255,0.5);padding:20px">还没有心愿，和${kid.name}聊聊吧 🌱</div>`
+      : wishes.map(w => `
+        <div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,0.08);border-radius:12px;margin-bottom:8px">
+          <span style="font-size:24px">${w.emoji}</span>
+          <span style="flex:1;color:white;font-size:14px">${w.content}</span>
+          <span style="font-size:11px;color:rgba(255,255,255,0.4)">${w.fulfilled_at ? '✅已实现' : '🌟心愿中'}</span>
+        </div>`).join('');
+    overlay.innerHTML = `
+      <div style="background:rgba(30,15,50,0.95);border-radius:24px;padding:24px;max-width:360px;width:100%;max-height:80vh;overflow-y:auto">
+        <div style="text-align:center;font-size:18px;font-weight:800;color:white;margin-bottom:6px">🌟 ${kid.name}的心愿池</div>
+        <div style="text-align:center;font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:20px">${wishes.length}/3 个心愿</div>
+        ${wishHTML}
+        <button style="width:100%;padding:14px;border-radius:16px;background:rgba(255,255,255,0.15);color:white;font-size:15px;margin-top:16px" onclick="document.getElementById('wishPoolOverlay').remove()">关闭</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  } catch(e) {
+    showToast('加载心愿失败');
+  }
 }
 
 async function openBondProfile() {
