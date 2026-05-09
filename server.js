@@ -370,6 +370,13 @@ app.get("/api/kids/:id/wishes", auth, async (req, res) => {
   res.json(wishes.rows);
 });
 
+app.post("/api/kids/:id/wishes/:wishId/fulfill", auth, async (req, res) => {
+  const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
+  if (!kidResult.rows[0]) return res.status(404).json({ error: "孩子不存在" });
+  await db.query("UPDATE wish_pool SET fulfilled_at=NOW() WHERE id=$1 AND kid_id=$2", [req.params.wishId, req.params.id]);
+  res.json({ ok: true });
+});
+
 app.post("/api/kids/:id/activity-check", auth, async (req, res) => {
   const { message, reply, age } = req.body;
   if (!message || !reply || age < 1) return res.json({ activitySuggestion: null });

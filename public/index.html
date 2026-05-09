@@ -1146,6 +1146,35 @@ async function saveWish(content, emoji, btn) {
   }
 }
 
+function fulfillWishInShop(wishId, content, emoji) {
+  document.getElementById('wishPoolOverlay')?.remove();
+  openGiftShop();
+  showToast(`为${kid?.name}选一份${content}吧 ${emoji}`);
+}
+async function markWishFulfilled(wishId, btn) {
+  try {
+    await req(`/api/kids/${kid.id}/wishes/${wishId}/fulfill`, { method: 'POST' });
+    showToast(`${kid?.name}的心愿实现了!🎉`);
+    document.getElementById('wishPoolOverlay')?.remove();
+    // 触发孩子感谢仪式
+    setTimeout(() => {
+      const area = document.getElementById('msgsArea');
+      if (area) {
+        const role = kid?.parent_role || '妈妈';
+        const line = `${role},谢谢你!这是我最开心的事!`;
+        area.insertAdjacentHTML('beforeend', bubble('assistant', line, new Date().toISOString()));
+        scrollBot();
+        req(`/api/kids/${kid.id}/messages/save`, {
+          method: 'POST',
+          body: JSON.stringify({ role: 'assistant', content: line })
+        }).catch(() => {});
+      }
+    }, 500);
+  } catch(e) {
+    showToast('操作失败,请重试');
+  }
+}
+
 
 
 function showBirthMoment(kid, role, ageRange) {
@@ -2282,11 +2311,18 @@ async function openWishPool() {
    const wishHTML = wishes.length === 0 
       ? `<div style="text-align:center;color:rgba(255,255,255,0.5);padding:20px">还没有心愿，和${kid.name}聊聊吧 🌱</div>`
       : wishes.map(w => {
-          const status = w.fulfilled_at ? '✅已实现' : '🌟心愿中';
-          return `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,0.08);border-radius:12px;margin-bottom:8px">
-            <span style="font-size:24px">${w.emoji}</span>
-            <span style="flex:1;color:white;font-size:14px">${w.content}</span>
-            <span style="font-size:11px;color:rgba(255,255,255,0.4)">${status}</span>
+          const isFulfilled = !!w.fulfilled_at;
+          return `<div style="padding:12px;background:rgba(255,255,255,0.08);border-radius:12px;margin-bottom:8px">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:${isFulfilled ? '0' : '10px'}">
+              <span style="font-size:24px">${w.emoji}</span>
+              <span style="flex:1;color:white;font-size:14px">${w.content}</span>
+              <span style="font-size:11px;color:rgba(255,255,255,0.4)">${isFulfilled ? '✅已实现' : '🌟心愿中'}</span>
+            </div>
+            ${!isFulfilled ? `
+            <div style="display:flex;gap:8px">
+              <button style="flex:1;padding:8px;border-radius:10px;background:linear-gradient(135deg,#F0C060,#E8954A);color:white;font-size:12px;font-weight:700" onclick="fulfillWishInShop('${w.id}','${w.content}','${w.emoji}')">送出心愿 🎁</button>
+              <button style="flex:1;padding:8px;border-radius:10px;background:rgba(255,255,255,0.15);color:white;font-size:12px" onclick="markWishFulfilled('${w.id}',this)">已实现 ✅</button>
+            </div>` : ''}
           </div>`;
         }).join('');
  
