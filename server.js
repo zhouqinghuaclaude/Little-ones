@@ -308,15 +308,23 @@ app.post("/api/kids/:id/activities", auth, async (req, res) => {
   res.json({ count, newAchievement, remaining });
 });
 app.post("/api/kids/:id/wish-check", auth, async (req, res) => {
-  const { reply, age } = req.body;
+  const { reply, age, existingWishes } = req.body;
   if (!reply || age < 1) return res.json({ wish: null });
+  const existingContents = (existingWishes || [])
+  .filter(w => !w.fulfilled_at || (Date.now() - new Date(w.fulfilled_at)) < 90 * 24 * 60 * 60 * 1000)
+  .map(w => w.content)
+  .join('、');
   
   try {
     const wishCheck = await claude.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 100,
-      system: `你是一个愿望提取助手。判断以下孩子的话语中是否包含明确的愿望或想要的东西（玩具、活动、食物、去某个地方等）。
-如果有，用JSON格式输出：{"has_wish": true, "content": "愿望内容（10字以内）", "emoji": "最合适的emoji"}
+      system: `你是一个愿望提取助手。判断以下孩子的话语中是否包含明确的愿望——特指想要拥有某个具体物品（玩具、书、运动装备、衣物等）。
+注意：
+1. 只捕捉想要拥有物品的愿望，不捕捉活动类（学XX、做XX、去XX）
+2. 如果愿望和已有心愿列表中的内容相似，输出{"has_wish": false}
+3. 已有心愿：${existingContents || '无'}
+如果有新的物品愿望，用JSON格式输出：{"has_wish": true, "content": "愿望内容（10字以内）", "emoji": "最合适的emoji"}
 如果没有，输出：{"has_wish": false}
 只输出JSON，不要其他内容。`,
       messages: [{ role: "user", content: `孩子说：${reply}` }]
