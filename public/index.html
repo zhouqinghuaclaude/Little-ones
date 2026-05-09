@@ -1161,7 +1161,10 @@ async function markWishFulfilled(wishId, btn) {
       const area = document.getElementById('msgsArea');
       if (area) {
         const role = kid?.parent_role || '妈妈';
-        const line = `${role},谢谢你!这是我最开心的事!`;
+        const age = kid?.age || 1;
+        const line = age <= 3 ? `${role}!谢谢!我好喜欢!` 
+ : age <= 6 ? `${role},你真的帮我实现了!我好开心!`
+ : `${role},谢谢你记得我的愿望`;
         area.insertAdjacentHTML('beforeend', bubble('assistant', line, new Date().toISOString()));
         scrollBot();
         req(`/api/kids/${kid.id}/messages/save`, {
@@ -2320,8 +2323,8 @@ async function openWishPool() {
             </div>
             ${!isFulfilled ? `
             <div style="display:flex;gap:8px">
-              <button style="flex:1;padding:8px;border-radius:10px;background:linear-gradient(135deg,#F0C060,#E8954A);color:white;font-size:12px;font-weight:700" onclick="fulfillWishInShop('${w.id}','${w.content}','${w.emoji}')">送出心愿 🎁</button>
-              <button style="flex:1;padding:8px;border-radius:10px;background:rgba(255,255,255,0.15);color:white;font-size:12px" onclick="markWishFulfilled('${w.id}',this)">已实现 ✅</button>
+              <button style="flex:1;padding:8px;border-radius:10px;background:linear-gradient(135deg,#F0C060,#E8954A);color:white;font-size:12px;font-weight:700" onclick="fulfillWishInShop('${w.id}','${w.content}','${w.emoji}')">满足${kid?.name}的心愿 🎁</button>
+              <button style="flex:1;padding:8px;border-radius:10px;background:rgba(255,255,255,0.15);color:white;font-size:12px" onclick="markWishFulfilled('${w.id}',this)">已实现 ✨</button>
             </div>` : ''}
           </div>`;
         }).join('');
