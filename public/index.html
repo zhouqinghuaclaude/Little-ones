@@ -1125,7 +1125,19 @@ function openAvatarUpload() {
     setTimeout(() => document.body.removeChild(overlay), 500);
   };
 }
- 
+ async function saveWish(content, emoji, btn) {
+  try {
+    await req(`/api/kids/${kid.id}/wishes`, {
+      method: 'POST',
+      body: JSON.stringify({ content, emoji })
+    });
+    btn.closest('div[style]').remove();
+    showToast(`已帮${kid.name}记下心愿 💝`);
+  } catch(e) {
+    showToast('记录失败，请重试');
+  }
+}
+
 function showBirthMoment(kid, role, ageRange) {
   
 const SCRIPTS = {
@@ -1901,7 +1913,31 @@ if (kid.age >= 1) {
   }).catch(() => {});
 }
 
- 
+ // 异步判断愿望
+if (kid.age >= 1) {
+  req(`/api/kids/${kid.id}/wish-check`, {
+    method: 'POST',
+    body: JSON.stringify({ reply: d.reply, age: kid.age })
+  }).then(wishData => {
+    if (wishData.wish) {
+      const wish = wishData.wish;
+      const area = document.getElementById('msgsArea');
+      const card = document.createElement('div');
+      card.style.cssText = `margin:8px 14px;background:white;border-radius:16px;padding:16px;box-shadow:0 4px 20px rgba(155,89,182,0.15);border:1.5px solid #E8D5F5;animation:fadeIn .3s ease`;
+      card.innerHTML = `
+        <div style="font-size:15px;font-weight:800;color:#9B59B6;margin-bottom:6px">${wish.emoji} ${kid.name}有个心愿</div>
+        <div style="font-size:14px;color:#555;margin-bottom:12px;line-height:1.6">「${wish.content}」</div>
+        <div style="display:flex;gap:8px">
+          <button class="primary-btn" style="margin-top:0;padding:10px;font-size:13px" onclick="saveWish('${wish.content}','${wish.emoji}',this)">帮${kid.name}记下来 💝</button>
+          <button style="padding:10px 16px;border-radius:12px;border:1.5px solid #E0D0EE;font-size:13px;color:#999" onclick="this.closest('div[style]').remove()">不了</button>
+        </div>
+      `;
+      area.appendChild(card);
+      scrollBot();
+    }
+  }).catch(() => {});
+}
+
 
 if (d.levelUp) {
   try {
