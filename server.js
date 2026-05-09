@@ -307,6 +307,31 @@ app.post("/api/kids/:id/activities", auth, async (req, res) => {
 
   res.json({ count, newAchievement, remaining });
 });
+app.post("/api/kids/:id/wish-check", auth, async (req, res) => {
+  const { reply, age } = req.body;
+  if (!reply || age < 1) return res.json({ wish: null });
+  
+  try {
+    const wishCheck = await claude.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 100,
+      system: `你是一个愿望提取助手。判断以下孩子的话语中是否包含明确的愿望或想要的东西（玩具、活动、食物、去某个地方等）。
+如果有，用JSON格式输出：{"has_wish": true, "content": "愿望内容（10字以内）", "emoji": "最合适的emoji"}
+如果没有，输出：{"has_wish": false}
+只输出JSON，不要其他内容。`,
+      messages: [{ role: "user", content: `孩子说：${reply}` }]
+    });
+    const result = JSON.parse(wishCheck.content[0].text.trim());
+    if (result.has_wish) {
+      res.json({ wish: { content: result.content, emoji: result.emoji } });
+    } else {
+      res.json({ wish: null });
+    }
+  } catch(e) {
+    res.json({ wish: null });
+  }
+});
+
 app.post("/api/kids/:id/activity-check", auth, async (req, res) => {
   const { message, reply, age } = req.body;
   if (!message || !reply || age < 1) return res.json({ activitySuggestion: null });
