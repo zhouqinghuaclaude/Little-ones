@@ -1292,6 +1292,7 @@ function saveActivityCache(cache) {
 }
 
 const _activityShownToday = getActivityCache();
+let _wishCheckBlocked = false;
 
 
 
@@ -1916,7 +1917,11 @@ if (kid.age >= 1) {
         if (trigger) {
           _activityShownToday[cacheKey] = true;
           saveActivityCache(_activityShownToday);
-          if (!d.storyPrompt && !d.songPrompt) showActivityCard(trigger);
+          if (!d.storyPrompt && !d.songPrompt) {
+            showActivityCard(trigger);
+            _wishCheckBlocked = true;
+            setTimeout(() => { _wishCheckBlocked = false; }, 3000);
+          }
         }
       }
     }
@@ -1924,7 +1929,7 @@ if (kid.age >= 1) {
 }
 
  // 异步判断愿望
-if (kid.age >= 1) {
+if (kid.age >= 1 && !_wishCheckBlocked) {
   req(`/api/kids/${kid.id}/wish-check`, {
     method: 'POST',
     body: JSON.stringify({ reply: d.reply, age: kid.age })
