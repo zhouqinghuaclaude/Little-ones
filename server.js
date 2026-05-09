@@ -331,6 +331,15 @@ app.post("/api/kids/:id/wish-check", auth, async (req, res) => {
   );
   res.json(result.rows[0]);
 });
+app.get("/api/kids/:id/wishes", auth, async (req, res) => {
+  const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
+  if (!kidResult.rows[0]) return res.status(404).json({ error: "孩子不存在" });
+  const wishes = await db.query(
+    "SELECT * FROM wish_pool WHERE kid_id=$1 ORDER BY created_at DESC",
+    [req.params.id]
+  );
+  res.json(wishes.rows);
+});
 
   try {
     const wishCheck = await claude.messages.create({
