@@ -2334,22 +2334,17 @@ function closeGiftShop(e) {
   document.getElementById("giftOverlay").classList.remove("open");
 }
 
-
 async function refreshGiftCounter() {
   try {
-    const today = new Date().toISOString().slice(0, 10);
-    // Fetch today's used count from the gifts list (approximate via API)
-    // We'll track it locally from send responses; initialise from a quick probe
     const r = await req(`/api/kids/${kid.id}/gifts`);
-    const todayFree = r.filter(g => {
-      return g.gift_type === "free" && g.created_at && g.created_at.slice(0, 10) === today;
-    }).length;
-    giftUsed = todayFree;
-    if (!giftLimit) giftLimit = 1;
-    // Default limit; will be updated on send response
+    const totalFree = r.filter(g => g.gift_type === 'free').length;
+    giftUsed = totalFree;
+    giftLimit = 3;
     updateGiftCounterUI();
   } catch(e) { }
 }
+
+
 
 function updateGiftCounterUI() {
   document.getElementById("giftCounter").textContent = `今日免费: ${giftUsed}/${giftLimit}`;
@@ -2381,8 +2376,10 @@ function renderGiftGrid() {
 document.getElementById("giftGrid").innerHTML = cat.items.map(item => {
     const btnHtml = isFree
       ? `<button class="gift-send-btn" ${limitReached ? "disabled" : ""}
-           onclick="sendGift('${item.emoji}','${item.name}','free','${level}')">
-           ${limitReached ? "已用完" : "送出 ✨"}
+           onclick="${limitReached ? 'showUpgradePrompt()' : `sendGift('${item.emoji}','${item.name}','free','${level}')`}">
+
+          ${limitReached ? "升级解锁 🌿" : "送出 ✨"}
+ 
          </button>`
       : `<button class="gift-paid-btn" disabled>💰 即将开放</button>`;
     return `<div class="gift-card">
