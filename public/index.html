@@ -1762,6 +1762,8 @@ document.getElementById("msgsArea").innerHTML=`<div style="text-align:center;pad
 try {
   const msgs=await req(`/api/kids/${k.id}/messages`);
   renderMsgs(msgs);
+  // 加载愿望池缓存
+  req(`/api/kids/${k.id}/wishes`).then(wishes => { kid._wishPool = wishes; }).catch(() => {});
   
   // 检查是否有待触发的晋级
   // 检测生日
@@ -1932,7 +1934,7 @@ if (kid.age >= 1) {
 if (kid.age >= 1 && !_wishCheckBlocked) {
   req(`/api/kids/${kid.id}/wish-check`, {
     method: 'POST',
-    body: JSON.stringify({ reply: d.reply, age: kid.age })
+    body: JSON.stringify({ reply: d.reply, age: kid.age, existingWishes: kid._wishPool || [] })
   }).then(wishData => {
     if (wishData.wish) {
       const wish = wishData.wish;
