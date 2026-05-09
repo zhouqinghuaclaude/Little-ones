@@ -310,7 +310,28 @@ app.post("/api/kids/:id/activities", auth, async (req, res) => {
 app.post("/api/kids/:id/wish-check", auth, async (req, res) => {
   const { reply, age } = req.body;
   if (!reply || age < 1) return res.json({ wish: null });
+  app.post("/api/kids/:id/wishes", auth, async (req, res) => {
+  const { content, emoji } = req.body;
+  if (!content?.trim()) return res.status(400).json({ error: "内容不能为空" });
+  const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
+  if (!kidResult.rows[0]) return res.status(404).json({ error: "孩子不存在" });
   
+  // 检查愿望池数量（免费用户最多3个）
+  const countResult = await db.query("SELECT COUNT(*) FROM wish_pool WHERE kid_id=$1 AND fulfilled_at IS NULL", [req.params.id]);
+  const wishCount = parseInt(countResult.rows[0].count);
+  
+  // TODO: 检查会员状态，免费用户限制3个
+  if (wishCount >= 3) {
+    return res.status(403).json({ error: `${kidResult.rows[0].name}的心愿池已满`, upgrade: true });
+  }
+  
+  const result = await db.query(
+    "INSERT INTO wish_pool (kid_id, content, emoji) VALUES ($1, $2, $3) RETURNING *",
+    [req.params.id, content.trim(), emoji || '🌟']
+  );
+  res.json(result.rows[0]);
+});
+
   try {
     const wishCheck = await claude.messages.create({
       model: "claude-sonnet-4-20250514",
