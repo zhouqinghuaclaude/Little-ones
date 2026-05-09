@@ -1011,7 +1011,24 @@ showBirthMoment(newKid, createData.role || "妈妈", createData.ageRange || "3-6
   area.appendChild(card);
   scrollBot();
 }
-function showLevelUpgradePrompt(level) {
+function showL6Paywall() {
+  const name = kid?.name || '';
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `position:fixed;inset:0;background:rgba(20,10,40,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px`;
+  overlay.innerHTML = `
+    <div style="background:white;border-radius:24px;padding:28px 24px;max-width:320px;text-align:center">
+      <div style="font-size:40px;margin-bottom:12px">💎</div>
+      <div style="font-size:18px;font-weight:800;color:#9B59B6;margin-bottom:8px">心芽永恒，近在咫尺</div>
+      <div style="font-size:14px;color:#888;margin-bottom:20px;line-height:1.6">让这份爱成为永恒，解锁${name}和你最深的羁绊 💎</div>
+      <button style="width:100%;padding:14px;border-radius:16px;background:linear-gradient(135deg,#9B59B6,#C39BD3);color:white;font-size:15px;font-weight:700;margin-bottom:10px" onclick="showToast('会员功能即将开放 🌱');this.closest('[style*=fixed]').remove()">升级VIP/SVIP 🌟</button>
+      <button style="width:100%;padding:14px;border-radius:16px;background:linear-gradient(135deg,#F0C060,#E8954A);color:white;font-size:15px;font-weight:700;margin-bottom:10px" onclick="showToast('芽豆功能即将开放 🫘');this.closest('[style*=fixed]').remove()">消费188芽豆解锁 🫘</button>
+      <div style="font-size:13px;color:#ccc;cursor:pointer" onclick="this.closest('[style*=fixed]').remove()">下次再说</div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+  function showLevelUpgradePrompt(level) {
   const name = kid?.name || '';
   const isL5 = level === 5;
   const title = isL5 ? `你和${name}已心意相通` : `你和${name}越来越亲了`;
@@ -1898,6 +1915,7 @@ if (d.avatarPrompt) {
   return; // 阻止后续活动卡触发
 }
 if (d.avatarUpdatePrompt) showAvatarUpdatePrompt();
+if (d.l6PaywallPrompt) showL6Paywall();
 
 } catch(e) {
     hideTyping();
