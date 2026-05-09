@@ -492,17 +492,23 @@ const todayDate = new Date().toISOString().slice(0, 10);
 const companionDays = Math.floor((new Date(todayDate) - new Date(createdDate)) / 86400000);
 
 // 用gifts_received判断已触发的等级（稳定的真相来源）
-const lastTriggeredLevel = kid.gifts_received || 1; // 1代表L1已触发
-const nextLevel = lastTriggeredLevel + 1; // 下一个待触发等级
-const nextIdx = nextLevel - 1; // 数组索引
+const lastTriggeredLevel = kid.gifts_received || 1;
+const nextLevel = lastTriggeredLevel + 1;
+const nextIdx = nextLevel - 1;
 
-// 检查下一级条件是否满足
 let canTriggerNext = false;
 if (nextLevel <= 6) {
   if (newBondScore >= LEVEL_THRESHOLDS[nextIdx] && 
       companionDays >= LEVEL_DAY_REQUIREMENTS[nextIdx]) {
     canTriggerNext = true;
   }
+}
+
+// L6需要付费解锁（免费用户）
+let l6PaywallPrompt = null;
+if (canTriggerNext && nextLevel === 6 && userMembership === 'free') {
+  canTriggerNext = false;
+  l6PaywallPrompt = true;
 }
 
 const oldLevel = lastTriggeredLevel - 1;
@@ -766,7 +772,7 @@ if (kid.age >= 1 && totalCount === 1) { // 第一条消息时检测
   }
 }
 
-  res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: totalCount, storyPrompt: storyPrompt, songPrompt: songPrompt, activitySuggestion, levelUp, avatarPrompt, avatarUpdatePrompt });
+ res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: totalCount, storyPrompt: storyPrompt, songPrompt: songPrompt, activitySuggestion, levelUp, avatarPrompt, avatarUpdatePrompt, l6PaywallPrompt });
 
 
   } catch (e) {
