@@ -1133,10 +1133,16 @@ function openAvatarUpload() {
     });
     btn.closest('div[style]').remove();
     showToast(`已帮${kid.name}记下心愿 💝`);
-  } catch(e) {
-    showToast('记录失败，请重试');
+ } catch(e) {
+    if (e.status === 403 && e.upgrade) {
+      btn.closest('div[style]').remove();
+      showToast(`${kid.name}的心愿池已满，升级VIP记录更多心愿 🌿`);
+      setTimeout(() => showUpgradePrompt(), 1500);
+    } else {
+      showToast('记录失败，请重试');
+    }
   }
-}
+
 
 function showBirthMoment(kid, role, ageRange) {
   
