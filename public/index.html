@@ -1197,24 +1197,30 @@ async function fulfillWishInShop(wishId, content, emoji) {
   });
   
   const products = data.products || [];
-  const productsHTML = products.map(p => `
+  const productsHTML = products.map((p, idx) => `
   <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#FAF5FF;border-radius:14px;margin-bottom:8px">
+  <input type="checkbox" id="wishProduct_${idx}" value="${idx}" 
+  style="width:18px;height:18px;accent-color:#9B59B6" 
+  onchange="updateWishCart(${p.price}, '${p.name}', '${p.emoji}', this.checked)">
   <span style="font-size:28px">${p.emoji}</span>
   <div style="flex:1">
   <div style="font-size:14px;font-weight:700;color:#333">${p.name}</div>
   <div style="font-size:12px;color:#999">${p.desc}</div>
   </div>
-  <button style="padding:8px 14px;border-radius:12px;background:linear-gradient(135deg,#F0C060,#E8954A);color:white;font-size:12px;font-weight:700" 
-  onclick="buyWishProduct('${wishId}','${p.name}','${p.emoji}',${p.price},this)">
-  ${p.price}🫘
-  </button>
+  <span style="font-size:13px;font-weight:700;color:#E8954A">${p.price}🫘</span>
   </div>
-  `).join('');
+`).join('');
   document.getElementById('wishProductsOverlay').innerHTML = `
   <div style="background:white;border-radius:24px;padding:24px;max-width:360px;width:100%;max-height:80vh;overflow-y:auto">
   <div style="text-align:center;font-size:18px;font-weight:800;color:#9B59B6;margin-bottom:4px">${emoji} ${content}</div>
   <div style="text-align:center;font-size:12px;color:#aaa;margin-bottom:16px">为${kid?.name}选一份心愿礼物</div>
-  ${productsHTML}
+  <div id="wishProductsList">${productsHTML}</div>
+  <div id="wishCartBar" style="display:none;margin-top:12px">
+  <button id="wishCartBtn" style="width:100%;padding:14px;border-radius:16px;background:linear-gradient(135deg,#F0C060,#E8954A);color:white;font-size:15px;font-weight:700" 
+  onclick="checkoutWishCart('${wishId}','${content}','${emoji}')">
+  共0🫘,送给${kid?.name} 🎁
+  </button>
+  </div>
   <button style="width:100%;padding:12px;border-radius:16px;background:#F5F0FF;color:#9B59B6;font-size:14px;font-weight:700;margin-top:8px" 
   onclick="document.getElementById('wishProductsOverlay').remove()">关闭</button>
   </div>
@@ -1223,6 +1229,65 @@ async function fulfillWishInShop(wishId, content, emoji) {
   document.getElementById('wishProductsOverlay')?.remove();
   showToast('加载失败,请重试');
   }
+}
+let _wishCart = [];
+function updateWishCart(price, name, emoji, checked) {
+  if (checked) {
+    _wishCart.push({ price, name, emoji });
+  } else {
+    _wishCart = _wishCart.filter(i => i.name !== name);
+  }
+  const total = _wishCart.reduce((sum, i) => sum + i.price, 0);
+  const cartBar = document.getElementById('wishCartBar');
+  const cartBtn = document.getElementById('wishCartBtn');
+  if (_wishCart.length > 0) {
+    cartBar.style.display = 'block';
+    cartBtn.textContent = `共${total}🫘,送给${kid?.name} 🎁`;
+  } else {
+    cartBar.style.display = 'none';
+  }
+}
+async function checkoutWishCart(wishId, content, emoji) {
+  if (_wishCart.length === 0) return;
+  const role = kid?.parent_role || '妈妈';
+  const age = kid?.age || 1;
+  const area = document.getElementById('msgsArea');
+  
+  document.getElementById('wishProductsOverlay')?.remove();
+  
+  // 孩子逐一感谢每件礼物
+  for (let i = 0; i < _wishCart.length; i++) {
+    const item = _wishCart[i];
+    setTimeout(async () => {
+      const lines = age <= 3 
+        ? [`${role}!谢谢!我好喜欢${item.emoji}!`]
+        : age <= 6 
+        ? [`${role},${item.name}!你真好!`]
+        : [`${role},谢谢你送我${item.name} ${item.emoji}`];
+      const line = lines[0];
+      if (area) {
+        area.insertAdjacentHTML('beforeend', bubble('assistant', line, new Date().toISOString()));
+        scrollBot();
+        await req(`/api/kids/${kid.id}/messages/save`, {
+          method: 'POST',
+          body: JSON.stringify({ role: 'assistant', content: line })
+        }).catch(() => {});
+      }
+    }, i * 1500);
+  }
+  
+  // 标记愿望已实现
+  await req(`/api/kids/${kid.id}/wishes/${wishId}/fulfill`, { method: 'POST' }).catch(() => {});
+  
+  // 更新本地愿望池缓存
+  if (kid._wishPool) {
+    kid._wishPool = kid._wishPool.map(w => 
+      w.id == wishId ? {...w, fulfilled_at: new Date().toISOString()} : w
+    );
+  }
+  
+  _wishCart = [];
+  showToast(`${emoji} 心愿已实现!${kid?.name}好开心!`);
 }
 async function buyWishProduct(wishId, productName, productEmoji, price, btn) {
   btn.disabled = true;
