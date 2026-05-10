@@ -1175,10 +1175,89 @@ async function sendSurprise(emoji, name) {
   } catch(e) {}
 }
 
-function fulfillWishInShop(wishId, content, emoji) {
+async function fulfillWishInShop(wishId, content, emoji) {
   document.getElementById('wishPoolOverlay')?.remove();
-  openGiftShop();
-  showToast(`为${kid?.name}选一份${content}吧 ${emoji}`);
+  
+  // 显示加载中
+  const loadingOverlay = document.createElement('div');
+  loadingOverlay.id = 'wishProductsOverlay';
+  loadingOverlay.style.cssText = `position:fixed;inset:0;background:rgba(20,10,40,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px`;
+  loadingOverlay.innerHTML = `
+  <div style="background:white;border-radius:24px;padding:28px 24px;max-width:360px;width:100%;text-align:center">
+  <div style="font-size:32px;margin-bottom:12px">${emoji}</div>
+  <div style="font-size:16px;font-weight:800;color:#9B59B6;margin-bottom:8px">为${kid?.name}寻找心愿礼物</div>
+  <div style="font-size:13px;color:#aaa">正在准备中...</div>
+  </div>
+  `;
+  document.body.appendChild(loadingOverlay);
+  try {
+  const data = await req(`/api/kids/${kid.id}/wish-products`, {
+  method: 'POST',
+  body: JSON.stringify({ wishContent: content, wishEmoji: emoji })
+  });
+  
+  const products = data.products || [];
+  const productsHTML = products.map(p => `
+  <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#FAF5FF;border-radius:14px;margin-bottom:8px">
+  <span style="font-size:28px">${p.emoji}</span>
+  <div style="flex:1">
+  <div style="font-size:14px;font-weight:700;color:#333">${p.name}</div>
+  <div style="font-size:12px;color:#999">${p.desc}</div>
+  </div>
+  <button style="padding:8px 14px;border-radius:12px;background:linear-gradient(135deg,#F0C060,#E8954A);color:white;font-size:12px;font-weight:700" 
+  onclick="buyWishProduct('${wishId}','${p.name}','${p.emoji}',${p.price},this)">
+  ${p.price}🫘
+  </button>
+  </div>
+  `).join('');
+  document.getElementById('wishProductsOverlay').innerHTML = `
+  <div style="background:white;border-radius:24px;padding:24px;max-width:360px;width:100%;max-height:80vh;overflow-y:auto">
+  <div style="text-align:center;font-size:18px;font-weight:800;color:#9B59B6;margin-bottom:4px">${emoji} ${content}</div>
+  <div style="text-align:center;font-size:12px;color:#aaa;margin-bottom:16px">为${kid?.name}选一份心愿礼物</div>
+  ${productsHTML}
+  <button style="width:100%;padding:12px;border-radius:16px;background:#F5F0FF;color:#9B59B6;font-size:14px;font-weight:700;margin-top:8px" 
+  onclick="document.getElementById('wishProductsOverlay').remove()">关闭</button>
+  </div>
+  `;
+  } catch(e) {
+  document.getElementById('wishProductsOverlay')?.remove();
+  showToast('加载失败,请重试');
+  }
+}
+async function buyWishProduct(wishId, productName, productEmoji, price, btn) {
+  btn.disabled = true;
+  btn.textContent = '送出中...';
+  try {
+  // 标记愿望已实现
+  await req(`/api/kids/${kid.id}/wishes/${wishId}/fulfill`, { method: 'POST' });
+  document.getElementById('wishProductsOverlay')?.remove();
+  
+  // 孩子感谢
+  const role = kid?.parent_role || '妈妈';
+  const age = kid?.age || 1;
+  const line = age <= 3 ? `${role}!谢谢!我好喜欢!` 
+  : age <= 6 ? `${role},你真的帮我实现了!我好开心!`
+  : `${role},谢谢你记得我的愿望`;
+  const area = document.getElementById('msgsArea');
+  area.insertAdjacentHTML('beforeend', bubble('assistant', line, new Date().toISOString()));
+  scrollBot();
+  await req(`/api/kids/${kid.id}/messages/save`, {
+  method: 'POST',
+  body: JSON.stringify({ role: 'assistant', content: line })
+  });
+  showToast(`${productEmoji} 已送出${productName},${kid?.name}好开心!`);
+  
+  // 更新本地愿望池缓存
+  if (kid._wishPool) {
+  kid._wishPool = kid._wishPool.map(w => 
+  w.id == wishId ? {...w, fulfilled_at: new Date().toISOString()} : w
+  );
+  }
+  } catch(e) {
+  btn.disabled = false;
+  btn.textContent = `${price}🫘`;
+  showToast('操作失败,请重试');
+  }
 }
 async function markWishFulfilled(wishId, btn) {
   try {
