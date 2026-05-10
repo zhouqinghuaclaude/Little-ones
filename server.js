@@ -1024,7 +1024,6 @@ async function initDB() {
 )`);
 db.query("UPDATE kids SET gifts_received = 1 WHERE gifts_received = 0 AND bond_score > 0").catch(() => {});
 
-  db.query("UPDATE kids SET pending_level_up = NULL WHERE pending_level_up IS NOT NULL").catch(() => {});
   console.log("Database ready");
 }
 
