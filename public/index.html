@@ -407,7 +407,7 @@ z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden;
 
   <div class="gift-modal" onclick="event.stopPropagation()">
     <div class="gift-modal-header">
-      <div class="gift-modal-title">🎁 愿望清单</div>
+      <div class="gift-modal-title">🎁 芽市</div>
       <div style="display:flex;align-items:center;gap:8px">
         <div id="giftCounter" class="gift-counter">今日免费: 0/1</div>
         <button class="gift-close-btn" onclick="closeGiftShop()">✕</button>
@@ -548,7 +548,7 @@ z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden;
       <button onclick="openBondProfile()" class="chat-nav-btn" id="bondHeaderBtn">💫 亲密</button>
       <button onclick="openWishPool()" class="chat-nav-btn" id="wishPoolBtn">🌟 心愿</button>
 
-      <button onclick="openGiftShop();" class="chat-nav-btn">🎁 愿望</button>
+      <button onclick="openGiftShop();" class="chat-nav-btn">🎁 芽市</button>
       <button onclick="openDiary(kid)" class="chat-nav-btn">📖 日记</button>
       <button onclick="openSettings(kid)" class="chat-nav-btn">⚙️ 设置</button>
     </div>
@@ -674,22 +674,6 @@ z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden;
 
 <script>
 var GIFT_CATEGORIES = [
-  {
-    id: "free",
-    label: "🌟 日常心愿",
-    type: "free",
-    gift_level: "free",
-    items: [
-      { emoji: "🍎", name: "苹果" },
-      { emoji: "🧸", name: "玩具熊" },
-      { emoji: "🌸", name: "小花" },
-      { emoji: "🍭", name: "棒棒糖" },
-      { emoji: "⭐", name: "小星星" },
-      { emoji: "🎈", name: "气球" },
-      { emoji: "🍬", name: "糖果" },
-      { emoji: "🌈", name: "彩虹画" },
-    ]
-  },
   {
     id: "arts",
     label: "🎨 才艺心愿",
@@ -2440,12 +2424,12 @@ function closeBondProfile(e) {
 
 // ── Gift Shop ──────────────────────────────────────────────────────────────
 
-var giftActiveCat = "free";
+var giftActiveCat = "arts";
 var giftUsed = 0;
 var giftLimit = 1;
 async function openGiftShop() {
   if (!kid) return;
-  giftActiveCat = "free";
+  giftActiveCat = "arts";
   document.getElementById("giftSuccessBanner")?.classList.remove("show");
   document.getElementById("giftOverlay").classList.add("open");
   await refreshGiftCounter();
