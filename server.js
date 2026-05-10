@@ -429,6 +429,11 @@ app.post("/api/kids/:id/gifts-received", auth, async (req, res) => {
   res.json({ ok: true });
 });
 
+app.post("/api/kids/:id/clear-pending-levelup", auth, async (req, res) => {
+ await db.query("UPDATE kids SET pending_level_up=NULL WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
+ res.json({ ok: true });
+});
+
 app.delete("/api/kids/:id", auth, async (req, res) => {
   await db.query("DELETE FROM kids WHERE id = $1 AND user_id = $2", [req.params.id, req.user.id]);
   res.json({ ok: true });
@@ -1022,6 +1027,7 @@ async function initDB() {
 )`);
 db.query("UPDATE kids SET gifts_received = 1 WHERE gifts_received = 0 AND bond_score > 0").catch(() => {});
 
+  db.query("UPDATE kids SET pending_level_up = NULL WHERE pending_level_up IS NOT NULL").catch(() => {});
   console.log("Database ready");
 }
 

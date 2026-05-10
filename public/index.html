@@ -1878,6 +1878,7 @@ if (today.getMonth() === 5 && today.getDate() === 1 && k.age >= 1 && k.age <= 12
 });
 k.pending_level_up = null;
 kid.pending_level_up = null;
+req(`/api/kids/${k.id}/clear-pending-levelup`, { method: 'POST' }).catch(() => {});
 
       }, 1000);
     }
