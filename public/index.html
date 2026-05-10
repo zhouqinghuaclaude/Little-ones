@@ -1785,8 +1785,9 @@ try {
   // 检测生日
 if (k.is_birthday) {
   const bdayCacheKey = `birthday_${k.id}_${new Date().getFullYear()}`;
-  if (!_activityShownToday[bdayCacheKey]) {
-    _activityShownToday[bdayCacheKey] = true;
+  const birthdayShown = localStorage.getItem(bdayCacheKey);
+  if (!birthdayShown) {
+    localStorage.setItem(bdayCacheKey, '1');
     setTimeout(() => showBirthdayMoment(k), 1000);
   }
 }
