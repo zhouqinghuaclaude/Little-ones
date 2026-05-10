@@ -307,37 +307,46 @@ app.post("/api/kids/:id/activities", auth, async (req, res) => {
 
   res.json({ count, newAchievement, remaining });
 });
-app.post("/api/kids/:id/wish-check", auth, async (req, res) => {
-  const { reply, age, existingWishes } = req.body;
-  if (!reply || age < 1) return res.json({ wish: null });
-  const existingContents = (existingWishes || [])
-  .filter(w => !w.fulfilled_at || (Date.now() - new Date(w.fulfilled_at)) < 90 * 24 * 60 * 60 * 1000)
-  .map(w => w.content)
-  .join('、');
-  
-  try {
-    const wishCheck = await claude.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 100,
-      system: `你是一个愿望提取助手。判断以下孩子的话语中是否包含明确的愿望——特指想要拥有某个具体物品（玩具、书、运动装备、衣物等）。
-注意：
-1. 只捕捉想要拥有物品的愿望，不捕捉活动类（学XX、做XX、去XX）
-2. 如果愿望和已有心愿列表中的内容相似，输出{"has_wish": false}
-3. 已有心愿：${existingContents || '无'}
-如果有新的物品愿望，用JSON格式输出：{"has_wish": true, "content": "愿望内容（10字以内）", "emoji": "最合适的emoji"}
-如果没有，输出：{"has_wish": false}
-只输出JSON，不要其他内容。`,
-      messages: [{ role: "user", content: `孩子说：${reply}` }]
-    });
-    const result = JSON.parse(wishCheck.content[0].text.trim());
-    if (result.has_wish) {
-      res.json({ wish: { content: result.content, emoji: result.emoji } });
-    } else {
-      res.json({ wish: null });
-    }
-  } catch(e) {
-    res.json({ wish: null });
-  }
+app.post("/api/kids/:id/context-check", auth, async (req, res) => {
+ const { message, reply, age, existingWishes } = req.body;
+ if (!message || !reply || age < 1) return res.json({ type: 'none' });
+ const ACTIVITY_OPTIONS = {
+ '1-3': ['blocks(搭积木)', 'puzzle(拼图)', 'hideseek(捉迷藏)', 'drawing(画画)', 'nursery(唱儿歌)', 'picturebook(读绘本)', 'park(去公园)'],
+ '3-6': ['football(踢足球)', 'painting(画画)', 'concert(听音乐会)', 'dance(跳舞)', 'library(去图书馆)', 'museum(去博物馆)', 'cycling(骑自行车)'],
+ '6+': ['football(踢足球)', 'swimming(游泳)', 'basketball(打篮球)', 'travel(去旅行)', 'science(做科学实验)', 'bookstore(去书店)', 'artexhibit(看展览)', 'theater(看表演)', 'baking(做烘焙)', 'concert(听音乐会)'],
+ };
+ const ageKey = age < 3 ? '1-3' : age < 6 ? '3-6' : '6+';
+ const options = ACTIVITY_OPTIONS[ageKey] || [];
+ 
+ const existingContents = (existingWishes || [])
+ .filter(w => !w.fulfilled_at || (Date.now() - new Date(w.fulfilled_at)) < 90 * 24 * 60 * 60 * 1000)
+ .map(w => w.content)
+ .join('、');
+ try {
+ const check = await claude.messages.create({
+ model: "claude-sonnet-4-20250514",
+ max_tokens: 100,
+ system: `你是一个对话分析助手。按以下优先级判断对话内容,只输出JSON:
+第一优先:判断双方是否在讨论要一起做某个具体活动。
+可选活动:${options.join(', ')}
+如果是 → {"type": "activity", "code": "活动代码"}
+第二优先(仅当第一优先不触发时):判断孩子是否明确表达想要某样东西。
+条件:
+1. 必须是明确具体的物品、特别体验(旅行/乐园/夏令营)或课程(钢琴课/舞蹈课)
+2. 不能是日常活动(骑车/踢球/画画等)
+3. 不能是模糊描述(有铃铛的/红色的),必须说出具体名称
+4. 不能和已有心愿重复:${existingContents || '无'}
+如果是 → {"type": "wish", "content": "具体名称(10字以内)", "emoji": "最合适emoji"}
+都不符合 → {"type": "none"}
+只输出JSON,不要其他内容。`,
+ messages: [{ role: "user", content: `孩子说:${reply}\n用户说:${message}` }]
+ });
+ 
+ const result = JSON.parse(check.content[0].text.trim());
+ res.json(result);
+ } catch(e) {
+ res.json({ type: 'none' });
+ }
 });
 
 app.post("/api/kids/:id/wishes", auth, async (req, res) => {
@@ -377,43 +386,7 @@ app.post("/api/kids/:id/wishes/:wishId/fulfill", auth, async (req, res) => {
   res.json({ ok: true });
 });
 
-app.post("/api/kids/:id/activity-check", auth, async (req, res) => {
-  const { message, reply, age } = req.body;
-  if (!message || !reply || age < 1) return res.json({ activitySuggestion: null });
-  
-  const ACTIVITY_OPTIONS = {
-  '1-3': ['blocks(搭积木)', 'puzzle(拼图)', 'hideseek(捉迷藏)', 'drawing(画画)', 'nursery(唱儿歌)', 'picturebook(读绘本)', 'park(去公园)'],
-  '3-6': ['football(踢足球)', 'painting(画画)', 'concert(听音乐会)', 'dance(跳舞)', 'library(去图书馆)', 'museum(去博物馆)', 'cycling(骑自行车)'],
-  '6+':  ['football(踢足球)', 'swimming(游泳)', 'basketball(打篮球)', 'travel(去旅行)', 'science(做科学实验)', 'bookstore(去书店)', 'artexhibit(看展览)', 'theater(看表演)', 'baking(做烘焙)', 'concert(听音乐会)'],
-};
 
-  const ageKey = age < 3 ? '1-3' : age < 6 ? '3-6' : '6+';
-  const options = ACTIVITY_OPTIONS[ageKey] || [];
-  
-  try {
-    const activityCheck = await claude.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 50,
-    system: `你是一个活动判断助手。严格判断对话中是否明确提到了以下具体活动之一，且双方都在讨论要一起做这件事。
-
-规则：
-1. 必须是双方互动，不能只是单方面提及
-2. 必须精确匹配活动，不能模糊联想（比如"讲故事"不是"唱儿歌"，"捉蝴蝶"不是"捉迷藏"）
-3. 如果不确定，输出none
-
-可选活动：${options.join(', ')}
-
-只输出活动代码或none，不要其他内容。`,
-
-      messages: [{ role: "user", content: `孩子说：${reply}\n用户说：${message}` }]
-    });
-    const suggestion = activityCheck.content[0].text.trim().toLowerCase();
-    const activitySuggestion = (suggestion !== 'none' && options.some(o => o.startsWith(suggestion))) ? suggestion : null;
-    res.json({ activitySuggestion });
-  } catch(e) {
-    res.json({ activitySuggestion: null });
-  }
-});
 app.post("/api/kids/:id/messages/save", auth, async (req, res) => {
   const { role, content } = req.body;
   if (!content?.trim()) return res.status(400).json({ error: "Empty content" });

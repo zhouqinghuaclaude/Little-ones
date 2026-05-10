@@ -1354,7 +1354,6 @@ function saveActivityCache(cache) {
 }
 
 const _activityShownToday = getActivityCache();
-let _wishCheckBlocked = false;
 
 
 
@@ -1968,48 +1967,39 @@ if (d.songPrompt && !_activityShownToday[songCacheKey]) {
 
 let activityTrigger = null;
 
-// 异步请求活动判断，不阻塞主流程
+// 合并判断:活动和愿望,互斥触发
 if (kid.age >= 1) {
-  req(`/api/kids/${kid.id}/activity-check`, {
+  req(`/api/kids/${kid.id}/context-check`, {
     method: 'POST',
-    body: JSON.stringify({ message: msg, reply: d.reply, age: kid.age })
-  }).then(actData => {
-    if (actData.activitySuggestion) {
+    body: JSON.stringify({ 
+      message: msg, 
+      reply: d.reply, 
+      age: kid.age,
+      existingWishes: kid._wishPool || []
+    })
+  }).then(result => {
+    if (result.type === 'activity') {
       const key = getAgeRangeKey(kid.age);
       const triggers = ACTIVITY_TRIGGERS[key] || [];
-      const cacheKey = `${kid.id}_${actData.activitySuggestion}_${today}`;
+      const today = new Date().toISOString().slice(0, 10);
+      const cacheKey = `${kid.id}_${result.code}_${today}`;
       if (!_activityShownToday[cacheKey]) {
-        const trigger = triggers.find(t => t.type === actData.activitySuggestion) || null;
+        const trigger = triggers.find(t => t.type === result.code) || null;
         if (trigger) {
           _activityShownToday[cacheKey] = true;
           saveActivityCache(_activityShownToday);
-          if (!d.storyPrompt && !d.songPrompt) {
-            showActivityCard(trigger);
-            _wishCheckBlocked = true;
-            setTimeout(() => { _wishCheckBlocked = false; }, 3000);
-          }
+          if (!d.storyPrompt && !d.songPrompt) showActivityCard(trigger);
         }
       }
-    }
-  }).catch(() => {});
-}
-
- // 异步判断愿望
-if (kid.age >= 1 && !_wishCheckBlocked) {
-  req(`/api/kids/${kid.id}/wish-check`, {
-    method: 'POST',
-    body: JSON.stringify({ reply: d.reply, age: kid.age, existingWishes: kid._wishPool || [] })
-  }).then(wishData => {
-    if (wishData.wish) {
-      const wish = wishData.wish;
+    } else if (result.type === 'wish' && result.content) {
       const area = document.getElementById('msgsArea');
       const card = document.createElement('div');
       card.style.cssText = `margin:8px 14px;background:white;border-radius:16px;padding:16px;box-shadow:0 4px 20px rgba(155,89,182,0.15);border:1.5px solid #E8D5F5;animation:fadeIn .3s ease`;
       card.innerHTML = `
-        <div style="font-size:15px;font-weight:800;color:#9B59B6;margin-bottom:6px">${wish.emoji} ${kid.name}有个心愿</div>
-        <div style="font-size:14px;color:#555;margin-bottom:12px;line-height:1.6">「${wish.content}」</div>
+        <div style="font-size:15px;font-weight:800;color:#9B59B6;margin-bottom:6px">${result.emoji} ${kid.name}有个心愿</div>
+        <div style="font-size:14px;color:#555;margin-bottom:12px;line-height:1.6">「${result.content}」</div>
         <div style="display:flex;gap:8px">
-          <button class="primary-btn" style="margin-top:0;padding:10px;font-size:13px" onclick="saveWish('${wish.content}','${wish.emoji}',this)">帮${kid.name}记下来 💝</button>
+          <button class="primary-btn" style="margin-top:0;padding:10px;font-size:13px" onclick="saveWish('${result.content}','${result.emoji}',this)">帮${kid.name}记下来 💝</button>
           <button style="padding:10px 16px;border-radius:12px;border:1.5px solid #E0D0EE;font-size:13px;color:#999" onclick="this.closest('div[style]').remove()">不了</button>
         </div>
       `;
