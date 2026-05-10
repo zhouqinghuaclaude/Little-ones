@@ -422,7 +422,6 @@ z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden;
     <div class="gift-modal-header">
       <div class="gift-modal-title">🎁 芽市</div>
       <div style="display:flex;align-items:center;gap:8px">
-        <div id="giftCounter" class="gift-counter">今日免费: 0/1</div>
         <button class="gift-close-btn" onclick="closeGiftShop()">✕</button>
       </div>
     </div>
@@ -2492,7 +2491,6 @@ async function refreshGiftCounter() {
 
 
 function updateGiftCounterUI() {
-  document.getElementById("giftCounter").textContent = `今日免费: ${giftUsed}/${giftLimit}`;
 }
 
 function renderGiftTabs() {
