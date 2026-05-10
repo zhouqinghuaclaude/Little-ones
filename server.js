@@ -321,7 +321,9 @@ app.post("/api/kids/:id/wish-products", auth, async (req, res) => {
 不要其他内容。`,
  messages: [{ role: "user", content: `孩子的心愿是:${wishContent}` }]
  });
- const products = JSON.parse(result.content[0].text.trim());
+ const rawText = result.content[0].text.trim();
+ console.log('wish-products raw:', rawText);
+ const products = JSON.parse(rawText.replace(/```json|```/g, '').trim());
  res.json({ products });
  } catch(e) {
  res.json({ products: [] });
