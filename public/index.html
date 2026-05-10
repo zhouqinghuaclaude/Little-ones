@@ -2135,6 +2135,10 @@ if (kid.age >= 1) {
         }
       }
     } else if (result.type === 'wish' && result.content) {
+      // 检查每日愿望触发次数(最多2次)
+      const wishTodayKey = `wish_count_${kid.id}_${new Date().toISOString().slice(0,10)}`;
+      const wishTodayCount = parseInt(localStorage.getItem(wishTodayKey) || '0');
+      if (wishTodayCount >= 2) return;
       const area = document.getElementById('msgsArea');
       const card = document.createElement('div');
       card.style.cssText = `margin:8px 14px;background:white;border-radius:16px;padding:16px;box-shadow:0 4px 20px rgba(155,89,182,0.15);border:1.5px solid #E8D5F5;animation:fadeIn .3s ease`;
@@ -2147,6 +2151,7 @@ if (kid.age >= 1) {
         </div>
       `;
       area.appendChild(card);
+      localStorage.setItem(wishTodayKey, String(wishTodayCount + 1));
       scrollBot();
     }
   }).catch(() => {});
