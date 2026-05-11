@@ -517,7 +517,7 @@ input, textarea { font-family: inherit; }
       <div onclick="showSettingsSection('interests')" style="display:flex;align-items:center;padding:16px;cursor:pointer;border-bottom:1px solid var(--border)">
         <span style="font-size:20px;margin-right:12px">💝</span>
         <div style="flex:1">
-          <div style="font-size:15px;font-weight:700" id="interestsSettingsTitle">让Ta更懂你</div>
+          <div style="font-size:15px;font-weight:700" id="interestsSettingsTitle">Ta更懂你</div>
           <div style="font-size:12px;color:var(--sub);margin-top:2px">分享你的爱好，让孩子更了解你</div>
         </div>
         <span style="color:var(--sub);font-size:18px">›</span>
@@ -2246,7 +2246,7 @@ function showSettingsSection(section) {
           return `<button class="choice-btn${isSelected ? ' on' : ''}" style="font-size:13px;padding:6px 10px" onclick="toggleInterest(this, '${item}')">${item}</button>`;
         }).join('')}
       </div>
-      <input id="customInterest" class="field-input" type="text" placeholder="也想分享其他爱好？告诉${k.name}吧（最爱的）" value="${customField || ''}">
+      <input id="customInterest" class="field-input" type="text" placeholder="也想分享其他爱好？告诉${k.name}吧" value="${customField || ''}">
       <button class="primary-btn" style="margin-top:28px" onclick="saveInterests()">保存爱好</button>
       <div id="subSettingsMsg" style="text-align:center;margin-top:12px;font-size:13px;color:var(--p)"></div>
     `;
