@@ -454,15 +454,15 @@ z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden;
   </div>
 
   <div class="msgs-area" id="msgsArea"></div>
+  <div class="quick-bar" id="surpriseBar">
+    <button class="surprise-btn" onclick="sendSurprise('🌸','小花')">🌸 小花</button>
+    <button class="surprise-btn" onclick="sendSurprise('🎈','气球')">🎈 气球</button>
+    <button class="surprise-btn" onclick="sendSurprise('⭐','星星')">⭐ 星星</button>
+    <button class="surprise-btn" onclick="sendSurprise('🍫','巧克力')">🍫 巧克力</button>
+    <button class="surprise-btn" onclick="sendSurprise('🧸','小熊')">🧸 小熊</button>
+    <button class="surprise-btn" onclick="sendSurprise('🌈','彩虹')">🌈 彩虹</button>
+  </div>
   <div class="input-row">
-    <div id="surpriseBar" style="display:flex;gap:6px;padding:6px 14px 0;overflow-x:auto;scrollbar-width:none">
-      <button class="surprise-btn" onclick="sendSurprise('🌸','小花')">🌸 小花</button>
-      <button class="surprise-btn" onclick="sendSurprise('🎈','气球')">🎈 气球</button>
-      <button class="surprise-btn" onclick="sendSurprise('⭐','星星')">⭐ 星星</button>
-      <button class="surprise-btn" onclick="sendSurprise('🍫','巧克力')">🍫 巧克力</button>
-      <button class="surprise-btn" onclick="sendSurprise('🧸','小熊')">🧸 小熊</button>
-      <button class="surprise-btn" onclick="sendSurprise('🌈','彩虹')">🌈 彩虹</button>
-    </div>
     <textarea id="msgInput" class="msg-input" placeholder="和宝宝说点什么…" rows="1"
       enterkeyhint="send"
       oninput="autoResize(this)"
