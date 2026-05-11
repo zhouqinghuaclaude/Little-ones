@@ -176,9 +176,8 @@ input, textarea { font-family: inherit; }
 .avatar-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-top: 12px; }
 
 /* Gift Shop */
-.gift-overlay { display: none; position: fixed; inset: 0; background: rgba(44,22,84,0.45);
-z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden; }
-.gift-overlay.open { display: flex !important; }
+.gift-overlay { display: none; position: fixed; inset: 0; background: rgba(44,22,84,0.45); z-index: 9999; align-items: flex-end; justify-content: center; pointer-events: none; }
+.gift-overlay.open { display: flex; pointer-events: auto; }
 .gift-modal { background: var(--bg); border-radius: 28px 28px 0 0; width: 100%; max-width: 520px;
   max-height: 70vh; min-height: 400px;
  display: flex; flex-direction: column;
