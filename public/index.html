@@ -463,8 +463,7 @@ z-index: 9999; align-items: flex-end; justify-content: center; overflow: hidden;
     <button class="surprise-btn" onclick="sendSurprise('🌈','彩虹')">🌈 彩虹</button>
   </div>
   <div class="input-row">
-    <textarea id="msgInput" class="msg-input" placeholder="和宝宝说点什么…" rows="1"
-      enterkeyhint="send"
+    <textarea id="msgInput" class="msg-input" placeholder="和宝宝说点什么..." rows="1"
       oninput="autoResize(this)"
       onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
     <button id="sendBtn" class="send-btn" onclick="sendMsg()">➤</button>
