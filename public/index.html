@@ -1915,12 +1915,7 @@ try {
   // 检查是否有待触发的晋级
   // 检测生日
 if (k.is_birthday) {
-  const bdayCacheKey = `birthday_${k.id}_${new Date().getFullYear()}`;
-  const birthdayShown = localStorage.getItem(bdayCacheKey);
-  if (!birthdayShown) {
-    localStorage.setItem(bdayCacheKey, '1');
-    setTimeout(() => showBirthdayMoment(k), 1000);
-  }
+  setTimeout(() => showBirthdayMoment(k), 1000);
 }
 
 // 检测六一儿童节（1-12岁）
