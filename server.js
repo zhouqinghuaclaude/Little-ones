@@ -100,7 +100,7 @@ const ZODIAC_TRAITS = {
 app.get("/api/kids", auth, async (req, res) => {
   const r = await db.query("SELECT * FROM kids WHERE user_id = $1 ORDER BY created_at", [req.user.id]);
   const today = new Date();
-  const kids = r.rows.map(kid => {
+  const kids = await Promise.all(r.rows.map(async kid => {
     const createdAt = new Date(kid.created_at);
     const companion_days = Math.floor((today - createdAt) / 86400000);
           const ageDisplay = (() => {
@@ -133,7 +133,15 @@ app.get("/api/kids", auth, async (req, res) => {
       })();
     const born = new Date(kid.birthday);
 const birthdayThisYear = new Date(today.getFullYear(), born.getMonth(), born.getDate());
-const isBirthday = kid.birthday && Math.floor((today - birthdayThisYear) / 86400000) === 0 && kid.age >= 1;
+const thisYear = today.getFullYear();
+const isBirthday = kid.birthday && 
+ Math.floor((today - birthdayThisYear) / 86400000) === 0 && 
+ kid.age >= 1 &&
+ kid.last_birthday_celebrated !== thisYear;
+
+if (isBirthday) {
+ await db.query("UPDATE kids SET last_birthday_celebrated=$1 WHERE id=$2", [thisYear, kid.id]);
+}
 
 return {
   ...kid,
@@ -146,7 +154,7 @@ return {
   is_birthday: isBirthday,
 };
 
-  });
+  }));
   res.json(kids);
 });
 
