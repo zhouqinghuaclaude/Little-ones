@@ -2316,15 +2316,15 @@ function showSettingsSection(section) {
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
           <div style="font-size:17px;font-weight:800;color:#9B59B6">🌿 VIP</div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:4px">
- <div>
- <button style="width:100%;padding:12px;border-radius:12px;background:rgba(155,89,182,0.15);color:#9B59B6;font-size:14px;font-weight:700;border:1.5px solid #C39BD3" onclick="showToast('会员功能即将开放 🌱')">VIP月卡 ¥29.99/月</button>
- <div style="text-align:center;font-size:11px;color:#aaa;margin-top:4px">自动续费,随时取消</div>
- </div>
- <div>
- <button style="width:100%;padding:12px;border-radius:12px;background:linear-gradient(135deg,#9B59B6,#C39BD3);color:white;font-size:14px;font-weight:700" onclick="showToast('会员功能即将开放 🌱')">VIP年卡 ¥299.99/年</button>
- <div style="text-align:center;font-size:11px;color:#aaa;margin-top:4px">自动续费,随时取消</div>
- </div>
+<div style="display:flex;gap:8px">
+ <button style="flex:1;padding:12px;border-radius:12px;background:rgba(155,89,182,0.15);border:1.5px solid #C39BD3;text-align:center" onclick="showToast('会员功能即将开放 🌱')">
+ <div style="font-size:14px;font-weight:700;color:#9B59B6">月卡 ¥29.99</div>
+ <div style="font-size:10px;color:#aaa;margin-top:3px">自动续费,随时取消</div>
+ </button>
+ <button style="flex:1;padding:12px;border-radius:12px;background:linear-gradient(135deg,#9B59B6,#C39BD3);text-align:center" onclick="showToast('会员功能即将开放 🌱')">
+ <div style="font-size:14px;font-weight:700;color:white">年卡 ¥299.99</div>
+ <div style="font-size:10px;color:rgba(255,255,255,0.7);margin-top:3px">自动续费,随时取消</div>
+ </button>
 </div>
         <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
           ${['最多2个孩子','月卡100条/天,年卡消息不限','L1-L6全部免费晋级','所有瞬间卡','头像定制1次/年','心愿池容量不限','重要仪式','宝宝记忆100条','站内消费8折'].map(item => 
@@ -2338,15 +2338,15 @@ function showSettingsSection(section) {
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
           <div style="font-size:17px;font-weight:800;color:#E8954A">🌟 SVIP</div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:4px">
- <div>
- <button style="width:100%;padding:12px;border-radius:12px;background:rgba(232,149,74,0.15);color:#E8954A;font-size:14px;font-weight:700;border:1.5px solid #F0C060" onclick="showToast('会员功能即将开放 🌱')">SVIP月卡 ¥39.99/月</button>
- <div style="text-align:center;font-size:11px;color:#aaa;margin-top:4px">自动续费,随时取消</div>
- </div>
- <div>
- <button style="width:100%;padding:12px;border-radius:12px;background:linear-gradient(135deg,#F0C060,#E8954A);color:white;font-size:14px;font-weight:700" onclick="showToast('会员功能即将开放 🌱')">SVIP年卡 ¥399.99/年</button>
- <div style="text-align:center;font-size:11px;color:#aaa;margin-top:4px">自动续费,随时取消</div>
- </div>
+<div style="display:flex;gap:8px">
+ <button style="flex:1;padding:12px;border-radius:12px;background:rgba(232,149,74,0.15);border:1.5px solid #F0C060;text-align:center" onclick="showToast('会员功能即将开放 🌱')">
+ <div style="font-size:14px;font-weight:700;color:#E8954A">月卡 ¥39.99</div>
+ <div style="font-size:10px;color:#aaa;margin-top:3px">自动续费,随时取消</div>
+ </button>
+ <button style="flex:1;padding:12px;border-radius:12px;background:linear-gradient(135deg,#F0C060,#E8954A);text-align:center" onclick="showToast('会员功能即将开放 🌱')">
+ <div style="font-size:14px;font-weight:700;color:white">年卡 ¥399.99</div>
+ <div style="font-size:10px;color:rgba(255,255,255,0.7);margin-top:3px">自动续费,随时取消</div>
+ </button>
 </div>
         <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
           ${['最多3个孩子','无限消息','VIP全部权益','头像定制每月1次','成长相册','宝宝记忆无限','新功能优先体验','优先客服','站内消费7折'].map(item => 
