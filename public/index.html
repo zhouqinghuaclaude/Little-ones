@@ -544,7 +544,7 @@ input, textarea { font-family: inherit; }
         </div>
         <span style="color:var(--sub);font-size:18px">›</span>
       </div>
-      <div onclick="showToast('芽豆功能即将开放 🫘')" style="display:flex;align-items:center;padding:16px;cursor:pointer;border-bottom:1px solid var(--border)">
+      <div onclick="showSettingsSection('sprouts')" style="display:flex;align-items:center;padding:16px;cursor:pointer;border-bottom:1px solid var(--border)">
         <span style="font-size:20px;margin-right:12px">🫘</span>
         <div style="flex:1">
           <div style="font-size:15px;font-weight:700">芽豆余额</div>
@@ -2156,6 +2156,15 @@ function showSettingsSection(section) {
   const title = document.getElementById('subSettingsTitle');
   const k = settingsKid;
 
+  title.textContent = {
+    birthday: '设定生日',
+    agemode: '成长模式',
+    personality: '设置性格',
+    avatar: '选择头像',
+    interests: 'Ta更懂你',
+    sprouts: '芽豆充值'
+  }[section] || '设置';
+
   if (section === 'birthday') {
     title.textContent = '设定生日';
     const currentBirthday = k.birthday ? k.birthday.slice(0,10) : '';
@@ -2249,6 +2258,44 @@ function showSettingsSection(section) {
       <input id="customInterest" class="field-input" type="text" placeholder="也想分享其他爱好？告诉${k.name}吧" value="${customField || ''}">
       <button class="primary-btn" style="margin-top:28px" onclick="saveInterests()">保存爱好</button>
       <div id="subSettingsMsg" style="text-align:center;margin-top:12px;font-size:13px;color:var(--p)"></div>
+    `;
+  } else if (section === 'sprouts') {
+    body.innerHTML = `
+      <div style="text-align:center;padding:20px 0 28px">
+        <div style="font-size:13px;color:#aaa;margin-bottom:4px">当前余额</div>
+        <div style="font-size:36px;font-weight:900;color:#E8954A">0 🫘</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">
+        <div style="background:white;border-radius:16px;padding:16px 20px;box-shadow:0 2px 12px rgba(155,89,182,0.08);display:flex;align-items:center;cursor:pointer" onclick="showToast('支付功能即将开放 🫘')">
+          <div style="flex:1">
+            <div style="font-size:16px;font-weight:800;color:#333">100 🫘</div>
+            <div style="font-size:12px;color:#aaa;margin-top:2px">¥9.99</div>
+          </div>
+          <div style="font-size:15px;font-weight:700;color:#9B59B6">购买 ›</div>
+        </div>
+
+        <div style="background:white;border-radius:16px;padding:16px 20px;box-shadow:0 2px 12px rgba(155,89,182,0.08);display:flex;align-items:center;cursor:pointer" onclick="showToast('支付功能即将开放 🫘')">
+          <div style="flex:1">
+            <div style="font-size:16px;font-weight:800;color:#333">200 🫘</div>
+            <div style="font-size:12px;color:#aaa;margin-top:2px">¥19.99</div>
+          </div>
+          <div style="font-size:15px;font-weight:700;color:#9B59B6">购买 ›</div>
+        </div>
+
+        <div style="background:linear-gradient(135deg,#F0C060,#E8954A);border-radius:16px;padding:16px 20px;box-shadow:0 4px 16px rgba(232,149,74,0.3);display:flex;align-items:center;cursor:pointer;position:relative" onclick="showToast('支付功能即将开放 🫘')">
+          <div style="position:absolute;top:-8px;right:12px;background:#e74c3c;color:white;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px">🔥 最划算</div>
+          <div style="flex:1">
+            <div style="font-size:16px;font-weight:800;color:white">600 🫘</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.8);margin-top:2px">¥49.99</div>
+          </div>
+          <div style="font-size:15px;font-weight:700;color:white">购买 ›</div>
+        </div>
+      </div>
+
+      <div style="text-align:center;font-size:12px;color:#bbb;line-height:1.6">
+        芽豆是小陪芽专属虚拟货币<br>用于APP内所有付费功能
+      </div>
     `;
   }
 
