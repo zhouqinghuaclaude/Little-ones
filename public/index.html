@@ -536,7 +536,7 @@ input, textarea { font-family: inherit; }
     <div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:.8px;margin-bottom:12px;text-transform:uppercase">我的账户</div>
 
     <div style="background:white;border-radius:18px;box-shadow:var(--card-shadow);overflow:hidden;margin-bottom:16px">
-      <div onclick="showToast('会员功能即将开放 🌱')" style="display:flex;align-items:center;padding:16px;cursor:pointer;border-bottom:1px solid var(--border)">
+      <div onclick="showSettingsSection('membership')" style="display:flex;align-items:center;padding:16px;cursor:pointer;border-bottom:1px solid var(--border)">
         <span style="font-size:20px;margin-right:12px">👑</span>
         <div style="flex:1">
           <div style="font-size:15px;font-weight:700">会员状态</div>
@@ -2162,7 +2162,8 @@ function showSettingsSection(section) {
     personality: '设置性格',
     avatar: '选择头像',
     interests: 'Ta更懂你',
-    sprouts: '芽豆充值'
+    sprouts: '芽豆充值',
+    membership: '小陪芽会员'
   }[section] || '设置';
 
   if (section === 'birthday') {
@@ -2295,6 +2296,56 @@ function showSettingsSection(section) {
 
       <div style="text-align:center;font-size:12px;color:#bbb;line-height:1.6">
         芽豆是小陪芽专属虚拟货币<br>用于APP内所有付费功能
+      </div>
+    `;
+  } else if (section === 'membership') {
+    body.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:12px">
+      
+      <!-- 免费用户 -->
+      <div style="background:white;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(155,89,182,0.08)">
+        <div style="font-size:15px;font-weight:800;color:#333;margin-bottom:12px">免费用户</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${['1个孩子','每天20条消息','L1-L3免费晋级','基础瞬间卡','心愿池容量3条'].map(item => 
+            `<div style="font-size:13px;color:#888;display:flex;align-items:center;gap:6px"><span style="color:#ddd">●</span>${item}</div>`
+          ).join('')}
+        </div>
+      </div>
+      <!-- VIP -->
+      <div style="background:linear-gradient(135deg,#F0E8FF,#E8D5F5);border-radius:16px;padding:20px;box-shadow:0 4px 16px rgba(155,89,182,0.15);border:1.5px solid #C39BD3">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div style="font-size:17px;font-weight:800;color:#9B59B6">🌿 VIP</div>
+          <div style="text-align:right">
+            <div style="font-size:13px;font-weight:700;color:#9B59B6">¥29.99/月</div>
+            <div style="font-size:11px;color:#aaa">¥299.99/年</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:#C39BD3;margin-bottom:12px">年卡消息不限,月卡100条/天</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
+          ${['最多2个孩子','月卡100条/天,年卡消息不限','L1-L6全部免费晋级','所有瞬间卡','头像定制1次/年','心愿池容量不限','重要仪式','宝宝记忆100条','站内消费8折'].map(item => 
+            `<div style="font-size:13px;color:#7D3C98;display:flex;align-items:center;gap:6px"><span style="color:#9B59B6">✓</span>${item}</div>`
+          ).join('')}
+        </div>
+        <button style="width:100%;padding:12px;border-radius:12px;background:linear-gradient(135deg,#9B59B6,#C39BD3);color:white;font-size:14px;font-weight:700" onclick="showToast('会员功能即将开放 🌱')">开通VIP</button>
+      </div>
+      <!-- SVIP -->
+      <div style="background:linear-gradient(135deg,#FFF8E8,#FFF0D0);border-radius:16px;padding:20px;box-shadow:0 4px 16px rgba(232,149,74,0.2);border:1.5px solid #F0C060">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div style="font-size:17px;font-weight:800;color:#E8954A">🌟 SVIP</div>
+          <div style="text-align:right">
+            <div style="font-size:13px;font-weight:700;color:#E8954A">¥39.99/月</div>
+            <div style="font-size:11px;color:#aaa">¥399.99/年</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:#E8954A;margin-bottom:12px">包含所有VIP权益</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
+          ${['最多3个孩子','无限消息','VIP全部权益','头像定制每月1次','成长相册','宝宝记忆无限','新功能优先体验','优先客服','站内消费7折'].map(item => 
+            `<div style="font-size:13px;color:#B7770D;display:flex;align-items:center;gap:6px"><span style="color:#E8954A">✓</span>${item}</div>`
+          ).join('')}
+        </div>
+        <button style="width:100%;padding:12px;border-radius:12px;background:linear-gradient(135deg,#F0C060,#E8954A);color:white;font-size:14px;font-weight:700" onclick="showToast('会员功能即将开放 🌱')">开通SVIP</button>
+      </div>
+      
       </div>
     `;
   }
