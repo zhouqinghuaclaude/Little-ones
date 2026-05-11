@@ -474,49 +474,97 @@ input, textarea { font-family: inherit; }
 <div id="settingsScreen" class="screen">
   <div class="page-header">
     <button class="back-btn" onclick="showScreen('chatScreen')">‹</button>
-    <div class="page-title">高级设置 ⚙️</div>
+    <div class="page-title">设置 ⚙️</div>
   </div>
   <div class="create-body">
-    <label class="field-label">📅 精准生日</label>
-    <input id="settingsBirthday" class="field-input" type="date">
-    <div id="birthdayLockMsg" style="font-size:12px;color:var(--sub);margin-top:6px;display:none">🔒 生日已锁定，属相星座已确定</div>
-    <div id="zodiacPreview" style="font-size:13px;color:var(--p);margin-top:8px;font-weight:700"></div>
 
-    <label class="field-label" style="margin-top:20px">🌱 成长模式</label>
-    <div id="ageModeDisplay" style="font-size:13px;color:var(--sub);margin-bottom:8px"></div>
-    <div class="choice-row">
-      <button class="choice-btn" id="sNatural" onclick="selectAgeMode('natural')">🌱 自然成长</button>
-      <button class="choice-btn" id="sFixed" onclick="selectAgeMode('fixed')">📌 冻龄</button>
+    <!-- 孩子设置部分 -->
+    <div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:.8px;margin-bottom:12px;text-transform:uppercase">孩子设置</div>
+
+    <div style="background:white;border-radius:18px;box-shadow:var(--card-shadow);overflow:hidden;margin-bottom:16px">
+      <div onclick="showSettingsSection('birthday')" style="display:flex;align-items:center;padding:16px;cursor:pointer;border-bottom:1px solid var(--border)">
+        <span style="font-size:20px;margin-right:12px">📅</span>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700">设定生日</div>
+          <div id="birthdaySettingsSub" style="font-size:12px;color:var(--sub);margin-top:2px">设置精准生日，解锁星座属相</div>
+        </div>
+        <span style="color:var(--sub);font-size:18px">›</span>
+      </div>
+      <div onclick="showSettingsSection('agemode')" style="display:flex;align-items:center;padding:16px;cursor:pointer;border-bottom:1px solid var(--border)">
+        <span style="font-size:20px;margin-right:12px">🌱</span>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700">成长模式</div>
+          <div id="ageModeSettingsSub" style="font-size:12px;color:var(--sub);margin-top:2px">自然成长 / 冻龄</div>
+        </div>
+        <span style="color:var(--sub);font-size:18px">›</span>
+      </div>
+      <div onclick="showSettingsSection('personality')" style="display:flex;align-items:center;padding:16px;cursor:pointer;border-bottom:1px solid var(--border)">
+        <span style="font-size:20px;margin-right:12px">✨</span>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700">设置性格</div>
+          <div id="personalitySettingsSub" style="font-size:12px;color:var(--sub);margin-top:2px">活泼 / 文静 / 聪明</div>
+        </div>
+        <span style="color:var(--sub);font-size:18px">›</span>
+      </div>
+      <div onclick="showSettingsSection('avatar')" style="display:flex;align-items:center;padding:16px;cursor:pointer;border-bottom:1px solid var(--border)">
+        <span style="font-size:20px;margin-right:12px">🖼️</span>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700">选择头像</div>
+          <div style="font-size:12px;color:var(--sub);margin-top:2px">为孩子选一个专属头像</div>
+        </div>
+        <span style="color:var(--sub);font-size:18px">›</span>
+      </div>
+      <div onclick="showSettingsSection('interests')" style="display:flex;align-items:center;padding:16px;cursor:pointer;border-bottom:1px solid var(--border)">
+        <span style="font-size:20px;margin-right:12px">💝</span>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700" id="interestsSettingsTitle">让Ta更懂你</div>
+          <div style="font-size:12px;color:var(--sub);margin-top:2px">分享你的爱好，让孩子更了解你</div>
+        </div>
+        <span style="color:var(--sub);font-size:18px">›</span>
+      </div>
+      <div onclick="showToast('开通会员后可添加更多孩子 🌱')" style="display:flex;align-items:center;padding:16px;cursor:pointer">
+        <span style="font-size:20px;margin-right:12px">➕</span>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700">添加孩子</div>
+          <div style="font-size:12px;color:var(--sub);margin-top:2px">开通会员后可添加更多孩子</div>
+        </div>
+        <span style="color:var(--sub);font-size:18px">›</span>
+      </div>
     </div>
-    
 
-    <label class="field-label" style="margin-top:20px">✨ 性格设置</label>
-    <div class="choice-row" style="flex-wrap:wrap;gap:8px">
-      <button class="choice-btn" id="sLively" onclick="selectPersonality('lively')">活泼</button>
-      <button class="choice-btn" id="sQuiet" onclick="selectPersonality('quiet')">文静</button>
-      <button class="choice-btn" id="sClever" onclick="selectPersonality('clever')">聪明</button>
-      <button class="choice-btn" id="sCustom" onclick="showToast('专属定制为付费功能，即将开放 🌱')">💎定制</button>
+    <!-- 我的账户部分 -->
+    <div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:.8px;margin-bottom:12px;text-transform:uppercase">我的账户</div>
 
+    <div style="background:white;border-radius:18px;box-shadow:var(--card-shadow);overflow:hidden;margin-bottom:16px">
+      <div onclick="showToast('会员功能即将开放 🌱')" style="display:flex;align-items:center;padding:16px;cursor:pointer;border-bottom:1px solid var(--border)">
+        <span style="font-size:20px;margin-right:12px">👑</span>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700">会员状态</div>
+          <div style="font-size:12px;color:var(--sub);margin-top:2px">免费版 · 升级解锁更多功能</div>
+        </div>
+        <span style="color:var(--sub);font-size:18px">›</span>
+      </div>
+      <div onclick="showToast('芽豆功能即将开放 🫘')" style="display:flex;align-items:center;padding:16px;cursor:pointer;border-bottom:1px solid var(--border)">
+        <span style="font-size:20px;margin-right:12px">🫘</span>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700">芽豆余额</div>
+          <div style="font-size:12px;color:var(--sub);margin-top:2px">0 芽豆</div>
+        </div>
+        <span style="color:var(--sub);font-size:18px">›</span>
+      </div>
+      <div onclick="showToast('账户信息功能即将开放 🌱')" style="display:flex;align-items:center;padding:16px;cursor:pointer">
+        <span style="font-size:20px;margin-right:12px">👤</span>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700">账户信息</div>
+          <div style="font-size:12px;color:var(--sub);margin-top:2px">查看和修改账户信息</div>
+        </div>
+        <span style="color:var(--sub);font-size:18px">›</span>
+      </div>
     </div>
-     <label class="field-label" style="margin-top:20px" id="interestLabel">💝 让宝宝更懂你</label>
-    <div style="font-size:12px;color:var(--sub);margin-bottom:10px" id="interestSubtitle">选择你的爱好，让宝宝找到和你共鸣的话题</div>
 
-    <div id="interestGrid" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
-    <input id="customInterest" class="field-input" type="text" placeholder="也想分享其他爱好？告诉宝宝吧（最爱的）">
-   
- <label class="field-label" style="margin-top:20px">🖼️ 头像选择</label>
-<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">
-  <div id="avatarSelectGrid" style="display:contents"></div>
-  <button onclick="showToast('上传你的照片，让孩子更像你，即将开放 📸')" style="width:48px;height:48px;border-radius:50%;border:2px dashed var(--border);background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px">
-    <span style="font-size:18px">📷</span>
-    <span style="font-size:9px;color:var(--sub);font-weight:600">定制</span>
-  </button>
-</div>
+    <!-- 退出登录 -->
+    <button onclick="logout()" style="width:100%;padding:16px;border-radius:18px;background:white;border:1.5px solid #FFD0D0;color:#E74C3C;font-size:15px;font-weight:700;margin-bottom:32px">退出登录</button>
 
-<label class="field-label" style="margin-top:20px">➕添加孩子</label>
-<button class="choice-btn" style="margin-top:8px" onclick="showToast('开通会员后可添加更多孩子 🌱')">添加</button>
-    <button class="primary-btn" style="margin-top:28px" onclick="saveSettings()">保存设置</button>
-    <div id="settingsMsg" style="text-align:center;margin-top:12px;font-size:13px;color:var(--p)"></div>
   </div>
 </div>
 
@@ -575,6 +623,15 @@ input, textarea { font-family: inherit; }
 
     <button class="bond-close-btn" onclick="closeBondProfile()">关闭</button>
   </div>
+</div>
+
+<!-- Sub Settings Screen -->
+<div id="subSettingsScreen" class="screen">
+  <div class="page-header">
+    <button class="back-btn" onclick="showScreen('settingsScreen')">‹</button>
+    <div class="page-title" id="subSettingsTitle">设置</div>
+  </div>
+  <div class="create-body" id="subSettingsBody"></div>
 </div>
 
 
@@ -2094,70 +2151,217 @@ let settingsKid = null;
 let selectedAgeMode = null;
 let selectedPersonality = null;
 
+function showSettingsSection(section) {
+  const body = document.getElementById('subSettingsBody');
+  const title = document.getElementById('subSettingsTitle');
+  const k = settingsKid;
+
+  if (section === 'birthday') {
+    title.textContent = '设定生日';
+    const currentBirthday = k.birthday ? k.birthday.slice(0,10) : '';
+    const isLocked = k.birthday_locked;
+    body.innerHTML = `
+      <label class="field-label">📅 精准生日</label>
+      <input id="subBirthdayInput" class="field-input" type="date" value="${currentBirthday}" ${isLocked ? 'disabled' : ''}>
+      ${isLocked ? '<div style="font-size:12px;color:var(--sub);margin-top:6px">🔒 生日已锁定，属相星座已确定</div>' : ''}
+      <div id="subZodiacPreview" style="font-size:13px;color:var(--p);margin-top:8px;font-weight:700"></div>
+      ${!isLocked ? '<button class="primary-btn" style="margin-top:28px" onclick="saveBirthday()">保存生日</button>' : ''}
+      <div id="subSettingsMsg" style="text-align:center;margin-top:12px;font-size:13px;color:var(--p)"></div>
+    `;
+    if (!isLocked) {
+      const input = document.getElementById('subBirthdayInput');
+      input.oninput = () => updateZodiacPreview(input.value);
+    }
+    updateZodiacPreview(currentBirthday);
+
+  } else if (section === 'agemode') {
+    title.textContent = '成长模式';
+    const mode = selectedAgeMode || k.age_mode || 'fixed';
+    const isLocked = k.age_mode_locked;
+    body.innerHTML = `
+      <label class="field-label">🌱 成长模式</label>
+      <div style="font-size:13px;color:var(--sub);margin-bottom:12px">${mode === 'natural' ? '当前：自然成长 🌱' : '当前：冻龄 📌'}</div>
+      <div class="choice-row">
+        <button class="choice-btn${mode === 'natural' ? ' on' : ''}" id="sNatural" onclick="selectAgeMode('natural')" ${isLocked ? 'disabled' : ''}>🌱 自然成长</button>
+        <button class="choice-btn${mode === 'fixed' ? ' on' : ''}" id="sFixed" onclick="selectAgeMode('fixed')" ${isLocked ? 'disabled' : ''}>📌 冻龄</button>
+      </div>
+      <div style="font-size:12px;color:var(--sub);margin-top:12px;line-height:1.6">
+        🌱 <b>自然成长</b>：孩子会随时间自然长大<br>
+        📌 <b>冻龄</b>：孩子保持在当前年龄
+      </div>
+      ${!isLocked ? '<button class="primary-btn" style="margin-top:28px" onclick="saveAgeMode()">保存设置</button>' : ''}
+      <div id="subSettingsMsg" style="text-align:center;margin-top:12px;font-size:13px;color:var(--p)"></div>
+    `;
+
+  } else if (section === 'personality') {
+    title.textContent = '设置性格';
+    const p = selectedPersonality || k.personality || 'lively';
+    body.innerHTML = `
+      <label class="field-label">✨ 性格设置</label>
+      <div class="choice-row" style="flex-wrap:wrap;gap:8px">
+        <button class="choice-btn${p === 'lively' ? ' on' : ''}" id="sLively" onclick="selectPersonality('lively')">活泼</button>
+        <button class="choice-btn${p === 'quiet' ? ' on' : ''}" id="sQuiet" onclick="selectPersonality('quiet')">文静</button>
+        <button class="choice-btn${p === 'clever' ? ' on' : ''}" id="sClever" onclick="selectPersonality('clever')">聪明</button>
+        <button class="choice-btn" id="sCustom" onclick="showToast('专属定制为付费功能，即将开放 🌱')">💎定制</button>
+      </div>
+      <div id="customPersonalityBox" style="display:none;margin-top:12px">
+        <input id="customPersonalityInput" class="field-input" type="text" placeholder="描述孩子的性格特点...">
+      </div>
+      <button class="primary-btn" style="margin-top:28px" onclick="savePersonality()">保存性格</button>
+      <div id="subSettingsMsg" style="text-align:center;margin-top:12px;font-size:13px;color:var(--p)"></div>
+    `;
+
+  } else if (section === 'avatar') {
+    title.textContent = '选择头像';
+    const gender = k.gender || 'boy';
+    const currentAvatar = k.avatar;
+    const boyAvatars = ["👦","🧒","👼","🦁","🐯"];
+    const girlAvatars = ["👧","👸","🐰","🐱","🦋"];
+    const avatars = gender === 'boy' ? boyAvatars : girlAvatars;
+    const bgStyle = gender === 'boy' ? 'linear-gradient(135deg,#D6EAF8,#AED6F1)' : 'linear-gradient(135deg,#FDEBD0,#FADBD8)';
+    body.innerHTML = `
+      <label class="field-label">🖼️ 头像选择</label>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px" id="avatarSelectGrid">
+        ${avatars.map(e => `<button onclick="selectSettingsAvatar('${e}')" style="width:56px;height:56px;border-radius:50%;border:2.5px solid ${currentAvatar===e?'var(--p)':'var(--border)'};background:${bgStyle};font-size:28px;display:flex;align-items:center;justify-content:center" id="avatarBtn_${e}">${e}</button>`).join('')}
+        <button onclick="showToast('上传你的照片，让孩子更像你，即将开放 📸')" style="width:56px;height:56px;border-radius:50%;border:2px dashed var(--border);background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px">
+          <span style="font-size:20px">📷</span>
+          <span style="font-size:9px;color:var(--sub);font-weight:600">定制</span>
+        </button>
+      </div>
+      <button class="primary-btn" style="margin-top:28px" onclick="saveAvatar()">保存头像</button>
+      <div id="subSettingsMsg" style="text-align:center;margin-top:12px;font-size:13px;color:var(--p)"></div>
+    `;
+
+  } else if (section === 'interests') {
+    title.textContent = '让Ta更懂你';
+    const INTERESTS = ['🏃跑步','🧘瑜伽','💪健身','🚴骑行','🏊游泳','🏔登山','📷摄影','🎨绘画','✍️写作','🎭手工','📚读书','🌱历史','💭心理学','🌍外语','🔬科普','🍳烹饪','🍞烘焙','🍷品酒','☕咖啡','🌸园艺','✈️旅行','🎬电影','🎵音乐','📺追剧','🎲桌游','💻编程','🤖AI','💰理财','🎨设计','🤔哲学','⚽足球','🏀篮球','🎾网球','🎮游戏','🎤唱歌','💃舞蹈'];
+    const selectedInterests = (k.parent_interests || '').split(',').map(s => s.trim()).filter(s => s);
+    const customField = selectedInterests.find(i => !INTERESTS.includes(i));
+    body.innerHTML = `
+      <label class="field-label">💝 让${k.name}更懂你</label>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:12px">选择你的爱好，让${k.name}找到和你共鸣的话题</div>
+      <div id="interestGrid" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+        ${INTERESTS.map(item => {
+          const isSelected = selectedInterests.includes(item);
+          return `<button class="choice-btn${isSelected ? ' on' : ''}" style="font-size:13px;padding:6px 10px" onclick="toggleInterest(this, '${item}')">${item}</button>`;
+        }).join('')}
+      </div>
+      <input id="customInterest" class="field-input" type="text" placeholder="也想分享其他爱好？告诉${k.name}吧（最爱的）" value="${customField || ''}">
+      <button class="primary-btn" style="margin-top:28px" onclick="saveInterests()">保存爱好</button>
+      <div id="subSettingsMsg" style="text-align:center;margin-top:12px;font-size:13px;color:var(--p)"></div>
+    `;
+  }
+
+  showScreen('subSettingsScreen');
+}
+
+async function saveBirthday() {
+  const msg = document.getElementById('subSettingsMsg');
+  msg.textContent = '保存中...';
+  try {
+    const birthday = document.getElementById('subBirthdayInput').value;
+    if (!birthday) { msg.textContent = '❌ 请选择生日'; return; }
+    const updated = await req(`/api/kids/${settingsKid.id}/settings`, {method:'PATCH', body:JSON.stringify({birthday})});
+    settingsKid = {...settingsKid, ...updated};
+    kid = {...kid, ...updated};
+    const sub = document.getElementById('birthdaySettingsSub');
+    if (sub) sub.textContent = birthday;
+    msg.textContent = '✅ 生日已保存';
+    setTimeout(() => { msg.textContent = ''; showScreen('settingsScreen'); }, 1500);
+  } catch(e) {
+    msg.textContent = '❌ ' + (e.message || '保存失败');
+  }
+}
+
+async function saveAgeMode() {
+  const msg = document.getElementById('subSettingsMsg');
+  msg.textContent = '保存中...';
+  try {
+    const updated = await req(`/api/kids/${settingsKid.id}/settings`, {method:'PATCH', body:JSON.stringify({age_mode: selectedAgeMode})});
+    settingsKid = {...settingsKid, ...updated};
+    kid = {...kid, ...updated};
+    const sub = document.getElementById('ageModeSettingsSub');
+    if (sub) sub.textContent = selectedAgeMode === 'natural' ? '自然成长 🌱' : '冻龄 📌';
+    msg.textContent = '✅ 成长模式已保存';
+    setTimeout(() => { msg.textContent = ''; showScreen('settingsScreen'); }, 1500);
+  } catch(e) {
+    msg.textContent = '❌ ' + (e.message || '保存失败');
+  }
+}
+
+async function savePersonality() {
+  const msg = document.getElementById('subSettingsMsg');
+  msg.textContent = '保存中...';
+  try {
+    const updated = await req(`/api/kids/${settingsKid.id}/settings`, {method:'PATCH', body:JSON.stringify({personality: selectedPersonality})});
+    settingsKid = {...settingsKid, ...updated};
+    kid = {...kid, ...updated};
+    const sub = document.getElementById('personalitySettingsSub');
+    const nameMap = {lively:'活泼', quiet:'文静', clever:'聪明'};
+    if (sub) sub.textContent = nameMap[selectedPersonality] || selectedPersonality;
+    msg.textContent = '✅ 性格已保存';
+    setTimeout(() => { msg.textContent = ''; showScreen('settingsScreen'); }, 1500);
+  } catch(e) {
+    msg.textContent = '❌ ' + (e.message || '保存失败');
+  }
+}
+
+async function saveAvatar() {
+  const msg = document.getElementById('subSettingsMsg');
+  msg.textContent = '保存中...';
+  try {
+    const updated = await req(`/api/kids/${settingsKid.id}/settings`, {method:'PATCH', body:JSON.stringify({avatar: settingsKid.avatar})});
+    settingsKid = {...settingsKid, ...updated};
+    kid = {...kid, ...updated};
+    msg.textContent = '✅ 头像已保存';
+    setTimeout(() => { msg.textContent = ''; showScreen('settingsScreen'); }, 1500);
+  } catch(e) {
+    msg.textContent = '❌ ' + (e.message || '保存失败');
+  }
+}
+
+async function saveInterests() {
+  const msg = document.getElementById('subSettingsMsg');
+  msg.textContent = '保存中...';
+  try {
+    const interests = [];
+    document.querySelectorAll('#interestGrid .choice-btn.on').forEach(btn => {
+      interests.push(btn.textContent.trim());
+    });
+    const customInterest = document.getElementById('customInterest').value.trim();
+    if (customInterest) interests.push(customInterest);
+    const updated = await req(`/api/kids/${settingsKid.id}/settings`, {method:'PATCH', body:JSON.stringify({parent_interests: interests.join(',')})});
+    settingsKid = {...settingsKid, ...updated};
+    kid = {...kid, ...updated};
+    msg.textContent = '✅ 爱好已保存';
+    setTimeout(() => { msg.textContent = ''; showScreen('settingsScreen'); }, 1500);
+  } catch(e) {
+    msg.textContent = '❌ ' + (e.message || '保存失败');
+  }
+}
+
 function openSettings(k) {
   settingsKid = k;
   selectedAgeMode = k.age_mode || 'fixed';
   selectedPersonality = k.personality || 'lively';
-  
-  // 生日
-  const birthdayInput = document.getElementById("settingsBirthday");
-  const birthdayLockMsg = document.getElementById("birthdayLockMsg");
-  if (k.birthday_locked) {
-    birthdayInput.value = k.birthday ? k.birthday.slice(0,10) : '';
-    birthdayInput.disabled = true;
-    birthdayLockMsg.style.display = 'block';
-  } else {
-    birthdayInput.value = k.birthday ? k.birthday.slice(0,10) : '';
-    birthdayInput.disabled = false;
-    birthdayLockMsg.style.display = 'none';
-    birthdayInput.oninput = () => updateZodiacPreview(birthdayInput.value);
-  }
-  updateZodiacPreview(k.birthday ? k.birthday.slice(0,10) : '');
 
-  // 成长模式
-  
-  const display = document.getElementById("ageModeDisplay");
-  display.textContent = k.age_mode === 'natural' ? '当前：自然成长 🌱' : '当前：冻龄 📌';
-  if (k.age_mode_locked) {
-    
-    document.getElementById("sNatural").disabled = true;
-    document.getElementById("sFixed").disabled = true;
-  } else {
-    
-    document.getElementById("sNatural").disabled = false;
-    document.getElementById("sFixed").disabled = false;
-  }
-  document.getElementById("sNatural").className = 'choice-btn' + (selectedAgeMode === 'natural' ? ' on' : '');
-  document.getElementById("sFixed").className = 'choice-btn' + (selectedAgeMode === 'fixed' ? ' on' : '');
+  // 更新子标题显示
+  const birthdaySub = document.getElementById('birthdaySettingsSub');
+  if (birthdaySub) birthdaySub.textContent = k.birthday ? k.birthday.slice(0,10) : '设置精准生日，解锁星座属相';
+  const ageModeSub = document.getElementById('ageModeSettingsSub');
+  if (ageModeSub) ageModeSub.textContent = k.age_mode === 'natural' ? '自然成长 🌱' : '冻龄 📌';
+  const personalitySub = document.getElementById('personalitySettingsSub');
+  const nameMap = {lively:'活泼', quiet:'文静', clever:'聪明'};
+  if (personalitySub) personalitySub.textContent = nameMap[k.personality] || '活泼 / 文静 / 聪明';
+  const interestsTitle = document.getElementById('interestsSettingsTitle');
+  if (interestsTitle) interestsTitle.textContent = `让${k.name}更懂你`;
 
-  // 性格
-  ['sLively','sQuiet','sClever','sCustom'].forEach(id => {
-    document.getElementById(id).className = 'choice-btn';
-  });
-  const personalityMap = {lively:'sLively', quiet:'sQuiet', clever:'sClever', custom:'sCustom'};
-  if (personalityMap[selectedPersonality]) {
-    document.getElementById(personalityMap[selectedPersonality]).className = 'choice-btn on';
-  }
-// 兴趣渲染
-document.getElementById("interestLabel").textContent = `💝 让${k.name}更懂你`;
-document.getElementById("interestSubtitle").textContent = `选择你的爱好，让${k.name}找到和你共鸣的话题`;
-document.getElementById("customInterest").placeholder = `也想分享其他爱好？告诉${k.name}吧`;
-const INTERESTS = ['🏃跑步','🧘瑜伽','💪健身','🚴骑行','🏊游泳','🏔登山','📷摄影','🎨绘画','✍️写作','🎭手工','📚读书','🌱历史','💭心理学','🌍外语','🔬科普','🍳烹饪','🍞烘焙','🍷品酒','☕咖啡','🌸园艺','✈️旅行','🎬电影','🎵音乐','📺追剧','🎲桌游','💻编程','🤖AI','💰理财','🎨设计','🤔哲学','⚽足球','🏀篮球','🎾网球','🎮游戏','🎤唱歌','💃舞蹈'];
-const selectedInterests = (k.parent_interests || '').split(',').map(s => s.trim()).filter(s => s);
-const interestGrid = document.getElementById("interestGrid");
-interestGrid.innerHTML = INTERESTS.map(item => {
-  const isSelected = selectedInterests.includes(item);
-  return `<button class="choice-btn${isSelected ? ' on' : ''}" style="font-size:13px;padding:6px 10px" onclick="toggleInterest(this, '${item}')">${item}</button>`;
-}).join('');
-const customField = selectedInterests.find(i => !INTERESTS.includes(i));
-document.getElementById("customInterest").value = customField || '';
- 
-renderAvatarSelectGrid(k.gender, k.avatar);
-  showScreen("settingsScreen");
+  showScreen('settingsScreen');
 }
 
 function updateZodiacPreview(birthday) {
-  const el = document.getElementById("zodiacPreview");
+  const el = document.getElementById("subZodiacPreview") || document.getElementById("zodiacPreview");
+  if (!el) return;
   if (!birthday) { el.textContent = ''; return; }
   const sign = getZodiacSign(birthday);
   const cz = getChineseZodiac(birthday);
@@ -2174,19 +2378,21 @@ function selectAgeMode(mode) {
 function selectPersonality(p) {
   selectedPersonality = p;
   ['sLively','sQuiet','sClever','sCustom'].forEach(id => {
-    document.getElementById(id).className = 'choice-btn';
+    const el = document.getElementById(id);
+    if (el) el.className = 'choice-btn';
   });
   const map = {lively:'sLively', quiet:'sQuiet', clever:'sClever', custom:'sCustom'};
-  if (map[p]) document.getElementById(map[p]).className = 'choice-btn on';
-  document.getElementById("customPersonalityBox").style.display = p === 'custom' ? 'block' : 'none';
+  if (map[p]) { const el = document.getElementById(map[p]); if (el) el.className = 'choice-btn on'; }
+  const cpBox = document.getElementById("customPersonalityBox");
+  if (cpBox) cpBox.style.display = p === 'custom' ? 'block' : 'none';
 }
+
 function renderAvatarSelectGrid(gender, currentAvatar) {
   const boyAvatars = ["👦","🧒","👼","🦁","🐯"];
-const girlAvatars = ["👧","👸","🐰","🐱","🦋"];
-
-
+  const girlAvatars = ["👧","👸","🐰","🐱","🦋"];
   const avatars = gender === "boy" ? boyAvatars : girlAvatars;
   const grid = document.getElementById("avatarSelectGrid");
+  if (!grid) return;
   grid.innerHTML = avatars.map(e =>
     `<button onclick="selectSettingsAvatar('${e}')" style="width:48px;height:48px;border-radius:50%;border:2.5px solid ${currentAvatar===e?'var(--p)':'var(--border)'};background:${gender==='boy'?'linear-gradient(135deg,#D6EAF8,#AED6F1)':'linear-gradient(135deg,#FDEBD0,#FADBD8)'};font-size:24px;display:flex;align-items:center;justify-content:center" id="avatarBtn_${e}">${e}</button>`
   ).join("");
@@ -2200,40 +2406,9 @@ function selectSettingsAvatar(emoji) {
   if (btn) btn.style.border = "2.5px solid var(--p)";
   settingsKid = {...settingsKid, avatar: emoji};
 }
+
 function toggleInterest(btn, item) {
   btn.classList.toggle('on');
-}
-
-async function saveSettings() {
-  const msg = document.getElementById("settingsMsg");
-  msg.textContent = '保存中...';
-  try {
-    const birthday = document.getElementById("settingsBirthday").value;
-    
-    const interests = [];
-    document.querySelectorAll('#interestGrid .choice-btn.on').forEach(btn => {
-      interests.push(btn.textContent.trim());
-    });
-    const customInterest = document.getElementById("customInterest").value.trim();
-    if (customInterest) interests.push(customInterest);
-
-    const body = {
-      personality: selectedPersonality,
-      avatar: settingsKid.avatar,
-      parent_interests: interests.join(','),
-    };
-
-    if (birthday && !settingsKid.birthday_locked) body.birthday = birthday;
-    if (selectedAgeMode !== settingsKid.age_mode && !settingsKid.age_mode_locked) body.age_mode = selectedAgeMode;
-    
-    const updated = await req(`/api/kids/${settingsKid.id}/settings`, {method:'PATCH', body:JSON.stringify(body)});
-    settingsKid = {...settingsKid, ...updated};
-    kid = {...kid, ...updated};
-    msg.textContent = '✅ 保存成功';
-    setTimeout(() => { msg.textContent = ''; showScreen('chatScreen'); }, 1500);
-  } catch(e) {
-    msg.textContent = '❌ ' + (e.message || '保存失败');
-  }
 }
 
 
