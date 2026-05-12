@@ -1,3 +1,4 @@
+console.error('SERVER START ATTEMPT');
 const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
@@ -935,6 +936,7 @@ app.post("/api/kids/:id/gifts", auth, async (req, res) => {
 
 
 async function initDB() {
+  console.error('INIT DB START');
   try {
   await db.query(`
     CREATE TABLE IF NOT EXISTS users (
