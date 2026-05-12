@@ -559,6 +559,11 @@ let bondDelta = 1; // base per message
     "UPDATE kids SET bond_score=$1, streak_days=$2, last_chat_date=$3 WHERE id=$4",
     [newBondScore, newStreakDays, todayStr, kid.id]
   );
+
+  // 获取用户会员状态（在等级检测前获取，避免引用错误）
+  const userResult = await db.query("SELECT membership_type FROM users WHERE id=$1", [req.user.id]);
+  const userMembership = userResult.rows[0]?.membership_type || 'free';
+
   // 检测是否晋级
 const LEVEL_THRESHOLDS = [0, 51, 151, 301, 501, 1001];
 const LEVEL_NAMES = ['初遇萌芽', '沁润青芽', '爱启灵芽', '心芽同频', '心芽共生', '心芽永恒'];
@@ -785,8 +790,6 @@ if (kidMsgDate !== todayStr) {
 }
 
 // 检查消息限制
-const userResult = await db.query("SELECT membership_type FROM users WHERE id=$1", [req.user.id]);
-const userMembership = userResult.rows[0]?.membership_type || 'free';
 const dailyLimit = userMembership === 'free' ? 20 : null;
 
 const kidCheck = await db.query("SELECT daily_msg_count, daily_msg_date FROM kids WHERE id=$1", [kid.id]);
