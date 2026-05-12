@@ -1121,5 +1121,10 @@ db.query(`CREATE TABLE IF NOT EXISTS wish_pool (
   fulfilled_at TIMESTAMP DEFAULT NULL
 )`).catch(() => {});
 
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT:', err.message, err.stack);
+  process.exit(1);
+});
+
 const PORT = process.env.PORT || 3000;
 initDB().then(() => app.listen(PORT, () => console.log("Server running on port " + PORT)));
