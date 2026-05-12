@@ -943,6 +943,7 @@ app.post("/api/kids/:id/gifts", auth, async (req, res) => {
 
 
 async function initDB() {
+  try {
   await db.query(`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
@@ -1033,6 +1034,10 @@ async function initDB() {
 db.query("UPDATE kids SET gifts_received = 1 WHERE gifts_received = 0 AND bond_score > 0").catch(() => {});
 
   console.log("Database ready");
+  } catch(err) {
+    console.error("DB INIT ERROR:", err.message);
+    process.exit(1);
+  }
 }
 
 app.get("/api/kids/:id/bond", auth, async (req, res) => {
