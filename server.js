@@ -766,6 +766,27 @@ if (message.includes('📖') && message.includes('讲故事')) {
 }
 
 
+  // 每日消息计数 — check BEFORE calling Claude
+  const kidMsgDate = kid.daily_msg_date ? new Date(kid.daily_msg_date).toISOString().slice(0, 10) : null;
+  if (kidMsgDate !== todayStr) {
+    await db.query("UPDATE kids SET daily_msg_count=0, daily_msg_date=$1 WHERE id=$2", [todayStr, kid.id]);
+    kid.daily_msg_count = 0;
+  }
+
+  // 检查消息限制
+  const dailyLimit = userMembership === 'free' ? 20 : null;
+
+  const kidCheck = await db.query("SELECT daily_msg_count, daily_msg_date FROM kids WHERE id=$1", [kid.id]);
+  kid.daily_msg_count = kidCheck.rows[0].daily_msg_count;
+  kid.daily_msg_date = kidCheck.rows[0].daily_msg_date;
+
+  if (dailyLimit && kid.daily_msg_count >= dailyLimit) {
+    return res.status(403).json({
+      error: `今天和${kid.name}的聊天次数已用完`,
+      upgrade: true
+    });
+  }
+
   try {
     const response = await claude.messages.create({
       model: "claude-sonnet-4-20250514",
@@ -781,33 +802,9 @@ if (message.includes('📖') && message.includes('讲故事')) {
       "INSERT INTO messages (kid_id, role, content) VALUES ($1,'assistant',$2) RETURNING id",
       [kid.id, reply]
     );
-// 每日消息计数
-const todayStr = new Date().toISOString().slice(0, 10);
-const kidMsgDate = kid.daily_msg_date ? new Date(kid.daily_msg_date).toISOString().slice(0, 10) : null;
-if (kidMsgDate !== todayStr) {
-  await db.query("UPDATE kids SET daily_msg_count=0, daily_msg_date=$1 WHERE id=$2", [todayStr, kid.id]);
-  kid.daily_msg_count = 0;
-}
 
-// 检查消息限制
-const dailyLimit = userMembership === 'free' ? 20 : null;
-
-const kidCheck = await db.query("SELECT daily_msg_count, daily_msg_date FROM kids WHERE id=$1", [kid.id]);
-kid.daily_msg_count = kidCheck.rows[0].daily_msg_count;
-kid.daily_msg_date = kidCheck.rows[0].daily_msg_date;
-
-
-if (dailyLimit && kid.daily_msg_count >= dailyLimit) {
-  return res.status(403).json({ 
-    error: `今天和${kid.name}的聊天次数已用完`,
-    upgrade: true
-  });
-}
-
-// 更新每日计数
-await db.query("UPDATE kids SET daily_msg_count=daily_msg_count+1 WHERE id=$1", [kid.id]);
-const checkAfter = await db.query("SELECT daily_msg_count FROM kids WHERE id=$1", [kid.id]);
-
+    // 更新每日计数
+    await db.query("UPDATE kids SET daily_msg_count=daily_msg_count+1 WHERE id=$1", [kid.id]);
 
     const totalCount = msgCount + 1;
 const storyPrompt = kid.age <= 3 && (reply.includes('故') && reply.includes('事'));
@@ -923,8 +920,8 @@ app.post("/api/kids/:id/gifts", auth, async (req, res) => {
 
   // Set pending_gift on kid with level prefix: "level:name"
   const level = gift_level || "free";
-     const kid = kidResult.rows[0];
-    await db.query("UPDATE kids SET pending_gift=NULL WHERE id=$1", [req.params.id]);
+  const kid = kidResult.rows[0];
+  await db.query("UPDATE kids SET pending_gift=$1 WHERE id=$2", [`${level}:${gift_name}`, req.params.id]);
 
     // Generate instant thank-you message from kid
     const giftSystem = `You are ${kid.name}, a ${kid.age}-year-old ${kid.gender === "boy" ? "boy" : "girl"}. You are ${kid.parent_role === "爸爸" ? "your dad's" : "your mom's"} beloved child. You just received a gift: ${gift_name}. React with genuine excitement and gratitude in Chinese. Be age-appropriate, warm and enthusiastic. Keep it to 2-3 sentences.`;
