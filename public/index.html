@@ -2157,8 +2157,9 @@ function showSettingsSection(section) {
     personality: '设置性格',
     avatar: '选择头像',
     interests: 'Ta更懂你',
-    sprouts: '芽豆充值',
-    membership: '小陪芽会员'
+    sprouts: '芽豆余额',
+    membership: '小陪芽会员',
+    sprouts: '芽豆余额'
   }[section] || '设置';
 
   if (section === 'birthday') {
@@ -2257,40 +2258,76 @@ function showSettingsSection(section) {
     `;
   } else if (section === 'sprouts') {
     body.innerHTML = `
-      <div style="text-align:center;padding:20px 0 28px">
-        <div style="font-size:13px;color:#aaa;margin-bottom:4px">当前余额</div>
-        <div style="font-size:36px;font-weight:900;color:#E8954A">0 🫘</div>
+      <div style="text-align:center;padding:20px 0 16px">
+        <div style="font-size:14px;font-weight:600;color:#333">我的芽豆</div>
+        <div style="font-size:48px;font-weight:900;color:#E8954A;margin:8px 0">0 🫘</div>
+        <div style="font-size:12px;color:#aaa;line-height:1.6">每日登录和聊天互动可获得芽豆</div>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">
-        <div style="background:white;border-radius:16px;padding:16px 20px;box-shadow:0 2px 12px rgba(155,89,182,0.08);display:flex;align-items:center;cursor:pointer" onclick="showToast('支付功能即将开放 🫘')">
-          <div style="flex:1">
-            <div style="font-size:16px;font-weight:800;color:#333">100 🫘</div>
-            <div style="font-size:12px;color:#aaa;margin-top:2px">¥9.99</div>
-          </div>
-          <div style="font-size:15px;font-weight:700;color:#9B59B6">购买 ›</div>
-        </div>
+      <div style="margin-bottom:20px">
+        <div style="font-size:13px;font-weight:700;color:#9B59B6;margin-bottom:10px;letter-spacing:.5px">注册会员赠送芽豆</div>
+        <div style="display:flex;gap:10px">
 
-        <div style="background:white;border-radius:16px;padding:16px 20px;box-shadow:0 2px 12px rgba(155,89,182,0.08);display:flex;align-items:center;cursor:pointer" onclick="showToast('支付功能即将开放 🫘')">
-          <div style="flex:1">
-            <div style="font-size:16px;font-weight:800;color:#333">200 🫘</div>
-            <div style="font-size:12px;color:#aaa;margin-top:2px">¥19.99</div>
+          <div style="flex:1;background:linear-gradient(135deg,#F0E8FF,#E8D5F5);border-radius:16px;padding:14px 10px;text-align:center;border:1.5px solid #C39BD3;cursor:pointer" onclick="showSettingsSection('membership')">
+            <div style="font-size:22px;margin-bottom:4px">🌿</div>
+            <div style="font-size:12px;font-weight:800;color:#9B59B6;margin-bottom:4px">VIP</div>
+            <div style="font-size:11px;color:#7D3C98;line-height:1.4">每月赠送<br><b style="font-size:13px">1000</b> 🫘</div>
+            <div style="margin-top:8px;font-size:11px;font-weight:700;color:#9B59B6;background:rgba(155,89,182,0.12);border-radius:8px;padding:4px 0;cursor:pointer">开通 ›</div>
           </div>
-          <div style="font-size:15px;font-weight:700;color:#9B59B6">购买 ›</div>
-        </div>
 
-        <div style="background:linear-gradient(135deg,#F0C060,#E8954A);border-radius:16px;padding:16px 20px;box-shadow:0 4px 16px rgba(232,149,74,0.3);display:flex;align-items:center;cursor:pointer;position:relative" onclick="showToast('支付功能即将开放 🫘')">
-          <div style="position:absolute;top:-8px;right:12px;background:#e74c3c;color:white;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px">🔥 最划算</div>
-          <div style="flex:1">
-            <div style="font-size:16px;font-weight:800;color:white">600 🫘</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.8);margin-top:2px">¥49.99</div>
+          <div style="flex:1;background:linear-gradient(135deg,#FFF8E8,#FFF0D0);border-radius:16px;padding:14px 10px;text-align:center;border:1.5px solid #F0C060;cursor:pointer" onclick="showSettingsSection('membership')">
+            <div style="font-size:22px;margin-bottom:4px">🌟</div>
+            <div style="font-size:12px;font-weight:800;color:#E8954A;margin-bottom:4px">SVIP</div>
+            <div style="font-size:11px;color:#B7770D;line-height:1.4">每月赠送<br><b style="font-size:13px">2000</b> 🫘</div>
+            <div style="margin-top:8px;font-size:11px;font-weight:700;color:#E8954A;background:rgba(232,149,74,0.12);border-radius:8px;padding:4px 0;cursor:pointer">开通 ›</div>
           </div>
-          <div style="font-size:15px;font-weight:700;color:white">购买 ›</div>
+
+          <div style="flex:1;background:linear-gradient(135deg,#F0F8FF,#E8F0FF);border-radius:16px;padding:14px 10px;text-align:center;border:1.5px solid #AED6F1;cursor:pointer" onclick="showSettingsSection('membership')">
+            <div style="font-size:22px;margin-bottom:4px">💎</div>
+            <div style="font-size:12px;font-weight:800;color:#2E86C1;margin-bottom:4px">DVIP</div>
+            <div style="font-size:11px;color:#1A5276;line-height:1.4">每月赠送<br><b style="font-size:13px">10000</b> 🫘</div>
+            <div style="margin-top:8px;font-size:11px;font-weight:700;color:#2E86C1;background:rgba(52,152,219,0.12);border-radius:8px;padding:4px 0;cursor:pointer">开通 ›</div>
+          </div>
+
         </div>
       </div>
 
-      <div style="text-align:center;font-size:12px;color:#bbb;line-height:1.6">
-        芽豆是小陪芽专属虚拟货币<br>用于APP内所有付费功能
+      <div style="background:white;border-radius:16px;padding:16px 18px;box-shadow:0 2px 12px rgba(155,89,182,0.08);margin-bottom:20px">
+        <div style="font-size:13px;font-weight:700;color:#9B59B6;margin-bottom:12px;letter-spacing:.5px">芽豆获取方式</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:20px">🎉</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700;color:#333">注册赠送</div>
+              <div style="font-size:11px;color:#aaa;margin-top:1px">新用户注册即送芽豆</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:20px">📅</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700;color:#333">每日登录</div>
+              <div style="font-size:11px;color:#aaa;margin-top:1px">每天登录可获得芽豆奖励</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:20px">💬</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700;color:#333">聊天互动</div>
+              <div style="font-size:11px;color:#aaa;margin-top:1px">与孩子聊天互动获得芽豆</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:20px">✨</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700;color:#333">瞬间卡</div>
+              <div style="font-size:11px;color:#aaa;margin-top:1px">完成瞬间卡任务获得芽豆</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center;font-size:11px;color:#ccc;line-height:1.7;padding-bottom:8px">
+        芽豆为小陪芽平台专属虚拟积分，不可转让<br>仅用于平台内容权益兑换
       </div>
     `;
   } else if (section === 'membership') {
