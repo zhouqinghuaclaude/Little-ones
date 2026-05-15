@@ -2300,7 +2300,7 @@ function showSettingsSection(section) {
     body.innerHTML = `
       <div style="text-align:center;padding:20px 0 16px">
         <div style="font-size:14px;font-weight:600;color:#333">我的芽豆</div>
-        <div style="font-size:48px;font-weight:900;color:#E8954A;margin:8px 0">0 🫘</div>
+        <div style="font-size:48px;font-weight:900;color:#E8954A;margin:8px 0" id="sproutsBalance">0 🫘</div>
         <div style="font-size:12px;color:#aaa;line-height:1.6">每日登录和聊天互动可获得芽豆</div>
       </div>
 
@@ -2370,6 +2370,11 @@ function showSettingsSection(section) {
         芽豆为小陪芽平台专属虚拟积分，不可转让<br>仅用于平台内容权益兑换
       </div>
     `;
+    // 加载真实芽豆余额
+    req('/api/sprouts').then(data => {
+      const el = document.getElementById('sproutsBalance');
+      if (el) el.textContent = `${data.balance} 🫘`;
+    }).catch(() => {});
   } else if (section === 'membership') {
     body.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:12px">
