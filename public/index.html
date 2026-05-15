@@ -1169,19 +1169,27 @@ async function fulfillWishInShop(wishId, content, emoji) {
   });
   
   const products = data.products || [];
-  const productsHTML = products.map((p, idx) => `
-  <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#FAF5FF;border-radius:14px;margin-bottom:8px">
-  <input type="checkbox" id="wishProduct_${idx}" value="${idx}" 
+  const maxItems = data.maxItems || 1;
+  const productsHTML = products.map((p, idx) => {
+  const isLocked = idx >= maxItems;
+  return `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:${isLocked ? '#F5F5F5' : '#FAF5FF'};border-radius:14px;margin-bottom:8px;${isLocked ? 'opacity:0.6' : ''}">
+  ${isLocked ? 
+  `<div style="width:18px;height:18px;display:flex;align-items:center;justify-content:center" onclick="showUpgradePrompt()">🔒</div>` :
+  `<input type="checkbox" id="wishProduct_${idx}" value="${idx}" 
   style="width:18px;height:18px;accent-color:#9B59B6" 
-  onchange="updateWishCart(${p.price}, '${p.name}', '${p.emoji}', this.checked)">
+  onchange="updateWishCart(${p.price}, '${p.name}', '${p.emoji}', this.checked)">`
+  }
   <span style="font-size:28px">${p.emoji}</span>
   <div style="flex:1">
-  <div style="font-size:14px;font-weight:700;color:#333">${p.name}</div>
+  <div style="font-size:14px;font-weight:700;color:${isLocked ? '#aaa' : '#333'}">${p.name}</div>
   <div style="font-size:12px;color:#999">${p.desc}</div>
   </div>
-  <span style="font-size:13px;font-weight:700;color:#E8954A">${p.price}🫘</span>
-  </div>
-`).join('');
+  ${isLocked ? 
+  `<div style="font-size:11px;color:#9B59B6;font-weight:700;cursor:pointer" onclick="showUpgradePrompt()">升级解锁</div>` :
+  `<span style="font-size:13px;font-weight:700;color:#E8954A">${p.price}🫘</span>`
+  }
+  </div>`;
+  }).join('');
   document.getElementById('wishProductsOverlay').innerHTML = `
   <div style="background:white;border-radius:24px;padding:24px;max-width:360px;width:100%;max-height:80vh;overflow-y:auto">
   <div style="text-align:center;font-size:18px;font-weight:800;color:#9B59B6;margin-bottom:4px">${emoji} ${content}</div>
