@@ -858,7 +858,7 @@ function getBondLevel(score) {
       <div class="kid-meta">${k.gender==="boy"?"男孩":"女孩"} · ${k.age_display||k.age+"岁"}${getKidZodiacInfo(k)}</div>
       <div class="kid-bond-info">${k.name}已陪伴你${compDays}天 · ${bl.emoji}${bl.name}${k.milestone ? ' · ' + k.milestone : ''}</div>
     </div>
-    <button class="kid-delete-btn" onclick="deleteKid(${k.id},'${k.name.replace(/'/g,"&#39;")}');event.stopPropagation();">删除</button>
+    <button class="kid-delete-btn" onclick="event.stopPropagation();deleteKid(${k.id})">删除</button>
   </div>`;
 }).join("");
 
@@ -2985,11 +2985,11 @@ async function sendGift(emoji, name, type, level) {
     renderGiftGrid();
   }
 }
-  async function deleteKid(id, name) {
-  if (!confirm(`确定要删除「${name}」吗？删除后无法恢复。`)) return;
+  async function deleteKid(id) {
+  if (!confirm('确定要删除这个孩子吗?此操作不可恢复。')) return;
   try {
     await req(`/api/kids/${id}`, { method: "DELETE" });
-    showToast(`${name} 已删除`);
+    showToast("已删除");
     loadKids();
   } catch(e) {
     showToast(e.message || "删除失败");
