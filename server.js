@@ -38,6 +38,7 @@ app.post("/api/register", async (req, res) => {
     );
     const user = r.rows[0];
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "30d" });
+    await db.query("UPDATE users SET sprouts_balance = sprouts_balance + 100 WHERE id = $1", [user.id]);
     res.json({ token, user });
   } catch (e) {
     if (e.code === "23505") return res.status(400).json({ error: "Email already registered" });
@@ -55,6 +56,12 @@ app.post("/api/login", async (req, res) => {
       return res.status(401).json({ error: "Incorrect email or password" });
     }
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "30d" });
+    // 每日登录+10芽豆(每天只加一次)
+    const today = new Date().toISOString().slice(0, 10);
+    const lastLogin = user.last_login_date ? String(user.last_login_date).slice(0, 10) : null;
+    if (lastLogin !== today) {
+      await db.query("UPDATE users SET sprouts_balance = sprouts_balance + 10, last_login_date = $1 WHERE id = $2", [today, user.id]);
+    }
     res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
   } catch {
     res.status(500).json({ error: "Login failed" });
@@ -293,6 +300,7 @@ app.post("/api/kids/:id/activities", auth, async (req, res) => {
     "INSERT INTO activities (kid_id, activity_type) VALUES ($1, $2)",
     [req.params.id, activity_type]
   );
+  await db.query("UPDATE users SET sprouts_balance = sprouts_balance + 20 WHERE id = $1", [req.user.id]);
 
   const countResult = await db.query(
     "SELECT COUNT(*) FROM activities WHERE kid_id=$1 AND activity_type=$2",
@@ -437,6 +445,11 @@ app.post("/api/kids/:id/gifts-received", auth, async (req, res) => {
 app.post("/api/kids/:id/clear-pending-levelup", auth, async (req, res) => {
  await db.query("UPDATE kids SET pending_level_up=NULL WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
  res.json({ ok: true });
+});
+
+app.get("/api/sprouts", auth, async (req, res) => {
+  const result = await db.query("SELECT sprouts_balance FROM users WHERE id = $1", [req.user.id]);
+  res.json({ balance: result.rows[0]?.sprouts_balance || 0 });
 });
 
 app.delete("/api/kids/:id", auth, async (req, res) => {
@@ -812,6 +825,10 @@ const checkAfter = await db.query("SELECT daily_msg_count FROM kids WHERE id=$1"
 
 
     const totalCount = msgCount + 1;
+    // 每聊10条+5芽豆
+    if (totalCount % 10 === 0) {
+      await db.query("UPDATE users SET sprouts_balance = sprouts_balance + 5 WHERE id = $1", [req.user.id]);
+    }
 const storyPrompt = kid.age <= 3 && (reply.includes('故') && reply.includes('事'));
 const songPrompt = kid.age <= 3 && (reply.includes('歌') || reply.includes('唱'));
 
@@ -1100,6 +1117,7 @@ db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar_prompt_date TIMESTAMP
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS membership_type VARCHAR(10) DEFAULT 'free'").catch(() => {});
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS membership_expiry TIMESTAMP DEFAULT NULL").catch(() => {});
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS sprouts_balance INTEGER DEFAULT 0").catch(() => {});
+db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_date DATE DEFAULT NULL").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS daily_msg_count INTEGER DEFAULT 0").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS daily_msg_date DATE DEFAULT NULL").catch(() => {});
 
