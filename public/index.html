@@ -980,13 +980,13 @@ function showL6Paywall() {
       <div style="font-size:40px;margin-bottom:12px">💎</div>
       <div style="font-size:18px;font-weight:800;color:#9B59B6;margin-bottom:8px">心芽永恒，近在咫尺</div>
       <div style="font-size:14px;color:#888;margin-bottom:20px;line-height:1.6">让这份爱成为永恒，解锁${name}和你最深的羁绊 💎</div>
-      <button style="width:100%;padding:14px;border-radius:16px;background:linear-gradient(135deg,#9B59B6,#C39BD3);color:white;font-size:15px;font-weight:700;margin-bottom:10px" onclick="showToast('会员功能即将开放 🌱');this.closest('[style*=fixed]').remove()">升级VIP/SVIP 🌟</button>
-      <button style="width:100%;padding:14px;border-radius:16px;background:linear-gradient(135deg,#F0C060,#E8954A);color:white;font-size:15px;font-weight:700;margin-bottom:10px" onclick="showToast('芽豆功能即将开放 🫘');this.closest('[style*=fixed]').remove()">消费188芽豆解锁 🫘</button>
+      <button style="width:100%;padding:14px;border-radius:16px;background:linear-gradient(135deg,#9B59B6,#C39BD3);color:white;font-size:15px;font-weight:700;margin-bottom:10px" onclick="this.closest('[style*=fixed]').remove();showSettingsSection('membership')">升级会员解锁 🌿</button>
       <div style="font-size:13px;color:#ccc;cursor:pointer" onclick="this.closest('[style*=fixed]').remove()">下次再说</div>
     </div>
   `;
   document.body.appendChild(overlay);
 }
+
 
   function showLevelUpgradePrompt() {
  const name = kid?.name || '';
