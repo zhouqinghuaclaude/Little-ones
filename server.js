@@ -5,6 +5,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Anthropic = require("@anthropic-ai/sdk");
 const path = require("path");
+const cron = require('node-cron');
 
 const app = express();
 app.use(cors());
@@ -1122,6 +1123,7 @@ db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS membership_type VARCHAR(10)
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS membership_expiry TIMESTAMP DEFAULT NULL").catch(() => {});
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS sprouts_balance INTEGER DEFAULT 0").catch(() => {});
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_date DATE DEFAULT NULL").catch(() => {});
+db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_sprouts_grant DATE DEFAULT NULL").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS daily_msg_count INTEGER DEFAULT 0").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS daily_msg_date DATE DEFAULT NULL").catch(() => {});
 
@@ -1147,6 +1149,37 @@ db.query(`CREATE TABLE IF NOT EXISTS wish_pool (
   created_at TIMESTAMP DEFAULT NOW(),
   fulfilled_at TIMESTAMP DEFAULT NULL
 )`).catch(() => {});
+
+// 会员芽豆发放函数
+async function grantMembershipSprouts(userId, membershipType) {
+  const sproutsMap = { vip: 1000, svip: 2000, dvip: 10000 };
+  const amount = sproutsMap[membershipType];
+  if (!amount) return;
+  const today = new Date().toISOString().slice(0, 10);
+  await db.query(
+    "UPDATE users SET sprouts_balance = sprouts_balance + $1, last_sprouts_grant = $2 WHERE id = $3",
+    [amount, today, userId]
+  );
+}
+
+// 每月1日定时发放芽豆
+cron.schedule('0 0 1 * *', async () => {
+  console.log('Monthly sprouts grant starting...');
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const users = await db.query(
+      `SELECT id, membership_type, last_sprouts_grant FROM users 
+      WHERE membership_type IN ('vip','svip','dvip')
+      AND (last_sprouts_grant IS NULL OR last_sprouts_grant < NOW() - INTERVAL '25 days')`
+    );
+    for (const user of users.rows) {
+      await grantMembershipSprouts(user.id, user.membership_type);
+    }
+    console.log(`Monthly sprouts granted to ${users.rows.length} users`);
+  } catch(e) {
+    console.error('Monthly sprouts error:', e.message);
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 initDB().then(() => app.listen(PORT, () => console.log("Server running on port " + PORT)));
