@@ -706,7 +706,12 @@ if (kid.age >= 3 && kid.parent_interests) {
     : `${kid.parent_role}的爱好包括：${kid.parent_interests}。可以以青少年视角讨论这些话题，产生共鸣，但保持青少年的淡定语气。`;
   system += ` ${ageGuide}`;
 }
-
+if (kid.birthday) {
+  const birthdayStr = kid.birthday.slice(0, 10);
+  const zodiac = getZodiacSign(kid.birthday);
+  const chineseZodiac = getChineseZodiac(kid.birthday);
+  system += ` 你的生日是${birthdayStr}${zodiac ? '，星座是' + zodiac.name : ''}${chineseZodiac ? '，属相是' + chineseZodiac.name : ''}。当${kid.parent_role}问你生日时，你知道自己的生日。`;
+}
 system += ` 不要主动提到恐龙，除非用户先提到恐龙。`;
 system += ` 严格控制回复长度，绝对不超过规定字数，宁可说得少也不说长句。`;
 
