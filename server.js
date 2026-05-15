@@ -707,9 +707,10 @@ if (kid.age >= 3 && kid.parent_interests) {
   system += ` ${ageGuide}`;
 }
 if (kid.birthday) {
-  const birthdayStr = kid.birthday.slice(0, 10);
+  const birthdayStr = new Date(kid.birthday).toISOString().slice(0, 10);
   system += ` 你的生日是${birthdayStr}。当${kid.parent_role}问你生日时，你知道自己的生日。`;
 }
+
 
 system += ` 不要主动提到恐龙，除非用户先提到恐龙。`;
 system += ` 严格控制回复长度，绝对不超过规定字数，宁可说得少也不说长句。`;
