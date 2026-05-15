@@ -325,24 +325,28 @@ app.post("/api/kids/:id/activities", auth, async (req, res) => {
 });
 app.post("/api/kids/:id/wish-products", auth, async (req, res) => {
  const { wishContent, wishEmoji } = req.body;
- if (!wishContent) return res.json({ products: [] });
+ if (!wishContent) return res.json({ products: [], maxItems: 1 });
  
+ // 获取会员等级
+ const userResult = await db.query("SELECT membership_type FROM users WHERE id=$1", [req.user.id]);
+ const membershipType = userResult.rows[0]?.membership_type || 'free';
+ const maxItems = membershipType === 'dvip' ? 999 
+ : membershipType === 'svip' ? 4 
+ : membershipType === 'vip' ? 3 
+ : 1;
  try {
  const result = await claude.messages.create({
  model: "claude-sonnet-4-20250514",
  max_tokens: 300,
- system: `你是一个虚拟儿童礼品商城的商品生成助手。根据孩子的心愿,生成3-5个相关的虚拟商品。
-每个商品包含:name(商品名,10字以内)、emoji(最合适的emoji)、price(芽豆价格,30-200之间)、desc(简短描述,15字以内)。
-只输出JSON数组,格式:[{"name":"...","emoji":"...","price":100,"desc":"..."}]
-不要其他内容。`,
+ system: `你是一个虚拟儿童礼品商城的商品生成助手。根据孩子的心愿,生成6个相关的虚拟商品,按价值从低到高排列。每个商品包含:name(商品名,10字以内)、emoji(最合适的emoji)、price(芽豆价格,30-200之间)、desc(简短描述,15字以内)。只输出JSON数组,格式:[{"name":"...","emoji":"...","price":100,"desc":"..."}]不要其他内容。`,
  messages: [{ role: "user", content: `孩子的心愿是:${wishContent}` }]
  });
  const rawText = result.content[0].text.trim();
  console.log('wish-products raw:', rawText);
  const products = JSON.parse(rawText.replace(/```json|```/g, '').trim());
- res.json({ products });
+ res.json({ products, maxItems });
  } catch(e) {
- res.json({ products: [] });
+ res.json({ products: [], maxItems });
  }
 });
 app.post("/api/kids/:id/context-check", auth, async (req, res) => {
