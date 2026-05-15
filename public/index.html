@@ -1946,6 +1946,7 @@ try {
   renderMsgs(msgs);
   // 加载愿望池缓存
   req(`/api/kids/${k.id}/wishes`).then(wishes => { kid._wishPool = wishes; }).catch(() => {});
+  req(`/api/kids/${k.id}/bond`).then(bond => { kid._bondCache = bond; }).catch(() => {});
   
   // 检查是否有待触发的晋级
   // 检测生日
@@ -2752,7 +2753,7 @@ function getBondProgress(score) {
 async function openWishPool() {
   if (!kid) return;
   try {
-    const wishes = await req(`/api/kids/${kid.id}/wishes`);
+    const wishes = kid._wishPool || await req(`/api/kids/${kid.id}/wishes`);
     const overlay = document.createElement('div');
     overlay.id = 'wishPoolOverlay';
     overlay.style.cssText = `position:fixed;inset:0;background:rgba(20,10,40,0.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px`;
@@ -2791,7 +2792,7 @@ async function openWishPool() {
 async function openBondProfile() {
   if (!kid) return;
   try {
-    const data = await req(`/api/kids/${kid.id}/bond`);
+    const data = kid._bondCache || await req(`/api/kids/${kid.id}/bond`);
     const bl = getBondLevel(data.bond_score);
     const prog = getBondProgress(data.bond_score);
 
