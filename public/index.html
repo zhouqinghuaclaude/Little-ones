@@ -446,8 +446,8 @@ input, textarea { font-family: inherit; }
     <div class="chat-header-row3">
       <button onclick="openBondProfile()" class="chat-nav-btn" id="bondHeaderBtn">💫 亲密</button>
       <button onclick="openWishPool()" class="chat-nav-btn" id="wishPoolBtn">🌟 心愿</button>
+      <button onclick="openDiary(kid)" class="chat-nav-btn">⏰ 时光</button>
       <button onclick="openGiftShop();" class="chat-nav-btn">🎁 芽市</button>
-      <button onclick="openDiary(kid)" class="chat-nav-btn">📖 日记</button>
       <button onclick="openSettings(kid)" class="chat-nav-btn">⚙️ 设置</button>
     </div>
   </div>
@@ -572,10 +572,21 @@ input, textarea { font-family: inherit; }
   <div class="page-header">
     <button class="back-btn" onclick="showScreen('chatScreen')">‹</button>
     <div style="flex:1">
-      <div class="page-title" id="diaryTitle">日记</div>
+      <div class="page-title" id="diaryTitle">时光</div>
     </div>
   </div>
-  <div id="diaryEntries" class="diary-entries"></div>
+  <div class="diary-entries">
+    <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:16px">
+      <div id="tabDiary" style="flex:1;text-align:center;padding:10px;font-size:14px;font-weight:700;color:#9B59B6;border-bottom:2px solid #9B59B6;cursor:pointer" onclick="switchTimeTab('diary')">📝 日记</div>
+      <div id="tabAlbum" style="flex:1;text-align:center;padding:10px;font-size:14px;font-weight:600;color:#aaa;cursor:pointer" onclick="switchTimeTab('album')">📸 相册</div>
+    </div>
+    <div id="diaryContent"></div>
+    <div id="albumContent" style="display:none;text-align:center;padding:40px 20px;color:#aaa">
+      <div style="font-size:40px;margin-bottom:12px">📸</div>
+      <div style="font-size:16px;font-weight:700;color:#9B59B6;margin-bottom:8px">成长相册</div>
+      <div style="font-size:13px">记录每个珍贵时刻,即将开放 🌱</div>
+    </div>
+  </div>
 </div>
 
 <!-- Bond Profile Overlay -->
@@ -1069,9 +1080,27 @@ function openAvatarUpload() {
     </div>
   `;
   document.body.appendChild(overlay);
-  document.getElementById('bdayBtn').onclick = () => {
+  document.getElementById('bdayBtn').onclick = async () => {
     overlay.style.animation = 'fadeOut .5s ease forwards';
-    setTimeout(() => document.body.removeChild(overlay), 500);
+    setTimeout(async () => {
+      document.body.removeChild(overlay);
+      try {
+        const age = k.age || 1;
+        const birthdayLine = age === 1 ? `${k.name}一岁啦,抱抱~ 🎂🤗`
+          : age === 2 ? `${k.name}两岁啦,要蛋糕!一起吃 🎂`
+          : age === 3 ? `${k.name}三岁啦,是不是大一点了 🎂`
+          : age === 4 ? `${k.name}又长大了一岁,会的东西变多了 🎂`
+          : age === 5 ? `${k.name}又长大了一岁,懂的东西更多了 🎂`
+          : age === 6 ? `${k.name}今年要上学了,放学一定要来接我呀 🎂`
+          : age <= 10 ? `${k.name}又过了一年,有你在就好 🎂`
+          : age <= 17 ? `${k.name}有些话不太会说,但你在就行 🎂`
+          : `${k.name}成年了,谢谢你一直在 🎂`;
+        await req(`/api/kids/${k.id}/diary`, {
+          method: 'POST',
+          body: JSON.stringify({ content: birthdayLine, mood: '🎂' })
+        });
+      } catch(e) {}
+    }, 500);
   };
 }
 async function saveWish(content, emoji, btn) {
@@ -2125,6 +2154,17 @@ if (d.l6PaywallPrompt) showL6Paywall();
   finally { document.getElementById("sendBtn").disabled=false; }
 }
 
+function switchTimeTab(tab) {
+  document.getElementById('diaryContent').style.display = tab === 'diary' ? 'block' : 'none';
+  document.getElementById('albumContent').style.display = tab === 'album' ? 'block' : 'none';
+  document.getElementById('tabDiary').style.cssText = tab === 'diary'
+    ? 'flex:1;text-align:center;padding:10px;font-size:14px;font-weight:700;color:#9B59B6;border-bottom:2px solid #9B59B6;cursor:pointer'
+    : 'flex:1;text-align:center;padding:10px;font-size:14px;font-weight:600;color:#aaa;cursor:pointer';
+  document.getElementById('tabAlbum').style.cssText = tab === 'album'
+    ? 'flex:1;text-align:center;padding:10px;font-size:14px;font-weight:700;color:#9B59B6;border-bottom:2px solid #9B59B6;cursor:pointer'
+    : 'flex:1;text-align:center;padding:10px;font-size:14px;font-weight:600;color:#aaa;cursor:pointer';
+}
+
 async function saveToDiary(kidId, content) {
   if (!kidId || !content) return;
   try {
@@ -2576,9 +2616,10 @@ function toggleInterest(btn, item) {
 
 async function openDiary(k) {
   if (!k) return;
-  document.getElementById("diaryTitle").textContent = `${k.name}的日记 📖`;
+  document.getElementById("diaryTitle").textContent = `${k.name}的时光 ⏰`;
   showScreen("diaryScreen");
-  const container = document.getElementById("diaryEntries");
+  switchTimeTab('diary');
+  const container = document.getElementById("diaryContent");
   container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--sub);font-size:24px">⟳</div>`;
   try {
     const entries = await req(`/api/kids/${k.id}/diary`);
