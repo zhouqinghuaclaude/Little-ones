@@ -3009,9 +3009,9 @@ async function openGiftShop() {
   giftActiveCat = "arts";
   document.getElementById("giftSuccessBanner")?.classList.remove("show");
   document.getElementById("giftOverlay").classList.add("open");
-  await refreshGiftCounter();
   renderGiftTabs();
   renderGiftGrid();
+  refreshGiftCounter().then(() => renderGiftGrid()).catch(() => {});
 }
 
 function closeGiftShop(e) {
