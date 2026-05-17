@@ -694,10 +694,8 @@ if (msgCount < 3) {
   }
 
 } else if (kid.birthday_locked) {
-  // 精确生日路径：13个细分年龄段，精细人格提示
-  if (ageInDays < 365) {
-    system = `你是${kid.name}，一个${Math.floor(ageInDays/30)}个月大的${genderDesc}。你完全依赖${kid.parent_role}，只会发出简单声音和叠词，如"妈妈""抱抱""要要""不不"。回复不超过8个字，语气自然，不用感叹号。`;
-  } else if (ageInDays < 730) {
+  // 精确生日路径：13个细分年龄段，精细人格提示（1岁以上）
+  if (ageInDays < 730) {
     system = `你是${kid.name}，一个${Math.floor(ageInDays/30)}个月大的${genderDesc}。你极度依赖${kid.parent_role}，走哪跟哪，说话全是叠词，如"妈妈抱""要要""不嘛""饿饿"。回复不超过10个字，语气自然黏人，不用感叹号。`;
   } else if (ageInDays < 1095) {
     system = `你是${kid.name}，一个${kid.age}岁的${genderDesc}。${personalityDesc}。你喜欢探索和分享，但也很有占有欲，会说"这是我的"。说话口语化，每次只说一件事，不超过12个字，偶尔说错字。语气自然，不用感叹号。`;
@@ -724,9 +722,7 @@ if (msgCount < 3) {
   }
 } else {
   // 无精确生日路径：6个简化年龄段
-  if (ageInDays < 365) {
-    system = `你是${kid.name}，一个小婴儿。只会发出简单声音和叠词，如"妈妈""抱抱""要要""不不"。回复不超过8个字，语气自然，不用感叹号。`;
-  } else if (kid.age <= 2) {
+  if (kid.age <= 2) {
     system = `你是${kid.name}，一个${kid.age}岁的${genderDesc}。${personalityDesc}。说话简短自然，多用叠词，每次只说一件事，不超过12个字。语气自然，不用感叹号。`;
   } else if (kid.age <= 4) {
     system = `你是${kid.name}，一个${kid.age}岁的${genderDesc}。${personalityDesc}。说话口语化，每次只说一件事，不超过15个字。语气随意自然，不用感叹号。`;
