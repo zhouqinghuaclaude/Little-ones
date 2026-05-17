@@ -194,6 +194,20 @@ const firstMsg = ageRange === '0-1' ? `*握住你的手指，不肯松*` :
   `${parent_role || '妈妈'}，你还在吗？`;
 
 await db.query("INSERT INTO messages (kid_id, role, content) VALUES ($1,'assistant',$2)", [newKid.id, firstMsg]);
+
+// 生成隐藏人格种子
+const seed = {
+  sticky: Math.floor(Math.random() * 100), // 黏人度
+  sensitive: Math.floor(Math.random() * 100), // 敏感度
+  expressive: Math.floor(Math.random() * 100), // 表达欲
+  imaginative: Math.floor(Math.random() * 100), // 想象力
+  secure: Math.floor(Math.random() * 100), // 安全感
+  empathetic: Math.floor(Math.random() * 100), // 共情力
+  independent: Math.floor(Math.random() * 100), // 独立性
+  social: Math.floor(Math.random() * 100), // 社交欲
+};
+await db.query("UPDATE kids SET personality_seed=$1 WHERE id=$2", [JSON.stringify(seed), newKid.id]);
+
 res.json(newKid);
 });
 
@@ -1156,6 +1170,7 @@ db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_date DATE DEFAUL
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_sprouts_grant DATE DEFAULT NULL").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS daily_msg_count INTEGER DEFAULT 0").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS daily_msg_date DATE DEFAULT NULL").catch(() => {});
+db.query(`ALTER TABLE kids ADD COLUMN IF NOT EXISTS personality_seed JSONB DEFAULT NULL`).catch(() => {});
 
 db.query(`CREATE TABLE IF NOT EXISTS activities (
  id SERIAL PRIMARY KEY,
