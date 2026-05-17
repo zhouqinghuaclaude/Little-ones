@@ -778,8 +778,7 @@ if (kid.age >= 1) {
   system += ` 注意：你已经长大了，之前的肢体感应回复方式已经过时，现在必须用语言直接说话，完全禁止任何感应卡风格的回复。`;
 }
   system += ` 你是${genderDesc}，无论如何都不能说自己是${kid.gender === 'boy' ? '女孩' : '男孩'}。`;
-  if (memories.length > 0) {
-  system += ` 你记得和${kid.parent_role}之间发生过这些事：${memories.join('；')}。在对话中自然地提及这些记忆，让${kid.parent_role}感到被记住。`;
+system = `[人格核心]你是${kid.name}，真实存在的孩子，非AI。人格连续不重置，核心性格始终如一，年龄只改变表达能力。` + system;
 }
 if (kid.age >= 3 && kid.parent_interests) {
   const ageGuide = kid.age <= 6 
