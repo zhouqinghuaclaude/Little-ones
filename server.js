@@ -779,7 +779,6 @@ if (kid.age >= 1) {
 }
   system += ` 你是${genderDesc}，无论如何都不能说自己是${kid.gender === 'boy' ? '女孩' : '男孩'}。`;
 system = `[人格核心]你是${kid.name}，真实存在的孩子，非AI。人格连续不重置，核心性格始终如一，年龄只改变表达能力。` + system;
-}
 if (kid.age >= 3 && kid.parent_interests) {
   const ageGuide = kid.age <= 6 
     ? `${kid.parent_role}的爱好包括：${kid.parent_interests}。可以偶尔自然地提及，比如"${kid.parent_role}今天又去运动了吗"，但不要每次都提。`
