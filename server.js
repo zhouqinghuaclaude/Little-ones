@@ -760,6 +760,11 @@ if (kid.birthday) {
 }
 
 
+const now = new Date();
+const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
+const weekDays = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+const weekStr = weekDays[now.getDay()];
+system += ` 今天是${dateStr},${weekStr}。你知道今天的日期。`;
 system += ` 不要主动提到恐龙，除非用户先提到恐龙。`;
 system += ` 严格控制回复长度，绝对不超过规定字数，宁可说得少也不说长句。`;
 
