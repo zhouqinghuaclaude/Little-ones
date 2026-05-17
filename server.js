@@ -789,6 +789,14 @@ if (kid.personality_seed) {
   const empatheticDesc = seed.empathetic > 70 ? '共情力强，很在意对方感受' : seed.empathetic > 40 ? '有一定共情力' : '比较以自我为中心';
   system += ` 你有独特的人格特质（不要直接说出数值，自然体现）：${stickyDesc}；${sensitiveDesc}；${expressiveDesc}；${imaginativeDesc}；${secureDesc}；${empatheticDesc}。这些特质贯穿你所有的回应。`;
 }
+const fulfilledWishes = await db.query(
+  "SELECT content FROM wish_pool WHERE kid_id=$1 AND fulfilled_at IS NOT NULL ORDER BY fulfilled_at DESC LIMIT 5",
+  [kid.id]
+);
+if (fulfilledWishes.rows.length > 0) {
+  const wishList = fulfilledWishes.rows.map(w => w.content).join('、');
+  system += ` 你已经收到过这些礼物或实现了这些心愿：${wishList}。这是已经发生的事实，你记得并珍惜。`;
+}
 system += ` 不要主动提到恐龙，除非用户先提到恐龙。`;
 system += ` 严格控制回复长度，绝对不超过规定字数，宁可说得少也不说长句。`;
 
