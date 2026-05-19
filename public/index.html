@@ -297,7 +297,7 @@ input, textarea { font-family: inherit; }
  display: flex;
  background: white;
  border-top: 1px solid var(--border);
- padding: 8px 16px env(safe-area-inset-bottom, 20px);
+ padding: 8px 16px calc(env(safe-area-inset-bottom, 0px) + 12px);
 }
 .chat-nav .chat-nav-btn {
  flex: 1;
