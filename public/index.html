@@ -579,7 +579,7 @@ input, textarea { font-family: inherit; }
   <div class="input-row">
     <textarea id="msgInput" class="msg-input" placeholder="和宝宝说点什么..." rows="1"
       enterkeyhint="send"
-      oninput="autoResize(this)"
+      oninput="autoResize(this)" onfocus="setTimeout(()=>scrollBot(),300)"
       onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
     <button id="sendBtn" class="send-btn" onclick="sendMsg()">➤</button>
   </div>
