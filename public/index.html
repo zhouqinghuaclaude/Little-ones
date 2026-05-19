@@ -22,8 +22,8 @@ input, textarea { font-family: inherit; }
 .screen.active { display: flex; }
 #loginScreen {
   background: radial-gradient(ellipse at 60% 40%, #1a0a2e 0%, #0d0618 55%, #000000 100%);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px;
-  position: fixed; inset: 0; overflow: hidden;
+  align-items: center; justify-content: center; padding: 40px 24px;
+  position: relative; overflow: hidden;
 }
 .stars-layer { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
 .star-static { position: absolute; border-radius: 50%; }
@@ -91,7 +91,7 @@ input, textarea { font-family: inherit; }
   position: relative; width: 150px; height: 150px; border-radius: 50%;
   background: radial-gradient(circle at 45% 42%, rgba(180,100,160,0.80) 0%, rgba(155,80,175,0.85) 30%, rgba(130,60,165,0.88) 55%, rgba(110,45,148,0.92) 75%, rgba(85,30,128,0.96) 100%);
   box-shadow: inset 0 0 40px 10px rgba(220,130,200,0.35), 0 0 30px 8px rgba(220,140,210,0.55), 0 0 60px 20px rgba(185,100,195,0.35);
-  animation: orbPulse 4s ease-in-out infinite; animation-fill-mode: both;
+  animation: orbPulse 4s ease-in-out infinite;
 }
 @keyframes orbPulse {
   0%, 100% { box-shadow: inset 0 0 40px 10px rgba(220,130,200,0.35), 0 0 30px 8px rgba(220,140,210,0.55), 0 0 60px 20px rgba(185,100,195,0.35); }
@@ -494,6 +494,8 @@ input, textarea { font-family: inherit; }
  <div class="dust" style="width:3px;height:3px;left:22px;top:130px;--dur:14s;--delay:1s;--dy:-6px;--dx:4px;--lo:0.07;--hi:0.3"></div>
  <div class="dust" style="width:4px;height:4px;right:25px;top:115px;--dur:12s;--delay:3s;--dy:-5px;--dx:-2px;--lo:0.06;--hi:0.26"></div>
  <div class="orb-wrap">
+ <div class="orbit-ring orbit-ring-1"><div class="orbit-dot"></div></div>
+ <div class="orbit-ring orbit-ring-2"><div class="orbit-dot"></div></div>
  <div class="orb">
  <div class="sparkle"></div>
  <div class="sparkle"></div>
@@ -3210,6 +3212,8 @@ function generateMeteors() {
     layer.appendChild(m);
   }
 }
+generateStars();
+generateMeteors();
 
 
 // 键盘弹出时隐藏底部导航
