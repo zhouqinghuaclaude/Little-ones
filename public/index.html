@@ -21,31 +21,159 @@ input, textarea { font-family: inherit; }
 .screen { display: none; flex-direction: column; min-height: 100vh; }
 .screen.active { display: flex; }
 #loginScreen {
- position: fixed;
- inset: 0;
- display: none;
- flex-direction: column;
- align-items: center;
- justify-content: flex-end;
- padding-bottom: 52px;
- background: linear-gradient(170deg, #1e1042 0%, #150d35 40%, #0e0825 75%, #070416 100%);
- overflow: hidden;
+  background: radial-gradient(ellipse at 60% 40%, #1a0a2e 0%, #0d0618 55%, #000000 100%);
+  align-items: center; justify-content: center; padding: 40px 24px;
+  position: relative; overflow: hidden;
 }
-#loginScreen.active { display: flex; }
-.starfield { position: absolute; inset: 0; z-index: 1; }
-.star { position: absolute; background: #fff; border-radius: 50%; }
-.login-meteor { position: absolute; width: 3px; height: 3px; background: #fff; border-radius: 50%; box-shadow: 0 0 8px #fff, 0 0 15px #ffe8b8; opacity: 0; z-index: 2; }
-.login-title-wrap { position: absolute; top: 16%; text-align: center; width: 100%; z-index: 6; }
-.login-title { font-size: 48px; font-weight: 900; letter-spacing: 8px; background: linear-gradient(135deg, #f0e6ff 0%, #d4a8f0 40%, #b06fd8 70%, #8844bb 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 18px rgba(190,120,255,0.45)); margin-bottom: 14px; }
-.login-slogan { font-size: 15px; color: rgba(195,155,255,0.55); letter-spacing: 4px; }
-.login-card { width: 90%; max-width: 420px; background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 24px; padding: 28px 24px; border: 1px solid rgba(180,120,255,0.14); box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06); z-index: 6; }
-.login-card .field { margin-bottom: 14px; }
-.login-card .field input { width: 100%; padding: 14px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(180,120,255,0.15); border-radius: 14px; color: #fff; font-size: 15px; outline: none; transition: border-color 0.3s, background 0.3s; font-family: inherit; }
-.login-card .field input::placeholder { color: rgba(195,155,255,0.35); }
-.login-card .field input:focus { border-color: rgba(180,120,255,0.45); background: rgba(140,80,210,0.1); }
-.login-btn { width: 100%; padding: 15px; background: linear-gradient(135deg, #5b2c6f, #8e44ad, #c0392b); border: none; border-radius: 14px; color: white; font-size: 16px; font-weight: 700; letter-spacing: 4px; cursor: pointer; margin-top: 4px; margin-bottom: 16px; box-shadow: 0 4px 22px rgba(120,45,155,0.45); font-family: inherit; }
-.login-switch { text-align: center; color: rgba(195,155,255,0.38); font-size: 13px; }
-.login-switch span { color: rgba(200,150,255,0.88); cursor: pointer; font-weight: 600; }
+.stars-layer { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.star-static { position: absolute; border-radius: 50%; }
+.star-breath {
+  position: absolute; border-radius: 50%;
+  animation: starBreathe var(--dur, 4s) var(--delay, 0s) ease-in-out infinite;
+}
+@keyframes starBreathe {
+  0%, 100% { opacity: var(--lo, 0.05); transform: scale(0.85); }
+  50% { opacity: var(--hi, 0.5); transform: scale(1.15); }
+}
+.meteor {
+  position: absolute; width: 90px; height: 1.5px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.85) 60%, rgba(255,255,255,0.0) 100%);
+  border-radius: 2px;
+  transform: rotate(var(--angle, 30deg));
+  animation: meteorFall var(--dur, 1.8s) var(--delay, 16s) ease-in infinite;
+  opacity: 0;
+}
+@keyframes meteorFall {
+  0% { opacity: 0; transform: rotate(var(--angle, 30deg)) translateX(0px); }
+  8% { opacity: 1; }
+  80% { opacity: 0.6; }
+  100% { opacity: 0; transform: rotate(var(--angle, 30deg)) translateX(220px); }
+}
+.sprout-scene {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+}
+.sprout-warmglow {
+  position: absolute; width: 260px; height: 260px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,200,120,0.13) 0%, rgba(200,120,255,0.09) 45%, transparent 72%);
+  animation: warmGlowPulse 4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes warmGlowPulse {
+  0%, 100% { transform: scale(0.92); opacity: 0.7; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+.sprout-root {
+  position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
+  width: 120px; height: 28px; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(180,255,120,0.18) 0%, transparent 70%);
+  animation: rootGlow 3s ease-in-out infinite;
+}
+@keyframes rootGlow {
+  0%, 100% { opacity: 0.5; transform: translateX(-50%) scaleX(0.85); }
+  50% { opacity: 1; transform: translateX(-50%) scaleX(1.15); }
+}
+.dust {
+  position: absolute; width: 3px; height: 3px; border-radius: 50%;
+  background: rgba(220,255,180,0.7);
+  animation: dustFloat var(--ddur, 4s) var(--ddelay, 0s) ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes dustFloat {
+  0% { opacity: 0; transform: translateY(0px) translateX(0px) scale(0.6); }
+  30% { opacity: 0.8; }
+  70% { opacity: 0.5; }
+  100% { opacity: 0; transform: translateY(-38px) translateX(var(--dx, 8px)) scale(1.2); }
+}
+.orb-wrap { position: relative; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; }
+.orb {
+  position: relative; width: 150px; height: 150px; border-radius: 50%;
+  background: radial-gradient(circle at 45% 42%, rgba(180,100,160,0.80) 0%, rgba(155,80,175,0.85) 30%, rgba(130,60,165,0.88) 55%, rgba(110,45,148,0.92) 75%, rgba(85,30,128,0.96) 100%);
+  box-shadow: inset 0 0 40px 10px rgba(220,130,200,0.35), 0 0 30px 8px rgba(220,140,210,0.55), 0 0 60px 20px rgba(185,100,195,0.35);
+  animation: orbPulse 4s ease-in-out infinite;
+}
+@keyframes orbPulse {
+  0%, 100% { box-shadow: inset 0 0 40px 10px rgba(220,130,200,0.35), 0 0 30px 8px rgba(220,140,210,0.55), 0 0 60px 20px rgba(185,100,195,0.35); }
+  50% { box-shadow: inset 0 0 55px 16px rgba(220,130,200,0.48), 0 0 42px 14px rgba(220,140,210,0.70), 0 0 80px 28px rgba(185,100,195,0.48); }
+}
+.orb::before { content: ''; position: absolute; top: 8%; left: 12%; width: 24%; height: 18%; border-radius: 50%; background: radial-gradient(ellipse at 40% 30%, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.35) 50%, transparent 100%); transform: rotate(-20deg); filter: blur(2px); }
+.orbit-ring {
+  position: absolute; border-radius: 50%;
+  border: 1.5px solid rgba(180,230,255,0.5);
+  box-shadow: 0 0 8px rgba(160,220,255,0.3);
+  animation: orbitSpin linear infinite;
+}
+.orbit-ring-1 { width: 178px; height: 178px; animation-duration: 6s; }
+.orbit-ring-2 { width: 196px; height: 196px; animation-duration: 9s; animation-direction: reverse; border-color: rgba(200,180,240,0.38); }
+@keyframes orbitSpin {
+  from { transform: rotate(0deg) rotateX(68deg); }
+  to { transform: rotate(360deg) rotateX(68deg); }
+}
+.orbit-dot { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: rgba(220,240,255,0.95); box-shadow: 0 0 6px 2px rgba(180,230,255,0.8); top: -3px; left: 50%; transform: translateX(-50%); }
+.sparkle {
+  position: absolute; border-radius: 50%; background: white;
+  box-shadow: 0 0 4px 2px rgba(255,255,255,0.8);
+  animation: sparklePop var(--sdur, 2.5s) var(--sdelay, 0s) ease-in-out infinite;
+}
+.sparkle:nth-child(1) { width: 4px; height: 4px; top: 18%; left: 22%; --sdelay: 0s; }
+.sparkle:nth-child(2) { width: 3px; height: 3px; top: 28%; right: 18%; --sdelay: 0.7s; }
+.sparkle:nth-child(3) { width: 3px; height: 3px; top: 55%; left: 14%; --sdelay: 1.2s; }
+.sparkle:nth-child(4) { width: 4px; height: 4px; top: 15%; left: 55%; --sdelay: 1.8s; }
+.sparkle:nth-child(5) { width: 3px; height: 3px; bottom: 22%; right: 20%; --sdelay: 0.4s; }
+@keyframes sparklePop {
+  0%, 100% { opacity: 0; transform: scale(0.4); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+.plant-svg {
+  position: absolute; width: 72px; height: 72px; bottom: 22%; left: 50%;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 0 6px rgba(210,240,60,0.95)) drop-shadow(0 0 16px rgba(180,225,40,0.70));
+  animation: plantFloat 3.5s ease-in-out infinite;
+}
+@keyframes plantFloat {
+  0%, 100% { transform: translateX(-50%) translateY(0px); }
+  50% { transform: translateX(-50%) translateY(-5px); }
+}
+.login-brand {
+  position: relative; z-index: 1;
+  font-size: 30px; font-weight: 900; text-align: center; letter-spacing: 7px;
+  margin-bottom: 6px;
+  background: linear-gradient(135deg, #e8b4f8 0%, #f9d4ff 40%, #ffc8e8 70%, #ffb8d0 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  filter: drop-shadow(0 0 12px rgba(220,140,255,0.55));
+}
+.login-tagline {
+  position: relative; z-index: 1;
+  font-size: 14px; color: rgba(210,185,240,0.75); text-align: center; margin-bottom: 36px;
+  letter-spacing: 1px;
+}
+.login-box {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 360px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 28px; padding: 28px 24px;
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.12);
+}
+.login-box .field { margin-bottom: 14px; }
+.login-box .field input {
+  width: 100%; border: 1.5px solid rgba(255,255,255,0.18); border-radius: 14px;
+  padding: 14px 16px; font-size: 15px; color: rgba(255,255,255,0.92); outline: none;
+  background: rgba(255,255,255,0.08); transition: border-color .2s, background .2s;
+}
+.login-box .field input::placeholder { color: rgba(200,180,230,0.55); }
+.login-box .field input:focus { border-color: rgba(200,140,255,0.65); background: rgba(255,255,255,0.13); }
+.login-btn {
+  width: 100%; padding: 15px; border-radius: 16px;
+  background: linear-gradient(135deg, #9b59b6, #c471ed, #f1948a);
+  color: white; font-size: 16px; font-weight: 700;
+  box-shadow: 0 6px 24px rgba(155,89,182,0.55), 0 2px 8px rgba(0,0,0,0.3);
+  margin-top: 4px;
+}
+.login-switch { text-align: center; margin-top: 18px; font-size: 14px; color: rgba(200,180,230,0.65); }
+.login-switch span { color: #d4a0ff; font-weight: 700; cursor: pointer; }
 .error-text { color: #E74C3C; font-size: 13px; text-align: center; margin-top: 10px; min-height: 18px; }
 #homeScreen { background: var(--bg); }
 .home-header { padding: 56px 20px 16px; background: linear-gradient(160deg, #F0E6FF, #FFF0F5); }
@@ -355,13 +483,71 @@ input, textarea { font-family: inherit; }
   </div>
 </div>
 <div id="loginScreen" class="screen active">
- <div class="starfield" id="loginStarfield"></div>
- <div id="loginMeteors"></div>
- <div class="login-title-wrap">
- <h1 class="login-title">小陪芽</h1>
- <p class="login-slogan">一颗小芽,在等你</p>
+ <div class="stars-layer" id="starsLayer"></div>
+ <div style="position:relative;z-index:2;text-align:center;margin-bottom:24px">
+ <div class="sprout-scene">
+ <div class="sprout-warmglow"></div>
+ <div class="sprout-root"></div>
+ <div class="dust" style="width:3px;height:3px;left:28px;top:80px;--dur:11s;--delay:0s;--dy:-7px;--dx:3px;--lo:0.08;--hi:0.38"></div>
+ <div class="dust" style="width:4px;height:4px;right:30px;top:90px;--dur:13s;--delay:2s;--dy:-5px;--dx:-3px;--lo:0.07;--hi:0.32"></div>
+ <div class="dust" style="width:3px;height:3px;left:50%;top:55px;--dur:10s;--delay:4s;--dy:-9px;--dx:2px;--lo:0.06;--hi:0.28"></div>
+ <div class="dust" style="width:3px;height:3px;left:22px;top:130px;--dur:14s;--delay:1s;--dy:-6px;--dx:4px;--lo:0.07;--hi:0.3"></div>
+ <div class="dust" style="width:4px;height:4px;right:25px;top:115px;--dur:12s;--delay:3s;--dy:-5px;--dx:-2px;--lo:0.06;--hi:0.26"></div>
+ <div class="orb-wrap">
+ <div class="orbit-ring orbit-ring-1"><div class="orbit-dot"></div></div>
+ <div class="orbit-ring orbit-ring-2"><div class="orbit-dot"></div></div>
+ <div class="orb">
+ <div class="sparkle"></div>
+ <div class="sparkle"></div>
+ <div class="sparkle"></div>
+ <div class="sparkle"></div>
+ <div class="sparkle"></div>
+ <svg class="plant-svg" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+ <defs>
+ <linearGradient id="stemGrad" x1="36" y1="66" x2="36" y2="20" gradientUnits="userSpaceOnUse">
+ <stop offset="0%" stop-color="#68b830"/><stop offset="60%" stop-color="#98d038"/><stop offset="100%" stop-color="#c8ec48"/>
+ </linearGradient>
+ <linearGradient id="leafL" x1="36" y1="46" x2="14" y2="20" gradientUnits="userSpaceOnUse">
+ <stop offset="0%" stop-color="#78b828"/><stop offset="55%" stop-color="#b0d838"/><stop offset="100%" stop-color="#dcf050"/>
+ </linearGradient>
+ <linearGradient id="leafR" x1="36" y1="44" x2="58" y2="18" gradientUnits="userSpaceOnUse">
+ <stop offset="0%" stop-color="#70b020"/><stop offset="55%" stop-color="#a8d030"/><stop offset="100%" stop-color="#d0e848"/>
+ </linearGradient>
+ <radialGradient id="budOuter" cx="46%" cy="40%" r="54%">
+ <stop offset="0%" stop-color="#f0f850"/><stop offset="50%" stop-color="#c8e030" stop-opacity="0.92"/><stop offset="100%" stop-color="#90c018" stop-opacity="0.70"/>
+ </radialGradient>
+ <radialGradient id="budCore" cx="40%" cy="32%" r="56%">
+ <stop offset="0%" stop-color="#fffff0"/><stop offset="40%" stop-color="#f8fc78"/><stop offset="100%" stop-color="#c8e030"/>
+ </radialGradient>
+ <filter id="softGlow"><feGaussianBlur stdDeviation="1.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+ <filter id="warmHalo"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+ <radialGradient id="careGlow" cx="50%" cy="55%" r="50%">
+ <stop offset="0%" stop-color="rgba(255,210,240,0.35)"/><stop offset="100%" stop-color="rgba(200,120,200,0.00)"/>
+ </radialGradient>
+ <radialGradient id="budMid" cx="44%" cy="36%" r="55%">
+ <stop offset="0%" stop-color="#f8fc70"/><stop offset="55%" stop-color="#d8ee48" stop-opacity="0.95"/><stop offset="100%" stop-color="#a8d028" stop-opacity="0.75"/>
+ </radialGradient>
+ </defs>
+ <ellipse cx="36" cy="54" rx="22" ry="10" fill="url(#careGlow)" filter="url(#warmHalo)"/>
+ <path d="M36 66 C36 56 36 46 36 36" stroke="url(#stemGrad)" stroke-width="3" stroke-linecap="round" fill="none"/>
+ <path d="M36 44 C34 40 28 32 18 22 C16 20 15 22 16 25 C20 32 28 38 34 42 C35 43 36 44 36 44 Z" fill="url(#leafL)" opacity="0.93"/>
+ <path d="M36 44 C30 38 22 30 17 23" stroke="rgba(255,255,220,0.65)" stroke-width="1.0" stroke-linecap="round" fill="none"/>
+ <path d="M36 40 C38 36 44 28 54 18 C56 16 57 18 56 21 C52 28 44 34 38 39 C37 40 36 40 36 40 Z" fill="url(#leafR)" opacity="0.90"/>
+ <path d="M36 40 C42 34 50 26 55 19" stroke="rgba(255,255,220,0.60)" stroke-width="1.0" stroke-linecap="round" fill="none"/>
+ <path d="M36 36 C36 28 40 20 44 16 C48 12 53 13 54 17 C55 22 51 30 46 33 C42 36 36 34 36 36 Z" fill="url(#budOuter)"/>
+ <path d="M37 34 C37 28 40 22 44 18 C47 15 51 16 52 20 C53 24 50 30 46 32 C42 34 37 33 37 34 Z" fill="url(#budMid)"/>
+ <path d="M38 32 C38 27 41 22 44 19 C47 17 50 18 51 21 C52 25 49 29 46 31 C43 33 38 31 38 32 Z" fill="url(#budCore)"/>
+ <path d="M40 28 C41 24 44 21 47 21 C49 22 50 25 48 28" stroke="rgba(255,255,210,0.72)" stroke-width="0.85" stroke-linecap="round" fill="none"/>
+ <ellipse cx="43" cy="17" rx="3.2" ry="1.8" fill="rgba(255,255,245,0.85)" transform="rotate(-20,43,17)" filter="url(#softGlow)"/>
+ <circle cx="42" cy="16" r="1.3" fill="rgba(255,255,255,0.97)"/>
+ </svg>
  </div>
- <div class="login-card">
+ </div>
+ </div>
+ <div class="login-brand">小陪芽</div>
+ <div class="login-tagline">一颗小芽,在等你</div>
+ </div>
+ <div class="login-box">
  <div class="field"><input id="loginEmail" type="email" placeholder="邮箱地址" autocomplete="email"></div>
  <div class="field"><input id="loginPwd" type="password" placeholder="密码(至少6位)" autocomplete="current-password"></div>
  <button id="loginBtn" class="login-btn" onclick="doLogin()">登 录</button>
@@ -2984,55 +3170,50 @@ async function sendGift(emoji, name, type, level) {
   }
 }
 
-function initLoginScreen() {
- const starfield = document.getElementById('loginStarfield');
- if (!starfield) return;
- const totalStars = 300;
- const twinkleStars = [];
- const colors = ['#ffffff','rgba(210,185,255,0.9)','rgba(255,235,195,0.8)','rgba(185,215,255,0.8)'];
- for (let i = 0; i < totalStars; i++) {
- const star = document.createElement('div');
- star.className = 'star';
- const size = Math.random() * 2.2 + 0.5;
- star.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;opacity:${Math.random()*0.35+0.08};background:${colors[Math.floor(Math.random()*colors.length)]}`;
- starfield.appendChild(star);
- if (Math.random() < 0.22) twinkleStars.push(star);
- }
- twinkleStars.forEach(star => {
- const cycle = (Math.random() * 3 + 4) * 1000;
- setInterval(() => {
- star.style.transition = 'opacity 0.8s ease';
- star.style.opacity = 0.06;
- setTimeout(() => { star.style.opacity = (Math.random() * 0.45 + 0.35).toFixed(2); }, 400);
- }, cycle);
- });
- const meteorsContainer = document.getElementById('loginMeteors');
- function createMeteor() {
- const m = document.createElement('div');
- m.className = 'login-meteor';
- m.style.left = '65%';
- m.style.top = '12%';
- meteorsContainer.appendChild(m);
- return m;
- }
- function animateMeteor(meteor) {
- const dur = Math.random() * 1.5 + 1.2;
- meteor.style.opacity = 1;
- meteor.style.transition = `all ${dur}s linear`;
- setTimeout(() => { meteor.style.left = '18%'; meteor.style.top = '42%'; }, 30);
- setTimeout(() => {
- meteor.style.opacity = 0;
- meteor.style.transition = 'none';
- meteor.style.left = '65%';
- meteor.style.top = '12%';
- setTimeout(() => animateMeteor(meteor), (Math.random() * 8 + 6) * 1000);
- }, dur * 1000);
- }
- for (let i = 0; i < 2; i++) {
- setTimeout(() => animateMeteor(createMeteor()), Math.random() * 4000);
- }
+function generateStars() {
+  const layer = document.getElementById('starsLayer');
+  if (!layer) return;
+  const total = 150;
+  const breathCount = Math.floor(total * 0.3);
+  const colors = ['white','rgba(210,185,255,0.9)','rgba(255,235,195,0.8)','rgba(185,215,255,0.8)','rgba(200,255,220,0.7)'];
+  for (let i = 0; i < total; i++) {
+    const star = document.createElement('div');
+    const size = Math.random() * 2.0 + 0.4;
+    const x = Math.random() * 100;
+    const y = Math.random() * 100;
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    if (i < breathCount) {
+      star.className = 'star-breath';
+      const dur = (Math.random() * 5 + 3).toFixed(1);
+      const delay = (Math.random() * 7).toFixed(1);
+      const lo = (Math.random() * 0.06 + 0.03).toFixed(2);
+      const hi = (Math.random() * 0.42 + 0.28).toFixed(2);
+      star.style.cssText = `width:${size}px;height:${size}px;left:${x}%;top:${y}%;background:${color};--dur:${dur}s;--delay:${delay}s;--lo:${lo};--hi:${hi}`;
+    } else {
+      star.className = 'star-static';
+      const op = (Math.random() * 0.18 + 0.04).toFixed(2);
+      star.style.cssText = `width:${size}px;height:${size}px;left:${x}%;top:${y}%;background:${color};opacity:${op}`;
+    }
+    layer.appendChild(star);
+  }
 }
-document.addEventListener("DOMContentLoaded", initLoginScreen);
+function generateMeteors() {
+  const layer = document.getElementById('starsLayer');
+  if (!layer) return;
+  for (let i = 0; i < 3; i++) {
+    const m = document.createElement('div');
+    m.className = 'meteor';
+    const x = Math.random() * 72 + 12;
+    const y = Math.random() * 22;
+    const dur = (Math.random() * 1.5 + 1.2).toFixed(1);
+    const delay = (Math.random() * 22 + 14).toFixed(1);
+    const angle = (Math.random() * 15 + 22).toFixed(0);
+    m.style.cssText = `left:${x}%;top:${y}%;--dur:${dur}s;--delay:${delay}s;--angle:${angle}deg`;
+    layer.appendChild(m);
+  }
+}
+generateStars();
+generateMeteors();
 
 
 // 键盘弹出时隐藏底部导航
