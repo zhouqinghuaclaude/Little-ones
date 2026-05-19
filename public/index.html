@@ -3032,7 +3032,7 @@ function initLoginScreen() {
  setTimeout(() => animateMeteor(createMeteor()), Math.random() * 4000);
  }
 }
-initLoginScreen();
+document.addEventListener("DOMContentLoaded", initLoginScreen);
 
 
 // 键盘弹出时隐藏底部导航
