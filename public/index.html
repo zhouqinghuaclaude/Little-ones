@@ -91,7 +91,7 @@ input, textarea { font-family: inherit; }
   position: relative; width: 150px; height: 150px; border-radius: 50%;
   background: radial-gradient(circle at 45% 42%, rgba(180,100,160,0.80) 0%, rgba(155,80,175,0.85) 30%, rgba(130,60,165,0.88) 55%, rgba(110,45,148,0.92) 75%, rgba(85,30,128,0.96) 100%);
   box-shadow: inset 0 0 40px 10px rgba(220,130,200,0.35), 0 0 30px 8px rgba(220,140,210,0.55), 0 0 60px 20px rgba(185,100,195,0.35);
-  animation: orbPulse 4s ease-in-out infinite;
+  animation: orbPulse 4s ease-in-out infinite; animation-fill-mode: both;
 }
 @keyframes orbPulse {
   0%, 100% { box-shadow: inset 0 0 40px 10px rgba(220,130,200,0.35), 0 0 30px 8px rgba(220,140,210,0.55), 0 0 60px 20px rgba(185,100,195,0.35); }
