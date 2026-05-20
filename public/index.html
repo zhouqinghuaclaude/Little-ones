@@ -493,7 +493,7 @@ input, textarea { font-family: inherit; }
         <span style="font-size:20px;margin-right:12px">✨</span>
         <div style="flex:1">
           <div style="font-size:15px;font-weight:700">设置性格</div>
-          <div id="personalitySettingsSub" style="font-size:12px;color:var(--sub);margin-top:2px">活泼 / 文静 / 聪明</div>
+          <div id="personalitySettingsSub" style="font-size:12px;color:var(--sub);margin-top:2px">外向活泼 / 温柔细腻 / 更多</div>
         </div>
         <span style="color:var(--sub);font-size:18px">›</span>
       </div>
@@ -709,7 +709,7 @@ let kid = null;
 let isReg = false;
 let selGender = "boy";
 let selRole = "妈妈";
-let selPersonality = "lively";
+let selPersonality = "outgoing";
 let selAvatar = null;
 
 function showScreen(id) {
@@ -2553,7 +2553,7 @@ async function saveInterests() {
 function openSettings(k) {
   settingsKid = k;
   selectedAgeMode = k.age_mode || 'fixed';
-  selectedPersonality = k.personality || 'lively';
+  selectedPersonality = k.personality || "outgoing";
 
   // 更新子标题显示
   const birthdaySub = document.getElementById('birthdaySettingsSub');
@@ -2561,8 +2561,8 @@ function openSettings(k) {
   const ageModeSub = document.getElementById('ageModeSettingsSub');
   if (ageModeSub) ageModeSub.textContent = k.age_mode === 'natural' ? '自然成长 🌱' : '冻龄 📌';
   const personalitySub = document.getElementById('personalitySettingsSub');
-  const nameMap = {lively:'活泼', quiet:'文静', clever:'聪明'};
-  if (personalitySub) personalitySub.textContent = nameMap[k.personality] || '活泼 / 文静 / 聪明';
+  const nameMap = {outgoing:'外向活泼', gentle:'温柔细腻', brave:'勇敢坚强', smart:'聪慧好学', quirky:'精灵古怪', clingy:'软糯黏人'};
+  if (personalitySub) personalitySub.textContent = nameMap[k.personality] || '外向活泼 / 温柔细腻 / 更多';
   const interestsTitle = document.getElementById('interestsSettingsTitle');
   if (interestsTitle) interestsTitle.textContent = `Ta更懂你`;
 
