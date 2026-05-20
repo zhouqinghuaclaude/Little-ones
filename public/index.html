@@ -3058,12 +3058,76 @@ if (window.visualViewport) {
  });
 }
 
-function showTerms() {
- alert("用户协议:使用本应用即表示您同意我们的服务条款。");
+function showPolicyModal() {
+ const existing = document.getElementById('policyModal');
+ if (existing) existing.remove();
+ const modal = document.createElement('div');
+ modal.id = 'policyModal';
+ modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;flex-direction:column;';
+ modal.innerHTML = `
+ <div style="display:flex;align-items:center;padding:52px 16px 12px;background:#1a0a2e;flex-shrink:0;border-bottom:1px solid rgba(180,120,255,0.2)">
+ <button onclick="document.getElementById('policyModal').remove()" style="background:none;border:none;color:white;font-size:28px;padding:4px 12px 4px 0;line-height:1">‹</button>
+ <span style="color:white;font-size:17px;font-weight:700">用户服务协议及隐私政策</span>
+ </div>
+ <div style="flex:1;overflow-y:auto;padding:20px 16px;background:#0e0620;color:rgba(220,200,255,0.82);font-size:14px;line-height:1.9">
+ <p style="color:rgba(180,140,255,0.6);margin-bottom:16px">生效日期:2026年05月20日</p>
+ <p style="margin-bottom:16px">欢迎使用「小陪芽」,本文件包含《用户服务协议》与《隐私政策》两部分,共同构成您与小陪芽运营主体之间的全部权利义务约定。在注册、登录、使用本APP前,请您仔细阅读本文件全部条款。</p>
+ <p style="color:white;font-weight:700;font-size:15px;margin:20px 0 10px">一、用户服务协议</p>
+ <p style="color:rgba(200,160,255,0.9);font-weight:700;margin:14px 0 6px">第一条 服务内容</p>
+ <p>1. 小陪芽是一款AI虚拟情感陪伴类产品,通过人工智能技术为用户提供聊天陪伴、情绪疏导、日常互动、虚拟陪伴等数字化服务。</p>
+ <p>2. 我方将根据技术迭代、运营需要,持续优化功能,可在不另行通知前提下调整、升级服务内容(不降低核心服务标准)。</p>
+ <p>3. 本APP仅供个人非商业使用,禁止用于营销、推广、批量注册、数据爬取、违法信息传播等行为。</p>
+ <p style="color:rgba(200,160,255,0.9);font-weight:700;margin:14px 0 6px">第二条 用户注册与账号使用</p>
+ <p>1. 您需年满18周岁,方可注册、使用本APP;未满18周岁用户禁止注册、登录及使用本APP任何服务,若发现未成年人使用,我方有权立即封禁账号、清除相关数据。</p>
+ <p>2. 您需使用有效邮箱完成注册,保证注册信息真实、合法、有效。</p>
+ <p>3. 账号、密码由您自行保管,因账号泄露、转借、被盗产生的全部责任由用户自行承担。</p>
+ <p>4. 一个用户仅限注册一个账号,禁止批量注册、恶意注册、共享账号、买卖账号。</p>
+ <p style="color:rgba(200,160,255,0.9);font-weight:700;margin:14px 0 6px">第三条 用户行为规范</p>
+ <p>您承诺在使用本APP时严格遵守以下约定:</p>
+ <p>1. 不发布、传播暴力、色情、赌博、政治敏感、违法违规内容;</p>
+ <p>2. 不利用AI对话诱导不良行为、进行诈骗、辱骂、传播虚假信息;</p>
+ <p>3. 不破解、逆向工程、篡改本APP程序、接口、数据;</p>
+ <p>4. 遵守国家法律法规、网络安全法、个人信息保护法及平台规则。</p>
+ <p style="color:rgba(200,160,255,0.9);font-weight:700;margin:14px 0 6px">第四条 知识产权</p>
+ <p>本APP软件、界面、UI、商标、文案、AI模型、算法等全部知识产权均归我方所有,受法律保护。用户不得复制、传播、售卖本APP内AI生成内容。</p>
+ <p style="color:rgba(200,160,255,0.9);font-weight:700;margin:14px 0 6px">第五条 芽豆(平台虚拟积分)规则</p>
+ <p>芽豆为本APP非法定货币、不可提现、不可交易、不可转让的平台虚拟积分,仅用于兑换会员权益、解锁APP功能,不具备任何实际货币价值。芽豆不可通过充值获得,仅可通过注册、每日登录、聊天互动、会员赠送等方式获取。</p>
+ <p style="color:rgba(200,160,255,0.9);font-weight:700;margin:14px 0 6px">第六条 会员服务</p>
+ <p>VIP、SVIP、DVIP等会员为付费增值服务,用户购买后即时生效,虚拟服务一经开通,不予退款。会员权益以APP内展示为准。</p>
+ <p style="color:rgba(200,160,255,0.9);font-weight:700;margin:14px 0 6px">第七条 免责声明</p>
+ <p>AI陪伴内容仅供娱乐、情感疏导参考,不构成心理咨询、医疗诊断、法律建议等,请勿依赖AI进行重大决策。</p>
+ <p style="color:rgba(200,160,255,0.9);font-weight:700;margin:14px 0 6px">第八条 账号注销与终止服务</p>
+ <p>用户可在APP内申请注销账号,注销后权益自动失效,账号注销后无法恢复。</p>
+ <p style="color:rgba(200,160,255,0.9);font-weight:700;margin:14px 0 6px">第九条 协议修改与争议解决</p>
+ <p>我方有权根据法律法规更新修改本文件,修改后将在APP内公示。因本文件产生的争议,提交我方所在地人民法院诉讼解决。</p>
+ <p style="color:white;font-weight:700;font-size:15px;margin:20px 0 10px">二、隐私政策</p>
+ <p style="margin-bottom:12px">本隐私政策依据《中华人民共和国个人信息保护法》《网络安全法》制定。</p>
+ <p style="color:rgba(200,160,255,0.9);font-weight:700;margin:14px 0 6px">(一)信息收集范围</p>
+ <p>我们仅收集实现服务必要的信息:注册邮箱、设备信息、对话数据、操作数据。不主动收集身份证号、人脸信息、地理位置、通讯录等非必要隐私信息。</p>
+ <p style="color:rgba(200,160,255,0.9);font-weight:700;margin:14px 0 6px">(二)信息使用目的</p>
+ <p>收集的个人信息仅用于提供AI情感陪伴服务、保障账号安全、优化AI模型、推送服务通知、遵守法律法规要求。</p>
+ <p style="color:rgba(200,160,255,0.9);font-weight:700;margin:14px 0 6px">(三)信息共享与披露</p>
+ <p>我方绝不向任何第三方出售、交易、出租您的个人信息。仅在司法机关依法调取等特殊情况下,依法提供必要信息。</p>
+ <p style="color:rgba(200,160,255,0.9);font-weight:700;margin:14px 0 6px">(四)信息存储与安全</p>
+ <p>您的个人信息均存储于合规云服务器,采用加密传输、加密存储技术。账号注销后30日内清除全部个人数据。</p>
+ <p style="color:rgba(200,160,255,0.9);font-weight:700;margin:14px 0 6px">(五)用户权利</p>
+ <p>您享有查阅、更正、删除、注销、撤回授权等权利,可通过APP内客服渠道行使。</p>
+ <p style="color:rgba(200,160,255,0.9);font-weight:700;margin:14px 0 6px">(六)未成年人保护</p>
+ <p>本APP仅限年满18周岁用户使用,未成年人禁止注册、登录及使用本APP服务。</p>
+ <p style="color:rgba(200,160,255,0.9);font-weight:700;margin:14px 0 6px">(七)Cookie与技术信息</p>
+ <p>本APP将使用必要的技术标识(如Cookie),用于账号安全验证、防作弊、服务适配,不追踪用户的其他网络行为。</p>
+ <p style="color:rgba(200,160,255,0.9);font-weight:700;margin:14px 0 6px">(八)联系我们</p>
+ <p>运营主体:心芽童伴(上海)智能科技有限公司</p>
+ <p>联系地址:上海浦东崂山路526号17楼D5</p>
+ <p style="margin-top:4px;color:rgba(180,140,255,0.5)">客服电话:(待补充)</p>
+ <p style="color:rgba(180,140,255,0.5)">客服邮箱:(待补充)</p>
+ <p style="margin-top:24px;padding-top:16px;border-top:1px solid rgba(180,120,255,0.15);color:rgba(180,140,255,0.5);font-size:12px;text-align:center">心芽童伴(上海)智能科技有限公司</p>
+ </div>
+ `;
+ document.body.appendChild(modal);
 }
-function showPrivacy() {
- alert("隐私政策:我们重视您的隐私,不会向第三方出售您的个人信息。");
-}
+function showTerms() { showPolicyModal(); }
+function showPrivacy() { showPolicyModal(); }
 </script>
 
 </body>
