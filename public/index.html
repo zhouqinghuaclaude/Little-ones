@@ -2554,6 +2554,8 @@ function openSettings(k) {
   settingsKid = k;
   selectedAgeMode = k.age_mode || 'fixed';
   selectedPersonality = k.personality || "outgoing";
+  const oldToNew = {lively:"outgoing", quiet:"gentle", clever:"smart"};
+  if (oldToNew[selectedPersonality]) selectedPersonality = oldToNew[selectedPersonality];
 
   // 更新子标题显示
   const birthdaySub = document.getElementById('birthdaySettingsSub');
