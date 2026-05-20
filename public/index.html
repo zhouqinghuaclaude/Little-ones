@@ -365,6 +365,10 @@ input, textarea { font-family: inherit; }
  <div class="field"><input id="loginEmail" type="email" placeholder="邮箱地址" autocomplete="email"></div>
  <div class="field"><input id="loginPwd" type="password" placeholder="密码(至少6位)" autocomplete="current-password"></div>
  <button id="loginBtn" class="login-btn" onclick="doLogin()">登 录</button>
+ <div id="agreeRow" style="display:none;align-items:flex-start;gap:8px;margin-bottom:12px">
+ <input type="checkbox" id="agreeCheck" style="margin-top:3px;accent-color:#8e44ad;width:16px;height:16px;flex-shrink:0">
+ <label for="agreeCheck" style="font-size:12px;color:rgba(195,155,255,0.6);line-height:1.5">我已阅读并同意 <span style="color:rgba(200,150,255,0.9);cursor:pointer" onclick="showTerms()">《用户协议》</span> 和 <span style="color:rgba(200,150,255,0.9);cursor:pointer" onclick="showPrivacy()">《隐私政策》</span></label>
+ </div>
  <div class="login-switch">没有账号?<span onclick="toggleReg()">立即注册</span></div>
  <div id="loginErr" class="error-text"></div>
  </div>
@@ -751,8 +755,10 @@ function autoResize(el) { el.style.height="auto"; el.style.height=Math.min(el.sc
 function toggleReg() {
   isReg=!isReg;
   document.querySelector(".login-switch span").textContent=isReg?"返回登录":"立即注册";
-  document.getElementById("loginBtn").textContent=isReg?"注册":"登录";
+  document.getElementById("loginBtn").textContent=isReg?"注 册":"登 录";
   document.getElementById("loginErr").textContent="";
+  const agreeRow = document.getElementById("agreeRow");
+  if (agreeRow) agreeRow.style.display = isReg ? "flex" : "none";
 }
 async function doLogin() {
   const email=document.getElementById("loginEmail").value.trim();
@@ -760,6 +766,12 @@ async function doLogin() {
   const err=document.getElementById("loginErr");
   err.textContent="";
   if(!email||!pwd) return err.textContent="请填写邮箱和密码";
+  if (isReg) {
+    const agreeCheck = document.getElementById("agreeCheck");
+    if (!agreeCheck || !agreeCheck.checked) {
+      return err.textContent = "请先同意用户协议和隐私政策";
+    }
+  }
   const btn=document.getElementById("loginBtn");
   btn.textContent="请稍候…";
 
@@ -3043,6 +3055,13 @@ if (window.visualViewport) {
  const keyboardOpen = window.visualViewport.height < window.innerHeight * 0.75;
  nav.style.display = keyboardOpen ? 'none' : 'flex';
  });
+}
+
+function showTerms() {
+ alert("用户协议:使用本应用即表示您同意我们的服务条款。");
+}
+function showPrivacy() {
+ alert("隐私政策:我们重视您的隐私,不会向第三方出售您的个人信息。");
 }
 </script>
 
