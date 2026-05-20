@@ -2248,21 +2248,23 @@ function showSettingsSection(section) {
 
   } else if (section === 'personality') {
     title.textContent = '设置性格';
-    const p = selectedPersonality || k.personality || 'lively';
+    const p = selectedPersonality || k.personality || 'outgoing';
     body.innerHTML = `
       <label class="field-label">✨ 性格设置</label>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:12px">选择后将影响孩子的性格特点,保存后生效</div>
       <div class="choice-row" style="flex-wrap:wrap;gap:8px">
-        <button class="choice-btn${p === 'lively' ? ' on' : ''}" id="sLively" onclick="selectPersonality('lively')">活泼</button>
-        <button class="choice-btn${p === 'quiet' ? ' on' : ''}" id="sQuiet" onclick="selectPersonality('quiet')">文静</button>
-        <button class="choice-btn${p === 'clever' ? ' on' : ''}" id="sClever" onclick="selectPersonality('clever')">聪明</button>
-        <button class="choice-btn" id="sCustom" onclick="showToast('专属定制为付费功能，即将开放 🌱')">💎定制</button>
+        <button class="choice-btn${p === 'outgoing' ? ' on' : ''}" id="sOutgoing" onclick="selectPersonality('outgoing')">😄 外向活泼</button>
+        <button class="choice-btn${p === 'gentle' ? ' on' : ''}" id="sGentle" onclick="selectPersonality('gentle')">🌸 温柔细腻</button>
+        <button class="choice-btn${p === 'brave' ? ' on' : ''}" id="sBrave" onclick="selectPersonality('brave')">💪 勇敢坚强</button>
+        <button class="choice-btn${p === 'smart' ? ' on' : ''}" id="sSmart" onclick="selectPersonality('smart')">🌟 聪慧好学</button>
+        <button class="choice-btn${p === 'quirky' ? ' on' : ''}" id="sQuirky" onclick="selectPersonality('quirky')">✨ 精灵古怪</button>
+        <button class="choice-btn${p === 'clingy' ? ' on' : ''}" id="sClingy" onclick="selectPersonality('clingy')">🧸 软糯黏人</button>
       </div>
-      <div id="customPersonalityBox" style="display:none;margin-top:12px">
-        <input id="customPersonalityInput" class="field-input" type="text" placeholder="描述孩子的性格特点...">
-      </div>
+      <div style="font-size:11px;color:var(--sub);margin-top:16px;padding:10px;background:var(--bg);border-radius:10px;line-height:1.8" id="personalityDesc"></div>
       <button class="primary-btn" style="margin-top:28px" onclick="savePersonality()">保存性格</button>
       <div id="subSettingsMsg" style="text-align:center;margin-top:12px;font-size:13px;color:var(--p)"></div>
     `;
+    showPersonalityDesc(p);
 
   } else if (section === 'avatar') {
     title.textContent = '选择头像';
@@ -2506,7 +2508,7 @@ async function savePersonality() {
     settingsKid = {...settingsKid, ...updated};
     kid = {...kid, ...updated};
     const sub = document.getElementById('personalitySettingsSub');
-    const nameMap = {lively:'活泼', quiet:'文静', clever:'聪明'};
+    const nameMap = {outgoing:'外向活泼', gentle:'温柔细腻', brave:'勇敢坚强', smart:'聪慧好学', quirky:'精灵古怪', clingy:'软糯黏人'};
     if (sub) sub.textContent = nameMap[selectedPersonality] || selectedPersonality;
     msg.textContent = '✅ 性格已保存';
     setTimeout(() => { msg.textContent = ''; showScreen('settingsScreen'); }, 1500);
@@ -2514,7 +2516,6 @@ async function savePersonality() {
     msg.textContent = '❌ ' + (e.message || '保存失败');
   }
 }
-
 async function saveAvatar() {
   const msg = document.getElementById('subSettingsMsg');
   msg.textContent = '保存中...';
@@ -2591,14 +2592,26 @@ function selectAgeMode(mode) {
 
 function selectPersonality(p) {
   selectedPersonality = p;
-  ['sLively','sQuiet','sClever','sCustom'].forEach(id => {
+  ['sOutgoing','sGentle','sBrave','sSmart','sQuirky','sClingy'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.className = 'choice-btn';
   });
-  const map = {lively:'sLively', quiet:'sQuiet', clever:'sClever', custom:'sCustom'};
+  const map = {outgoing:'sOutgoing', gentle:'sGentle', brave:'sBrave', smart:'sSmart', quirky:'sQuirky', clingy:'sClingy'};
   if (map[p]) { const el = document.getElementById(map[p]); if (el) el.className = 'choice-btn on'; }
-  const cpBox = document.getElementById("customPersonalityBox");
-  if (cpBox) cpBox.style.display = p === 'custom' ? 'block' : 'none';
+  showPersonalityDesc(p);
+}
+
+function showPersonalityDesc(p) {
+  const desc = {
+    outgoing: '😄 外向活泼:爱表达、爱社交、开朗大方',
+    gentle: '🌸 温柔细腻:温柔体贴、心思细腻、安静内敛',
+    brave: '💪 勇敢坚强:有担当、不怕困难、抗挫力强',
+    smart: '🌟 聪慧好学:爱思考、爱学习、爱创造',
+    quirky: '✨ 精灵古怪:鬼点子多、天马行空、出人意料',
+    clingy: '🧸 软糯黏人:爱撒娇、依赖感强、特别在意陪伴',
+  };
+  const el = document.getElementById('personalityDesc');
+  if (el && desc[p]) el.textContent = desc[p];
 }
 
 function renderAvatarSelectGrid(gender, currentAvatar) {
