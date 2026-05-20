@@ -257,6 +257,22 @@ if (birthday && !kid.birthday_locked) {
   // 性格设置
   if (personality) {
     await db.query("UPDATE kids SET personality=$1, personality_custom=$2 WHERE id=$3", [personality, personality_custom || null, kid.id]);
+    
+    // 更新性格种子
+    const seedMap = {
+      outgoing: { social: 92, expressive: 90 },
+      gentle: { empathetic: 90, sensitive: 88 },
+      brave: { independent: 92, secure: 90 },
+      smart: { imaginative: 93, independent: 88 },
+      quirky: { imaginative: 95, expressive: 88 },
+      clingy: { sticky: 93, empathetic: 90 },
+    };
+    if (seedMap[personality]) {
+      const currentSeedResult = await db.query('SELECT personality_seed FROM kids WHERE id=$1', [req.params.id]);
+      const currentSeed = currentSeedResult.rows[0]?.personality_seed || {};
+      const newSeed = { ...currentSeed, ...seedMap[personality] };
+      await db.query('UPDATE kids SET personality_seed=$1 WHERE id=$2', [JSON.stringify(newSeed), req.params.id]);
+    }
   }
 if (avatar !== undefined) {
   await db.query("UPDATE kids SET avatar=$1 WHERE id=$2", [avatar, kid.id]);
