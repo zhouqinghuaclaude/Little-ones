@@ -513,13 +513,13 @@ input, textarea { font-family: inherit; }
         </div>
         <span style="color:var(--sub);font-size:18px">›</span>
       </div>
-      <div onclick="showToast('开通会员后可添加更多孩子 🌱')" style="display:flex;align-items:center;padding:16px;cursor:pointer">
-        <span style="font-size:20px;margin-right:12px">➕</span>
+      <div onclick="confirmDeleteKid()" style="display:flex;align-items:center;padding:16px;cursor:pointer">
+        <span style="font-size:20px;margin-right:12px">🗑️</span>
         <div style="flex:1">
-          <div style="font-size:15px;font-weight:700">添加孩子</div>
-          <div style="font-size:12px;color:var(--sub);margin-top:2px">开通会员后可添加更多孩子</div>
+          <div style="font-size:15px;font-weight:700;color:#E74C3C">删除孩子</div>
+          <div style="font-size:12px;color:#E74C3C;opacity:0.7;margin-top:2px">删除后不可恢复,请谨慎操作</div>
         </div>
-        <span style="color:var(--sub);font-size:18px">›</span>
+        <span style="color:#E74C3C;font-size:18px;opacity:0.5">›</span>
       </div>
     </div>
 
@@ -527,6 +527,14 @@ input, textarea { font-family: inherit; }
     <div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:.8px;margin-bottom:12px;text-transform:uppercase">我的账户</div>
 
     <div style="background:white;border-radius:18px;box-shadow:var(--card-shadow);overflow:hidden;margin-bottom:16px">
+      <div onclick="showManageKids()" style="display:flex;align-items:center;padding:16px;cursor:pointer;border-bottom:1px solid var(--border)">
+        <span style="font-size:20px;margin-right:12px">👶</span>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700">管理孩子</div>
+          <div style="font-size:12px;color:var(--sub);margin-top:2px">添加或删除孩子</div>
+        </div>
+        <span style="color:var(--sub);font-size:18px">›</span>
+      </div>
       <div onclick="showSettingsSection('membership')" style="display:flex;align-items:center;padding:16px;cursor:pointer;border-bottom:1px solid var(--border)">
         <span style="font-size:20px;margin-right:12px">👑</span>
         <div style="flex:1">
@@ -858,7 +866,7 @@ function getBondLevel(score) {
       <div class="kid-meta">${k.gender==="boy"?"男孩":"女孩"} · ${k.age_display||k.age+"岁"}${getKidZodiacInfo(k)}</div>
       <div class="kid-bond-info">${k.name}已陪伴你${compDays}天 · ${bl.emoji}${bl.name}${k.milestone ? ' · ' + k.milestone : ''}</div>
     </div>
-    <button class="kid-delete-btn" onclick="event.stopPropagation();deleteKid(${k.id})">删除</button>
+    
   </div>`;
 }).join("");
 
@@ -3143,6 +3151,18 @@ function showPolicyModal() {
 }
 function showTerms() { showPolicyModal(); }
 function showPrivacy() { showPolicyModal(); }
+
+function confirmDeleteKid() {
+ if (!settingsKid) return;
+ if (confirm(`确定要删除「${settingsKid.name}」吗?\n\n删除后所有聊天记录和数据将永久清除,无法恢复。`)) {
+ deleteKid(settingsKid.id);
+ }
+}
+function showManageKids() {
+ showScreen('homeScreen');
+ loadKids();
+ setTimeout(() => showToast('长按孩子卡可管理,或在孩子设置中删除 🌱'), 500);
+}
 </script>
 
 </body>
