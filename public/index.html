@@ -49,7 +49,7 @@ input, textarea { font-family: inherit; }
 .error-text { color: #E74C3C; font-size: 13px; text-align: center; margin-top: 10px; min-height: 18px; }
 #homeScreen { background: var(--bg); }
 .home-header { padding: 52px 20px 16px; background: linear-gradient(160deg, #F0E6FF, #FFF0F5); position: relative; }
-.home-header::before { content: ''; position: absolute; top: -30px; right: -30px; width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle, rgba(155,89,182,0.08), transparent 70%); }
+.home-header::before { content: ''; position: absolute; top: -30px; right: -30px; width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle, rgba(155,89,182,0.08), transparent 70%); pointer-events: none; }
 .home-top-row { display: flex; align-items: center; justify-content: space-between; }
 .home-logo-area { display: flex; align-items: center; gap: 10px; }
 .home-bud { width: 42px; height: 42px; border-radius: 50%; background: radial-gradient(circle at 38% 38%, rgba(255,255,230,0.9) 0%, rgba(180,230,80,0.7) 40%, rgba(120,180,40,0.8) 70%, rgba(80,140,20,0.9) 100%); box-shadow: 0 0 16px rgba(140,200,50,0.35), 0 2px 8px rgba(80,140,20,0.2); display: flex; align-items: center; justify-content: center; animation: budPulse 3.5s ease-in-out infinite; flex-shrink: 0; }
