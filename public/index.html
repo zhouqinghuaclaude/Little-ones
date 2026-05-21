@@ -816,7 +816,7 @@ showScreen("homeScreen"); loadKids();
 
   finally { btn.textContent=isReg?"注册":"登录"; }
 }
-function logout() { token=""; localStorage.clear(); document.querySelectorAll(".screen").forEach(s => { s.classList.remove("active"); s.style.display="none"; }); const ls = document.getElementById("loginScreen"); ls.style.display="flex"; ls.style.position="fixed"; ls.style.inset="0"; ls.classList.add("active"); }
+function logout() { token=""; localStorage.clear(); document.querySelectorAll(".screen").forEach(s => { s.classList.remove("active"); s.style.display=""; }); showScreen("loginScreen"); }
 
 const MOODS=["😊","😄","🥰","😌","🤩","😎"];
 const BOND_LEVELS = [
