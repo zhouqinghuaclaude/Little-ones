@@ -170,6 +170,14 @@ input, textarea { font-family: inherit; }
  gap: 8px;
  align-items: flex-end;
 }
+.emoji-toggle-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--bg); border: 1.5px solid var(--border); font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-bottom: 2px; }
+.emoji-panel { display: none; background: white; border-top: 1px solid var(--border); padding: 10px 12px; flex-shrink: 0; max-height: 220px; overflow-y: auto; }
+.emoji-panel.open { display: block; }
+.emoji-group { margin-bottom: 8px; }
+.emoji-label { font-size: 11px; color: var(--sub); font-weight: 600; margin-bottom: 6px; }
+.emoji-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.emoji-row span { font-size: 26px; cursor: pointer; padding: 4px; border-radius: 8px; transition: background 0.15s; }
+.emoji-row span:active { background: var(--border); }
 .chat-nav {
  flex-shrink: 0;
  display: flex;
@@ -450,11 +458,66 @@ input, textarea { font-family: inherit; }
  <button class="surprise-btn" onclick="sendSurprise('🌈','彩虹')">🌈 彩虹</button>
  </div>
  <!-- 输入框 -->
+ <div class="emoji-panel" id="emojiPanel">
+ <div class="emoji-group">
+ <div class="emoji-label">爱心</div>
+ <div class="emoji-row">
+ <span onclick="insertEmoji('❤️')">❤️</span>
+ <span onclick="insertEmoji('🧡')">🧡</span>
+ <span onclick="insertEmoji('💛')">💛</span>
+ <span onclick="insertEmoji('💚')">💚</span>
+ <span onclick="insertEmoji('💙')">💙</span>
+ <span onclick="insertEmoji('💜')">💜</span>
+ <span onclick="insertEmoji('🤍')">🤍</span>
+ <span onclick="insertEmoji('💕')">💕</span>
+ </div>
+ </div>
+ <div class="emoji-group">
+ <div class="emoji-label">表情</div>
+ <div class="emoji-row">
+ <span onclick="insertEmoji('😊')">😊</span>
+ <span onclick="insertEmoji('😂')">😂</span>
+ <span onclick="insertEmoji('🥰')">🥰</span>
+ <span onclick="insertEmoji('😘')">😘</span>
+ <span onclick="insertEmoji('🤗')">🤗</span>
+ <span onclick="insertEmoji('😴')">😴</span>
+ <span onclick="insertEmoji('😢')">😢</span>
+ <span onclick="insertEmoji('😄')">😄</span>
+ </div>
+ </div>
+ <div class="emoji-group">
+ <div class="emoji-label">动作</div>
+ <div class="emoji-row">
+ <span onclick="insertEmoji('👍')">👍</span>
+ <span onclick="insertEmoji('🙏')">🙏</span>
+ <span onclick="insertEmoji('👏')">👏</span>
+ <span onclick="insertEmoji('🫂')">🫂</span>
+ <span onclick="insertEmoji('✌️')">✌️</span>
+ <span onclick="insertEmoji('🤝')">🤝</span>
+ <span onclick="insertEmoji('💪')">💪</span>
+ <span onclick="insertEmoji('🤲')">🤲</span>
+ </div>
+ </div>
+ <div class="emoji-group">
+ <div class="emoji-label">礼物</div>
+ <div class="emoji-row">
+ <span onclick="insertEmoji('🎁')">🎁</span>
+ <span onclick="insertEmoji('🎀')">🎀</span>
+ <span onclick="insertEmoji('🎈')">🎈</span>
+ <span onclick="insertEmoji('🎂')">🎂</span>
+ <span onclick="insertEmoji('🍭')">🍭</span>
+ <span onclick="insertEmoji('🍬')">🍬</span>
+ <span onclick="insertEmoji('🌸')">🌸</span>
+ <span onclick="insertEmoji('⭐')">⭐</span>
+ </div>
+ </div>
+ </div>
  <div class="input-row">
  <textarea id="msgInput" class="msg-input" placeholder="和宝宝说点什么..." rows="1"
  enterkeyhint="send"
  oninput="autoResize(this)" onfocus="setTimeout(()=>scrollBot(),500)" onfocus="setTimeout(()=>scrollBot(),300)"
  onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"></textarea>
+ <button class="emoji-toggle-btn" id="emojiToggleBtn" onclick="toggleEmojiPanel()">😊</button>
  <button id="sendBtn" class="send-btn" onclick="sendMsg()">➤</button>
  </div>
  <!-- 固定底部导航 -->
@@ -3168,6 +3231,38 @@ function showManageKids() {
  showScreen('homeScreen');
  loadKids();
  setTimeout(() => showToast('长按孩子卡可管理,或在孩子设置中删除 🌱'), 500);
+}
+
+function toggleEmojiPanel() {
+ const panel = document.getElementById('emojiPanel');
+ const btn = document.getElementById('emojiToggleBtn');
+ if (!panel) return;
+ const isOpen = panel.classList.contains('open');
+ if (isOpen) {
+ panel.classList.remove('open');
+ btn.textContent = '😊';
+ document.getElementById('msgInput').focus();
+ } else {
+ panel.classList.add('open');
+ btn.textContent = '⌨️';
+ document.getElementById('msgInput').blur();
+ setTimeout(() => scrollBot(), 100);
+ }
+}
+function closeEmojiPanel() {
+ const panel = document.getElementById('emojiPanel');
+ const btn = document.getElementById('emojiToggleBtn');
+ if (panel) panel.classList.remove('open');
+ if (btn) btn.textContent = '😊';
+}
+function insertEmoji(emoji) {
+ const input = document.getElementById('msgInput');
+ if (!input) return;
+ const start = input.selectionStart;
+ const end = input.selectionEnd;
+ input.value = input.value.slice(0, start) + emoji + input.value.slice(end);
+ input.selectionStart = input.selectionEnd = start + emoji.length;
+ autoResize(input);
 }
 </script>
 
