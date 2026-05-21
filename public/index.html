@@ -48,11 +48,14 @@ input, textarea { font-family: inherit; }
 .login-switch span { color: rgba(200,150,255,0.88); cursor: pointer; font-weight: 600; }
 .error-text { color: #E74C3C; font-size: 13px; text-align: center; margin-top: 10px; min-height: 18px; }
 #homeScreen { background: var(--bg); }
-.home-header { padding: 56px 20px 16px; background: linear-gradient(160deg, #F0E6FF, #FFF0F5); }
-.home-greeting { font-size: 13px; color: var(--sub); font-weight: 600; margin-bottom: 4px; }
-.home-row { display: flex; align-items: center; justify-content: space-between; }
-.home-title { font-size: 26px; font-weight: 900; color: var(--text); }
-.home-sub { font-size: 13px; color: var(--sub); margin-top: 4px; }
+.home-header { padding: 52px 20px 16px; background: linear-gradient(160deg, #F0E6FF, #FFF0F5); position: relative; overflow: hidden; }
+.home-header::before { content: ''; position: absolute; top: -30px; right: -30px; width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle, rgba(155,89,182,0.08), transparent 70%); }
+.home-top-row { display: flex; align-items: center; justify-content: space-between; }
+.home-logo-area { display: flex; align-items: center; gap: 10px; }
+.home-bud { width: 42px; height: 42px; border-radius: 50%; background: radial-gradient(circle at 38% 38%, rgba(255,255,230,0.9) 0%, rgba(180,230,80,0.7) 40%, rgba(120,180,40,0.8) 70%, rgba(80,140,20,0.9) 100%); box-shadow: 0 0 16px rgba(140,200,50,0.35), 0 2px 8px rgba(80,140,20,0.2); display: flex; align-items: center; justify-content: center; animation: budPulse 3.5s ease-in-out infinite; flex-shrink: 0; }
+@keyframes budPulse { 0%, 100% { box-shadow: 0 0 16px rgba(140,200,50,0.35), 0 2px 8px rgba(80,140,20,0.2); transform: scale(1); } 50% { box-shadow: 0 0 24px rgba(140,200,50,0.55), 0 2px 12px rgba(80,140,20,0.3); transform: scale(1.05); } }
+.home-bud svg { width: 26px; height: 26px; filter: drop-shadow(0 0 4px rgba(180,230,60,0.4)); }
+.home-brand { font-size: 24px; font-weight: 900; letter-spacing: 3px; background: linear-gradient(135deg, #7d3c98 0%, #9b59b6 50%, #c0392b 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 .logout-btn { padding: 8px 16px; border-radius: 20px; background: white;
   color: var(--sub); font-size: 13px; font-weight: 600; border: 1.5px solid var(--border); }
 .kids-container { padding: 20px 16px; flex: 1; overflow-y: auto; }
@@ -62,6 +65,9 @@ input, textarea { font-family: inherit; }
   border-radius: 22px; padding: 16px 16px 32px; margin-bottom: 12px; box-shadow: var(--card-shadow);
   cursor: pointer; position: relative; }
 .kid-card:active { transform: scale(0.97); }
+.kid-start-btn { display: flex; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 20px; background: linear-gradient(135deg, rgba(155,89,182,0.1), rgba(241,148,138,0.1)); border: 1px solid rgba(155,89,182,0.15); font-size: 11px; font-weight: 700; color: var(--p); flex-shrink: 0; }
+.kid-start-arrow { font-size: 12px; animation: arrowBreathe 2s ease-in-out infinite; }
+@keyframes arrowBreathe { 0%, 100% { opacity: 0.4; transform: translateX(0); } 50% { opacity: 1; transform: translateX(2px); } }
 .kid-face { width: 58px; height: 58px; border-radius: 50%; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center; font-size: 30px; position: relative; }
 .boy-face { background: linear-gradient(135deg, #D6EAF8, #AED6F1); }
@@ -376,18 +382,34 @@ input, textarea { font-family: inherit; }
 
 <div id="homeScreen" class="screen">
   <div class="home-header">
-    <div class="home-greeting">你好 👋</div>
-    <div class="home-row">
-      <div class="home-title">小陪芽</div>
+    <div class="home-top-row">
+      <div class="home-logo-area">
+        <div class="home-bud">
+          <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="hSG" x1="36" y1="66" x2="36" y2="20" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#68b830"/><stop offset="100%" stop-color="#c8ec48"/>
+              </linearGradient>
+              <radialGradient id="hBG" cx="46%" cy="40%" r="54%">
+                <stop offset="0%" stop-color="#f0f850"/><stop offset="100%" stop-color="#90c018" stop-opacity="0.70"/>
+              </radialGradient>
+            </defs>
+            <path d="M36 66 C36 56 36 46 36 36" stroke="url(#hSG)" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+            <path d="M36 44 C34 40 28 32 18 22 C16 20 15 22 16 25 C20 32 28 38 34 42 Z" fill="#a5d6a7" opacity="0.93"/>
+            <path d="M36 40 C38 36 44 28 54 18 C56 16 57 18 56 21 C52 28 44 34 38 39 Z" fill="#c8e6c9" opacity="0.90"/>
+            <path d="M36 36 C36 28 40 20 44 16 C48 12 53 13 54 17 C55 22 51 30 46 33 Z" fill="url(#hBG)"/>
+          </svg>
+        </div>
+        <div class="home-brand">小陪芽</div>
+      </div>
       <button class="logout-btn" onclick="logout()">退出</button>
     </div>
-    <div class="home-sub">点击宝宝开始今天的对话吧～</div>
   </div>
   <div class="kids-container">
     <div class="section-label">我的孩子</div>
     <div id="kidsList"></div>
   </div>
-</div>
+</div></div>
 
 <div id="createScreen" class="screen" style="background:var(--bg)">
   <div class="page-header">
@@ -866,7 +888,7 @@ function getBondLevel(score) {
       <div class="kid-meta">${k.gender==="boy"?"男孩":"女孩"} · ${k.age_display||k.age+"岁"}${getKidZodiacInfo(k)}</div>
       <div class="kid-bond-info">${k.name}已陪伴你${compDays}天 · ${bl.emoji}${bl.name}${k.milestone ? ' · ' + k.milestone : ''}</div>
     </div>
-    
+    <div class="kid-start-btn">开启互动 <span class="kid-start-arrow">→</span></div>
   </div>`;
 }).join("");
 
