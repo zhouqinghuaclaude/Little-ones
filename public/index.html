@@ -65,7 +65,7 @@ input, textarea { font-family: inherit; }
   border-radius: 22px; padding: 16px 16px 32px; margin-bottom: 12px; box-shadow: var(--card-shadow);
   cursor: pointer; position: relative; }
 .kid-card:active { transform: scale(0.97); }
-.kid-start-btn { display: flex; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 20px; background: linear-gradient(135deg, rgba(155,89,182,0.1), rgba(241,148,138,0.1)); border: 1px solid rgba(155,89,182,0.15); font-size: 11px; font-weight: 700; color: var(--p); flex-shrink: 0; align-self: flex-end; margin-top: auto; max-width: 90px; }
+.kid-start-btn { display: flex; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 20px; background: linear-gradient(135deg, rgba(155,89,182,0.1), rgba(241,148,138,0.1)); border: 1px solid rgba(155,89,182,0.15); font-size: 13px; font-weight: 700; color: var(--p); flex-shrink: 0; align-self: flex-end; margin-top: auto; max-width: 90px; }
 .kid-start-arrow { font-size: 12px; animation: arrowBreathe 2s ease-in-out infinite; }
 @keyframes arrowBreathe { 0%, 100% { opacity: 0.4; transform: translateX(0); } 50% { opacity: 1; transform: translateX(2px); } }
 .kid-face { width: 58px; height: 58px; border-radius: 50%; flex-shrink: 0;
@@ -872,7 +872,7 @@ function getBondLevel(score) {
       <div class="kid-meta">${k.gender==="boy"?"男孩":"女孩"} · ${k.age_display||k.age+"岁"}${getKidZodiacInfo(k)}</div>
       <div class="kid-bond-info">${bl.emoji}${bl.name} · 已陪伴${compDays}天</div>
     </div>
-    <div class="kid-start-btn">开启互动 <span class="kid-start-arrow">→</span></div>
+    <div class="kid-start-btn">开启 <span class="kid-start-arrow">→</span></div>
   </div>`;
 }).join("");
 
