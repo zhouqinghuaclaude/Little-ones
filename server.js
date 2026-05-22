@@ -16,6 +16,7 @@ app.use(express.static("public"));
 const db = new Pool({ connectionString: process.env.DATABASE_URL });
 const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const doubao = process.env.DOUBAO_API_KEY ? new OpenAI({ apiKey: process.env.DOUBAO_API_KEY, baseURL: "https://ark.cn-beijing.volces.com/api/v3" }) : null;
+console.log("DOUBAO init:", process.env.DOUBAO_API_KEY ? "KEY_EXISTS" : "NO_KEY");
 async function callAI(messages, system, maxTokens) {
  if (doubao) {
  const msgs = system ? [{ role: "system", content: system }, ...messages] : messages;
