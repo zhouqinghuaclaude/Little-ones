@@ -15,12 +15,18 @@ app.use(express.static("public"));
 
 const db = new Pool({ connectionString: process.env.DATABASE_URL });
 const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const doubao = process.env.DOUBAO_API_KEY ? new OpenAI({ apiKey: process.env.DOUBAO_API_KEY, baseURL: "https://ark.cn-beijing.volces.com/api/v3" }) : null;
+let _doubao = null;
+function getDoubao() {
+  if (!_doubao && process.env.DOUBAO_API_KEY) {
+    _doubao = new OpenAI({ apiKey: process.env.DOUBAO_API_KEY, baseURL: "https://ark.cn-beijing.volces.com/api/v3" });
+  }
+  return _doubao;
+}
 console.log("DOUBAO init:", process.env.DOUBAO_API_KEY ? "KEY_EXISTS" : "NO_KEY");
 async function callAI(messages, system, maxTokens) {
- if (doubao) {
+ if (getDoubao()) {
  const msgs = system ? [{ role: "system", content: system }, ...messages] : messages;
- const res = await doubao.chat.completions.create({
+ const res = await getDoubao().chat.completions.create({
  model: process.env.DOUBAO_MODEL || "doubao-seed-2-0-lite-260428",
  max_tokens: maxTokens || 1000,
  messages: msgs,
@@ -915,7 +921,7 @@ if (message.includes('📖') && message.includes('讲故事')) {
 
 
   try {
-    console.log("callAI doubao:", !!doubao);
+    console.log("callAI doubao:", !!getDoubao(), "key:", process.env.DOUBAO_API_KEY ? "EXISTS" : "MISSING");
     const reply = await callAI(chatMessages, system, kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 100);
     await db.query("UPDATE kids SET pending_gift = NULL WHERE id = $1", [kid.id]);
 
