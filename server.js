@@ -4,6 +4,7 @@ const { Pool } = require("pg");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Anthropic = require("@anthropic-ai/sdk");
+const OpenAI = require("openai");
 const path = require("path");
 const cron = require('node-cron');
 
@@ -13,7 +14,27 @@ app.use(express.json());
 app.use(express.static("public"));
 
 const db = new Pool({ connectionString: process.env.DATABASE_URL });
-const claude = new Anthropic({ apiKey: process.env.DOUBAO_API_KEY || process.env.ANTHROPIC_API_KEY, baseURL: process.env.DOUBAO_API_KEY ? "https://ark.cn-beijing.volces.com/api/compatible" : undefined });
+const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const doubao = process.env.DOUBAO_API_KEY ? new OpenAI({ apiKey: process.env.DOUBAO_API_KEY, baseURL: "https://ark.cn-beijing.volces.com/api/v3" }) : null;
+async function callAI(messages, system, maxTokens) {
+ if (doubao) {
+ const msgs = system ? [{ role: "system", content: system }, ...messages] : messages;
+ const res = await doubao.chat.completions.create({
+ model: process.env.DOUBAO_MODEL || "doubao-seed-2-0-lite-260428",
+ max_tokens: maxTokens || 1000,
+ messages: msgs,
+ });
+ return res.choices[0].message.content.trim();
+ } else {
+ const res = await claude.messages.create({
+ model: "claude-sonnet-4-20250514",
+ max_tokens: maxTokens || 1000,
+ system: system,
+ messages: messages,
+ });
+ return res.content[0].text.trim();
+ }
+}
 const JWT_SECRET = process.env.JWT_SECRET || "little-ones-secret-2024";
 
 const auth = (req, res, next) => {
@@ -893,14 +914,7 @@ if (message.includes('📖') && message.includes('讲故事')) {
 
 
   try {
-    const response = await claude.messages.create({
-      model: process.env.DOUBAO_MODEL || "claude-sonnet-4-20250514",
-      max_tokens: kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 100,
-      system: system,
-      messages: chatMessages
-    });
-
-    const reply = response.content[0].text.trim();
+    const reply = await callAI(chatMessages, system, kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 100);
     await db.query("UPDATE kids SET pending_gift = NULL WHERE id = $1", [kid.id]);
 
     const saved = await db.query(
