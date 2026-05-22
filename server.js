@@ -915,6 +915,7 @@ if (message.includes('📖') && message.includes('讲故事')) {
 
 
   try {
+    console.log("callAI doubao:", !!doubao);
     const reply = await callAI(chatMessages, system, kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 100);
     await db.query("UPDATE kids SET pending_gift = NULL WHERE id = $1", [kid.id]);
 
