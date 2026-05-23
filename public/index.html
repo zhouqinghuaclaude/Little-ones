@@ -558,7 +558,7 @@ input, textarea { font-family: inherit; }
         </div>
         <span style="color:var(--sub);font-size:18px">›</span>
       </div>
-      <div onclick="showSettingsSection('personality')" style="display:flex;align-items:center;padding:16px;cursor:pointer;border-bottom:1px solid var(--border)">
+      <div id="personalitySettingsRow" onclick="showSettingsSection('personality')" style="display:flex;align-items:center;padding:16px;cursor:pointer;border-bottom:1px solid var(--border)">
         <span style="font-size:20px;margin-right:12px">✨</span>
         <div style="flex:1">
           <div style="font-size:15px;font-weight:700">设置性格</div>
@@ -2642,6 +2642,8 @@ function openSettings(k) {
   const personalitySub = document.getElementById('personalitySettingsSub');
   const nameMap = {outgoing:'外向活泼', gentle:'温柔细腻', brave:'勇敢坚强', smart:'聪慧好学', quirky:'精灵古怪', clingy:'软糯黏人'};
   if (personalitySub) personalitySub.textContent = nameMap[k.personality] || '外向活泼 / 温柔细腻 / 更多';
+  const personalityRow = document.getElementById("personalitySettingsRow");
+  if (personalityRow) personalityRow.style.display = k.personality && ["outgoing","gentle","brave","smart","quirky","clingy"].includes(k.personality) ? "none" : "flex";
   const interestsTitle = document.getElementById('interestsSettingsTitle');
   if (interestsTitle) interestsTitle.textContent = `Ta更懂你`;
 
