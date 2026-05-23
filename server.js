@@ -612,7 +612,8 @@ const msgCount = parseInt(msgCountResult.rows[0].count) || 0;
   }
 
   // ── Bond score calculation ────────────────────────────────────────────────
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const _now = new Date();
+const todayStr = new Date(_now.getTime() + 8*3600*1000).toISOString().slice(0, 10);
   const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
   const lastChatDate = kid.last_chat_date ? String(kid.last_chat_date).slice(0, 10) : null;
 let bondDelta = 1; // base per message
@@ -694,7 +695,8 @@ const newLevel = canTriggerNext ? nextLevel - 1 : oldLevel;
 // 延迟触发晋级：存入pending_level_up，不立刻触发
 let levelUp = null;
 if (newLevel > oldLevel) {
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const _now = new Date();
+const todayStr = new Date(_now.getTime() + 8*3600*1000).toISOString().slice(0, 10);
   const lastLevelupDate = kid.last_levelup_date ? String(kid.last_levelup_date).slice(0, 10) : null;
   if (lastLevelupDate !== todayStr) {
     await db.query("UPDATE kids SET pending_level_up=$1 WHERE id=$2", [newLevel + 1, kid.id]);
@@ -705,7 +707,8 @@ if (newLevel > oldLevel) {
 if (kid.pending_level_up && kid.last_chat_at) {
   const minutesSinceLastChat = (Date.now() - new Date(kid.last_chat_at)) / 60000;
   if (minutesSinceLastChat >= 10) {
-    const todayStr = new Date().toISOString().slice(0, 10);
+    const _now = new Date();
+const todayStr = new Date(_now.getTime() + 8*3600*1000).toISOString().slice(0, 10);
     levelUp = {
       level: kid.pending_level_up,
       name: LEVEL_NAMES[kid.pending_level_up - 1],
@@ -932,7 +935,8 @@ if (message.includes('📖') && message.includes('讲故事')) {
       [kid.id, reply]
     );
 // 每日消息计数
-const todayStr = new Date().toISOString().slice(0, 10);
+const _now = new Date();
+const todayStr = new Date(_now.getTime() + 8*3600*1000).toISOString().slice(0, 10);
 const kidMsgDate = kid.daily_msg_date ? new Date(kid.daily_msg_date).toISOString().slice(0, 10) : null;
 if (kidMsgDate !== todayStr) {
   await db.query("UPDATE kids SET daily_msg_count=0, daily_msg_date=$1 WHERE id=$2", [todayStr, kid.id]);
