@@ -2555,7 +2555,7 @@ async function saveBirthday() {
     const sub = document.getElementById('birthdaySettingsSub');
     if (sub) sub.textContent = birthday;
     msg.textContent = '✅ 生日已保存';
-    setTimeout(() => { msg.textContent = ''; showScreen('settingsScreen'); }, 1500);
+    setTimeout(() => { msg.textContent = ''; openSettings(settingsKid); }, 1500);
   } catch(e) {
     msg.textContent = '❌ ' + (e.message || '保存失败');
   }
@@ -2571,7 +2571,7 @@ async function saveAgeMode() {
     const sub = document.getElementById('ageModeSettingsSub');
     if (sub) sub.textContent = selectedAgeMode === 'natural' ? '自然成长 🌱' : '冻龄 📌';
     msg.textContent = '✅ 成长模式已保存';
-    setTimeout(() => { msg.textContent = ''; showScreen('settingsScreen'); }, 1500);
+    setTimeout(() => { msg.textContent = ''; openSettings(settingsKid); }, 1500);
   } catch(e) {
     msg.textContent = '❌ ' + (e.message || '保存失败');
   }
@@ -2589,7 +2589,7 @@ async function savePersonality() {
     const nameMap = {outgoing:'外向活泼', gentle:'温柔细腻', brave:'勇敢坚强', smart:'聪慧好学', quirky:'精灵古怪', clingy:'软糯黏人'};
     if (sub) sub.textContent = nameMap[selectedPersonality] || selectedPersonality;
     msg.textContent = '✅ 性格已保存';
-    setTimeout(() => { msg.textContent = ''; showScreen('settingsScreen'); }, 1500);
+    setTimeout(() => { msg.textContent = ''; openSettings(settingsKid); }, 1500);
   } catch(e) {
     msg.textContent = '❌ ' + (e.message || '保存失败');
   }
@@ -2602,7 +2602,7 @@ async function saveAvatar() {
     settingsKid = {...settingsKid, ...updated};
     kid = {...kid, ...updated};
     msg.textContent = '✅ 头像已保存';
-    setTimeout(() => { msg.textContent = ''; showScreen('settingsScreen'); }, 1500);
+    setTimeout(() => { msg.textContent = ''; openSettings(settingsKid); }, 1500);
   } catch(e) {
     msg.textContent = '❌ ' + (e.message || '保存失败');
   }
@@ -2622,7 +2622,7 @@ async function saveInterests() {
     settingsKid = {...settingsKid, ...updated};
     kid = {...kid, ...updated};
     msg.textContent = '✅ 爱好已保存';
-    setTimeout(() => { msg.textContent = ''; showScreen('settingsScreen'); }, 1500);
+    setTimeout(() => { msg.textContent = ''; openSettings(settingsKid); }, 1500);
   } catch(e) {
     msg.textContent = '❌ ' + (e.message || '保存失败');
   }
