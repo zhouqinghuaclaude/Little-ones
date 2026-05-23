@@ -841,7 +841,9 @@ const now = new Date();
 const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
 const weekDays = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
 const weekStr = weekDays[now.getDay()];
-const timeStr = `${now.getHours()}时${now.getMinutes()}分`;
+const chinaHours = (now.getUTCHours() + 8) % 24;
+const chinaMinutes = now.getUTCMinutes();
+const timeStr = `${chinaHours}时${chinaMinutes < 10 ? "0" + chinaMinutes : chinaMinutes}分`;
 system += ` 今天是${dateStr},${weekStr},现在是${timeStr}。你知道今天的日期和当前时间。`;
 if (kid.personality_seed) {
   const seed = typeof kid.personality_seed === 'string' ? JSON.parse(kid.personality_seed) : kid.personality_seed;
