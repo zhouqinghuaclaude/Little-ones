@@ -2326,9 +2326,18 @@ function showSettingsSection(section) {
   } else if (section === 'personality') {
     title.textContent = '设置性格';
     const p = selectedPersonality || k.personality || 'outgoing';
-    body.innerHTML = `
+    const isLocked = k.personality && ['outgoing','gentle','brave','smart','quirky','clingy'].includes(k.personality);
+    const nameMap = {outgoing:'😄 外向活泼', gentle:'🌸 温柔细腻', brave:'💪 勇敢坚强', smart:'🌟 聪慧好学', quirky:'✨ 精灵古怪', clingy:'🧸 软糯黏人'};
+    body.innerHTML = isLocked ? `
       <label class="field-label">✨ 性格设置</label>
-      <div style="font-size:12px;color:var(--sub);margin-bottom:12px">选择后将影响孩子的性格特点,保存后生效</div>
+      <div style="margin-top:12px;padding:16px;background:var(--bg);border-radius:14px;text-align:center">
+        <div style="font-size:24px;margin-bottom:8px">${nameMap[k.personality]}</div>
+        <div style="font-size:12px;color:var(--sub);margin-top:6px">🔒 性格已锁定，将伴随孩子成长</div>
+      </div>
+      <div id="subSettingsMsg" style="text-align:center;margin-top:12px;font-size:13px;color:var(--p)"></div>
+    ` : `
+      <label class="field-label">✨ 性格设置</label>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:12px">选择后将影响孩子的性格特点，保存后无法更改</div>
       <div class="choice-row" style="flex-wrap:wrap;gap:8px">
         <button class="choice-btn${p === 'outgoing' ? ' on' : ''}" id="sOutgoing" onclick="selectPersonality('outgoing')">😄 外向活泼</button>
         <button class="choice-btn${p === 'gentle' ? ' on' : ''}" id="sGentle" onclick="selectPersonality('gentle')">🌸 温柔细腻</button>
@@ -2341,7 +2350,7 @@ function showSettingsSection(section) {
       <button class="primary-btn" style="margin-top:28px" onclick="savePersonality()">保存性格</button>
       <div id="subSettingsMsg" style="text-align:center;margin-top:12px;font-size:13px;color:var(--p)"></div>
     `;
-    showPersonalityDesc(p);
+    if (!isLocked) showPersonalityDesc(p);
 
   } else if (section === 'avatar') {
     title.textContent = '选择头像';
