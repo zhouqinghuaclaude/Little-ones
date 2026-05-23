@@ -2578,6 +2578,7 @@ async function saveAgeMode() {
 }
 
 async function savePersonality() {
+  if (!confirm('孩子性格一旦选定,无法更改,确认吗?')) return;
   const msg = document.getElementById('subSettingsMsg');
   msg.textContent = '保存中...';
   try {
@@ -2643,7 +2644,7 @@ function openSettings(k) {
   const nameMap = {outgoing:'外向活泼', gentle:'温柔细腻', brave:'勇敢坚强', smart:'聪慧好学', quirky:'精灵古怪', clingy:'软糯黏人'};
   if (personalitySub) personalitySub.textContent = nameMap[k.personality] || '外向活泼 / 温柔细腻 / 更多';
   const personalityRow = document.getElementById("personalitySettingsRow");
-  if (personalityRow) personalityRow.style.display = k.personality && ["outgoing","gentle","brave","smart","quirky","clingy"].includes(k.personality) ? "none" : "flex";
+  if (personalityRow) { const hasPersonality = k.personality && ["outgoing","gentle","brave","smart","quirky","clingy"].includes(k.personality); personalityRow.style.pointerEvents = hasPersonality ? "none" : "auto"; const arrow = personalityRow.querySelector("span:last-child"); if (arrow) arrow.style.display = hasPersonality ? "none" : ""; }
   const interestsTitle = document.getElementById('interestsSettingsTitle');
   if (interestsTitle) interestsTitle.textContent = `Ta更懂你`;
 
