@@ -582,7 +582,7 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
   const isMissing = _lastChatDate && (_lastChatDate.getFullYear() !== _today.getFullYear() || _lastChatDate.getMonth() !== _today.getMonth() || _lastChatDate.getDate() !== _today.getDate());
 
   const histResult = await db.query(
-    "SELECT role, content FROM messages WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 20",
+    "SELECT role, content FROM messages WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 50",
     [kid.id]
   );
   const history = histResult.rows.reverse();
