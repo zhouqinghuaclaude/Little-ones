@@ -577,8 +577,8 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
   }
 
   // Check if the child has been missing the parent (last chat > 1 day ago)
-  const _lastChatDate = kid.last_chat_at ? new Date(kid.last_chat_at) : null;
-  const _today = new Date();
+  const _lastChatDate = kid.last_chat_at ? new Date(new Date(kid.last_chat_at).getTime() + 8*3600*1000) : null;
+  const _today = new Date(new Date().getTime() + 8*3600*1000);
   const isMissing = _lastChatDate && (_lastChatDate.getFullYear() !== _today.getFullYear() || _lastChatDate.getMonth() !== _today.getMonth() || _lastChatDate.getDate() !== _today.getDate());
 
   const histResult = await db.query(
