@@ -580,6 +580,7 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
   const _lastChatDate = kid.last_chat_at ? new Date(new Date(kid.last_chat_at).getTime() + 8*3600*1000) : null;
   const _today = new Date(new Date().getTime() + 8*3600*1000);
   const isMissing = _lastChatDate && (_lastChatDate.getFullYear() !== _today.getFullYear() || _lastChatDate.getMonth() !== _today.getMonth() || _lastChatDate.getDate() !== _today.getDate());
+  console.log("MISSING DEBUG:", { last_chat_at: kid.last_chat_at, _lastChatDate: _lastChatDate?.toISOString(), _today: _today.toISOString(), isMissing });
 
   const histResult = await db.query(
     "SELECT role, content FROM messages WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 50",
