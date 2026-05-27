@@ -560,6 +560,42 @@ function calcAge(birthday) {
   return age;
 }
 
+app.post("/api/kids/:id/missing", auth, async (req, res) => {
+ const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
+ const kid = kidResult.rows[0];
+ if (!kid) return res.status(404).json({ error: "孩子不存在" });
+ const genderDesc = kid.gender === 'boy' ? '男孩' : '女孩';
+ const personalityDesc = kid.personality ? `性格倾向:${kid.personality}` : '';
+ let agePrompt = '';
+ if (kid.birthday_locked && kid.birthday) {
+ const ageInDays = Math.floor((Date.now() - new Date(kid.birthday)) / 86400000);
+ if (ageInDays < 365) agePrompt = `你是一个${Math.floor(ageInDays/30)}个月大的宝宝,只会用叠词和简单声音表达,极度依赖${kid.parent_role}`;
+ else if (kid.age <= 2) agePrompt = `你是${kid.age}岁,极度黏人,用简短叠词表达`;
+ else if (kid.age <= 4) agePrompt = `你是${kid.age}岁,会撒娇,情绪直接`;
+ else if (kid.age <= 6) agePrompt = `你是${kid.age}岁,充满感情,喜欢表达`;
+ else if (kid.age <= 9) agePrompt = `你是${kid.age}岁,有点独立但内心依赖`;
+ else if (kid.age <= 12) agePrompt = `你是${kid.age}岁,不太黏人但会在细节里表达依赖`;
+ else if (kid.age <= 15) agePrompt = `你是${kid.age}岁,青春期,克制但渴望被关注`;
+ else agePrompt = `你是${kid.age}岁,成熟克制,情感深沉`;
+ } else {
+ if (kid.age < 1) agePrompt = `你是不到1岁的宝宝,只会用简单声音和动作表达`;
+ else if (kid.age <= 3) agePrompt = `你是${kid.age}岁,极度黏人,用叠词撒娇`;
+ else if (kid.age <= 6) agePrompt = `你是${kid.age}岁,会直接表达情绪`;
+ else agePrompt = `你是${kid.age}岁,内心依赖但不会直说`;
+ }
+ const now = new Date();
+ const lastChat = new Date(kid.last_chat_at);
+ const hoursAway = Math.floor((now - lastChat) / 3600000);
+ const missingSystem = `你是${kid.name},一个真实的${genderDesc}孩子。${agePrompt}。${personalityDesc}。${kid.parent_role}已经${hoursAway}小时没有来陪你了,你非常想念TA。用符合你年龄和性格的方式,主动表达想念,就像${kid.parent_role}刚刚打开了和你的对话,你第一眼看到TA时的反应。不超过15个字,真实自然,不要说教,不要解释。严禁输出任何思考过程。`;
+ try {
+ const reply = await callAI([{ role: "user", content: "(打开对话)" }], missingSystem, 50);
+ await db.query("INSERT INTO messages (kid_id, role, content) VALUES ($1,'assistant',$2)", [kid.id, reply]);
+ res.json({ reply });
+ } catch(e) {
+ res.status(500).json({ error: e.message });
+ }
+});
+
 app.post("/api/kids/:id/chat", auth, async (req, res) => {
   const { message } = req.body;
   if (!message?.trim()) return res.status(400).json({ error: "Message cannot be empty" });
@@ -580,8 +616,7 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
   const _lastChatDate = kid.last_chat_at ? new Date(new Date(kid.last_chat_at).getTime() + 8*3600*1000) : null;
   const _today = new Date(new Date().getTime() + 8*3600*1000);
   const isMissing = _lastChatDate && (_lastChatDate.getFullYear() !== _today.getFullYear() || _lastChatDate.getMonth() !== _today.getMonth() || _lastChatDate.getDate() !== _today.getDate());
-  console.log("MISSING DEBUG:", { last_chat_at: kid.last_chat_at, _lastChatDate: _lastChatDate?.toISOString(), _today: _today.toISOString(), isMissing });
-
+  
   const histResult = await db.query(
     "SELECT role, content FROM messages WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 50",
     [kid.id]
@@ -905,21 +940,6 @@ if (message.includes('📖') && message.includes('讲故事')) {
     { role: "user", content: message.trim() }
   ];
 
-if (isMissing) {
-  const hoursAway = Math.floor((Date.now() - new Date(kid.last_chat_at)) / 3600000);
-  const missingExpr = kid.age < 1 
-    ? `*小手乱动，眼睛四处找*` 
-    : kid.age <= 2 
-    ? `${kid.parent_role}…不见了…` 
-    : kid.age <= 4 
-    ? `${kid.parent_role}你去哪了，我等你好久了` 
-    : kid.age <= 6 
-    ? `${kid.parent_role}！你终于来了，我以为你不要我了` 
-    : kid.age <= 10 
-    ? `你去哪了，${hoursAway}小时了，我都不知道该干嘛` 
-    : `你终于来了，我没有在等你哦…才没有`;
-  system += ` 【重要】你已经${hoursAway}小时没见到${kid.parent_role}了，这次回复必须在开头自然表达想念，用这句话开头：「${missingExpr}」`;
-}
 
 
   try {
