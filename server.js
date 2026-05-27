@@ -569,7 +569,14 @@ app.post("/api/kids/:id/missing", auth, async (req, res) => {
  let agePrompt = '';
  if (kid.birthday_locked && kid.birthday) {
  const ageInDays = Math.floor((Date.now() - new Date(kid.birthday)) / 86400000);
- if (ageInDays < 365) agePrompt = `你是一个${Math.floor(ageInDays/30)}个月大的宝宝,只会用叠词和简单声音表达,极度依赖${kid.parent_role}`;
+ if (ageInDays < 365) {
+   const msgCountResult = await db.query("SELECT COUNT(*) FROM messages WHERE kid_id=$1 AND role='assistant'", [kid.id]);
+   const msgCount = parseInt(msgCountResult.rows[0].count) || 0;
+   if (msgCount < 5) agePrompt = `你是一个${Math.floor(ageInDays/30)}个月大的宝宝，只能用肢体动作回应，比如*小手乱动，眼睛四处找*，不说任何语言文字`;
+   else if (msgCount < 10) agePrompt = `你是一个${Math.floor(ageInDays/30)}个月大的宝宝，只能发出简单声音如"啊～""嗯～"，可加简短肢体描述`;
+   else if (msgCount < 15) agePrompt = `你是一个${Math.floor(ageInDays/30)}个月大的宝宝，只能说"妈""抱"等单字，加肢体动作`;
+   else agePrompt = `你是一个${Math.floor(ageInDays/30)}个月大的宝宝，只能说叠词如"妈妈""抱抱"，不超过4个字`;
+ }
  else if (kid.age <= 2) agePrompt = `你是${kid.age}岁,极度黏人,用简短叠词表达`;
  else if (kid.age <= 4) agePrompt = `你是${kid.age}岁,会撒娇,情绪直接`;
  else if (kid.age <= 6) agePrompt = `你是${kid.age}岁,充满感情,喜欢表达`;
