@@ -905,7 +905,7 @@ if (message.includes('📖') && message.includes('讲故事')) {
     { role: "user", content: message.trim() }
   ];
 
- if (isMissing) {
+if (isMissing) {
   const hoursAway = Math.floor((Date.now() - new Date(kid.last_chat_at)) / 3600000);
   const missingExpr = kid.age < 1 
     ? `*小手乱动，眼睛四处找*` 
@@ -917,13 +917,8 @@ if (message.includes('📖') && message.includes('讲故事')) {
     ? `${kid.parent_role}！你终于来了，我以为你不要我了` 
     : kid.age <= 10 
     ? `你去哪了，${hoursAway}小时了，我都不知道该干嘛` 
-    : `你终于来了，我没有在等你哦…才没有` ;
-
-  chatMessages.unshift({
-    role: "user",
-    content: `[System note: 你已经${hoursAway}小时没见到${kid.parent_role}了。用以下方式自然地在对话开头表达想念：「${missingExpr}」，情绪真实，不要太夸张。]`
-  });
-  chatMessages.splice(1, 0, { role: "assistant", content: "好的。" });
+    : `你终于来了，我没有在等你哦…才没有`;
+  system += ` 【重要】你已经${hoursAway}小时没见到${kid.parent_role}了，这次回复必须在开头自然表达想念，用这句话开头：「${missingExpr}」`;
 }
 
 
