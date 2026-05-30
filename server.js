@@ -564,6 +564,53 @@ app.post("/api/kids/:id/missing", auth, async (req, res) => {
  const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
  const kid = kidResult.rows[0];
  if (!kid) return res.status(404).json({ error: "孩子不存在" });
+ // 每天只触发一次
+ const todayStr = new Date(new Date().getTime() + 8*3600*1000).toISOString().slice(0,10);
+ if (kid.last_missing_date && String(kid.last_missing_date).slice(0,10) === todayStr) {
+ return res.json({ skip: true });
+ }
+ const genderDesc = kid.gender === 'boy' ? '男孩' : '女孩';
+ const personalityMap = {outgoing:'外向活泼',gentle:'温柔细腻',brave:'勇敢坚强',smart:'聪慧好学',quirky:'精灵古怪',clingy:'软糯黏人'};
+ const personalityDesc = kid.personality ? `性格:${personalityMap[kid.personality] || kid.personality}` : '';
+ const now = new Date();
+ const lastChat = new Date(kid.last_chat_at);
+ const hoursAway = Math.floor((now - lastChat) / 3600000);
+ const todayDate = new Date(now.getTime() + 8*3600*1000);
+ const dateDesc = `今天是${todayDate.getMonth()+1}月${todayDate.getDate()}日`;
+ let agePrompt = '';
+ if (kid.birthday_locked && kid.birthday) {
+ const ageInDays = Math.floor((Date.now() - new Date(kid.birthday)) / 86400000);
+ if (ageInDays < 365) {
+ const msgCountResult = await db.query("SELECT COUNT(*) FROM messages WHERE kid_id=$1 AND role='assistant'", [kid.id]);
+ const msgCount = parseInt(msgCountResult.rows[0].count) || 0;
+ if (msgCount < 5) agePrompt = `你是${Math.floor(ageInDays/30)}个月大的宝宝,只能用肢体动作,如*小手乱动*,不说话`;
+ else if (msgCount < 10) agePrompt = `你是${Math.floor(ageInDays/30)}个月大,只发简单声音如"啊~",可加肢体描述`;
+ else if (msgCount < 15) agePrompt = `你是${Math.floor(ageInDays/30)}个月大,只说单字如"妈""抱",加肢体动作`;
+ else agePrompt = `你是${Math.floor(ageInDays/30)}个月大,只说叠词如"妈妈""抱抱",不超过4个字`;
+ }
+ else if (kid.age <= 2) agePrompt = `你是${kid.age}岁,极度黏人,用叠词撒娇,多用感叹号问号,少用句号`;
+ else if (kid.age <= 4) agePrompt = `你是${kid.age}岁,直接表达情绪,多用感叹号问号,少用句号`;
+ else if (kid.age <= 6) agePrompt = `你是${kid.age}岁,充满感情,多用感叹号问号,少用句号`;
+ else if (kid.age <= 9) agePrompt = `你是${kid.age}岁,有点独立但内心依赖,可以用句号`;
+ else if (kid.age <= 12) agePrompt = `你是${kid.age}岁,不太黏人但细节里有依赖`;
+ else if (kid.age <= 15) agePrompt = `你是${kid.age}岁,青春期,克制但渴望被关注`;
+ else agePrompt = `你是${kid.age}岁,成熟克制,情感深沉`;
+ } else {
+ if (kid.age < 1) agePrompt = `你是不到1岁的宝宝,只用肢体动作和简单声音`;
+ else if (kid.age <= 3) agePrompt = `你是${kid.age}岁,极度黏人,叠词撒娇,多用感叹号问号,少用句号`;
+ else if (kid.age <= 6) agePrompt = `你是${kid.age}岁,直接表达情绪,多用感叹号问号,少用句号`;
+ else agePrompt = `你是${kid.age}岁,内心依赖但不直说`;
+ }
+ const missingSystem = `你是${kid.name},一个真实的${genderDesc}孩子。${agePrompt}。${personalityDesc}。${dateDesc}。${kid.parent_role}已经${hoursAway}小时没来陪你了,你非常想念TA。用符合你年龄和性格的方式主动表达想念,就像${kid.parent_role}刚打开对话你第一眼看到TA的反应。不超过15个字。真实自然,每次表达方式要有变化,不要总是说"想你""抱抱"。严禁输出思考过程。`;
+ try {
+ const reply = await callAI([{ role: "user", content: "(打开对话)" }], missingSystem, 30);
+ await db.query("INSERT INTO messages (kid_id, role, content) VALUES ($1,'assistant',$2)", [kid.id, reply]);
+ await db.query("UPDATE kids SET last_missing_date=$1 WHERE id=$2", [todayStr, kid.id]);
+ res.json({ reply });
+ } catch(e) {
+ res.status(500).json({ error: e.message });
+ }
+});
  const genderDesc = kid.gender === 'boy' ? '男孩' : '女孩';
  const personalityDesc = kid.personality ? `性格倾向:${kid.personality}` : '';
  let agePrompt = '';
@@ -1159,6 +1206,7 @@ async function initDB() {
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS birthday DATE;
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS personality VARCHAR(20) DEFAULT 'lively';
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_chat_at TIMESTAMP;
+ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_missing_date DATE;
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar VARCHAR(10);
     CREATE TABLE IF NOT EXISTS diary (
       id SERIAL PRIMARY KEY,

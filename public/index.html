@@ -2033,7 +2033,6 @@ try {
  _lastChat.getDate() !== _todayChina.getDate()
  );
  if (_isMissing) {
- setTimeout(() => {
  req(`/api/kids/${k.id}/missing`, { method: 'POST' }).then(data => {
  if (data.reply) {
  const area = document.getElementById('msgsArea');
@@ -2041,7 +2040,6 @@ try {
  scrollBot();
  }
  }).catch(() => {});
- }, 300);
  }
   
   // 检查是否有待触发的晋级
