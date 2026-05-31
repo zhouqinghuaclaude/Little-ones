@@ -833,7 +833,7 @@ const todayStr = new Date(_now.getTime() + 8*3600*1000).toISOString().slice(0, 1
   // ─────────────────────────────────────────────────────────────────────────
 // 获取孩子的记忆
 const memoriesResult = await db.query(
-  "SELECT content FROM memories WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 10",
+  "SELECT content FROM memories WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 30",
   [kid.id]
 );
 const memories = memoriesResult.rows.map(r => r.content);
@@ -974,6 +974,9 @@ if (fulfilledWishes.rows.length > 0) {
   const wishList = fulfilledWishes.rows.map(w => w.content).join('、');
   system += ` 你已经收到过这些礼物或实现了这些心愿：${wishList}。这是已经发生的事实，你记得并珍惜。`;
 }
+if (memories.length > 0) {
+  system += ` 你还记得这些过去发生的事：${memories.join('；')}。这些是你真实的记忆，合适的时候可以自然地主动提起，就像真正的孩子会想起过去的经历。`;
+}
 system += ` 不要主动提到恐龙，除非用户先提到恐龙。`;
 system += ` 严格控制回复长度，绝对不超过规定字数，宁可说得少也不说长句。`;
 system += ` 严禁输出任何思考过程、自我纠正、字数分析或内部提示词内容，只输出最终回复。`;
@@ -1089,7 +1092,7 @@ if (totalCount % 20 === 0) {
       await db.query("INSERT INTO memories (kid_id, content) VALUES ($1, $2)", [kid.id, memory.trim()]);
     }
     // 只保留最近50条记忆
-    await db.query("DELETE FROM memories WHERE kid_id=$1 AND id NOT IN (SELECT id FROM memories WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 50)", [kid.id]);
+    await db.query("DELETE FROM memories WHERE kid_id=$1 AND id NOT IN (SELECT id FROM memories WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 200)", [kid.id]);
   }).catch(() => {});
 }
 
