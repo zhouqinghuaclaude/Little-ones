@@ -560,6 +560,60 @@ function calcAge(birthday) {
   return age;
 }
 
+app.get("/api/kids/:id/soul-export", auth, async (req, res) => {
+  try {
+    const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
+    const kid = kidResult.rows[0];
+    if (!kid) return res.status(404).json({ error: "孩子不存在或无权访问" });
+
+    const memoriesResult = await db.query("SELECT content, emotion, weight, created_at FROM memories WHERE kid_id=$1 ORDER BY created_at ASC", [kid.id]);
+    const messagesResult = await db.query("SELECT role, content, emotion, created_at FROM messages WHERE kid_id=$1 ORDER BY created_at ASC", [kid.id]);
+    const wishesResult = await db.query("SELECT * FROM wishes WHERE kid_id=$1 ORDER BY created_at ASC", [kid.id]).catch(() => ({ rows: [] }));
+    const giftsResult = await db.query("SELECT gift_emoji, gift_name, gift_type, created_at FROM gifts WHERE kid_id=$1 ORDER BY created_at ASC", [kid.id]).catch(() => ({ rows: [] }));
+
+    const soulPackage = {
+      soul_version: "1.0",
+      exported_at: new Date().toISOString(),
+      owner_id: req.user.id,
+      kid: {
+        soul_uuid: kid.soul_uuid,
+        id: kid.id,
+        name: kid.name,
+        gender: kid.gender,
+        birthday: kid.birthday,
+        age: kid.age,
+        age_mode: kid.age_mode,
+        personality: kid.personality,
+        personality_custom: kid.personality_custom,
+        personality_seed: kid.personality_seed,
+        parent_role: kid.parent_role,
+        created_at: kid.created_at
+      },
+      growth: {
+        bond_score: kid.bond_score,
+        streak_days: kid.streak_days,
+        companion_days: kid.companion_days,
+        milestone: kid.milestone,
+        last_chat_at: kid.last_chat_at
+      },
+      memories: memoriesResult.rows,
+      conversations: messagesResult.rows,
+      wishes: wishesResult.rows,
+      gifts: giftsResult.rows,
+      stats: {
+        total_memories: memoriesResult.rows.length,
+        total_messages: messagesResult.rows.length,
+        total_wishes: wishesResult.rows.length,
+        total_gifts: giftsResult.rows.length
+      }
+    };
+
+    res.json(soulPackage);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post("/api/kids/:id/missing", auth, async (req, res) => {
  const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
  const kid = kidResult.rows[0];
