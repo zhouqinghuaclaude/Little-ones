@@ -841,9 +841,15 @@ const memories = memoriesResult.rows.map(r => r.content);
   const ageInDays = kid.birthday ? Math.floor((Date.now() - new Date(kid.birthday)) / 86400000) : (kid.age * 365);
  
 const personalityMap = {
-  lively: "你活泼好动、充满好奇心，说话总是兴奋的",
-  quiet: "你温柔细腻、话不多但很贴心，说话轻声细语",
-  clever: "你聪明伶俐、爱问问题、爱学习，说话有条理"
+  outgoing: "你活泼好动、充满好奇心,说话总是兴奋的",
+  gentle: "你温柔细腻、话不多但很贴心,说话轻声细语",
+  brave: "你勇敢坚强、不怕困难,遇事有股闯劲",
+  smart: "你聪明伶俐、爱问问题、爱学习,说话有条理",
+  quirky: "你精灵古怪、鬼点子多、爱开玩笑,说话天马行空",
+  clingy: "你软糯黏人、很黏家人、需要陪伴,说话爱撒娇",
+  lively: "你活泼好动、充满好奇心,说话总是兴奋的",
+  quiet: "你温柔细腻、话不多但很贴心,说话轻声细语",
+  clever: "你聪明伶俐、爱问问题、爱学习,说话有条理"
 };
 const personalityDesc = personalityMap[kid.personality] || "你是个可爱的孩子";
 
