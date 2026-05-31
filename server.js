@@ -14,6 +14,14 @@ app.use(express.json());
 app.use(express.static("public"));
 
 const db = new Pool({ connectionString: process.env.DATABASE_URL });
+let _claudeAI = null;
+function getClaudeAI() {
+  if (_claudeAI) return _claudeAI;
+  _claudeAI = process.env.DOUBAO_API_KEY
+    ? new Anthropic({ apiKey: process.env.DOUBAO_API_KEY, baseURL: "https://ark.cn-beijing.volces.com/api/compatible" })
+    : claude;
+  return _claudeAI;
+}
 const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 let _doubao = null;
 function getDoubao() {
@@ -414,7 +422,7 @@ app.post("/api/kids/:id/wish-products", auth, async (req, res) => {
  : membershipType === 'vip' ? 3 
  : 1;
  try {
- const result = await claude.messages.create({
+ const result = await getClaudeAI().messages.create({
  model: process.env.DOUBAO_MODEL || "claude-sonnet-4-20250514",
  max_tokens: 300,
  system: `你是一个虚拟儿童礼品商城的商品生成助手。根据孩子的心愿,生成6个相关的虚拟商品,按价值从低到高排列。每个商品包含:name(商品名,10字以内)、emoji(最合适的emoji)、price(芽豆价格,30-200之间)、desc(简短描述,15字以内)。只输出JSON数组,格式:[{"name":"...","emoji":"...","price":100,"desc":"..."}]不要其他内容。`,
@@ -444,7 +452,7 @@ app.post("/api/kids/:id/context-check", auth, async (req, res) => {
  .map(w => w.content)
  .join('、');
  try {
- const check = await claude.messages.create({
+ const check = await getClaudeAI().messages.create({
  model: process.env.DOUBAO_MODEL || "claude-sonnet-4-20250514",
  max_tokens: 100,
  system: `你是一个对话分析助手。按以下优先级判断对话内容,只输出JSON:
@@ -468,7 +476,6 @@ app.post("/api/kids/:id/context-check", auth, async (req, res) => {
  const result = JSON.parse(check.content[0].text.trim());
  res.json(result);
  } catch(e) {
-      console.log('DETECT ERROR:', e.message);
  res.json({ type: 'none' });
  }
 });
@@ -1071,7 +1078,7 @@ if (newBondScore >= 230 && kid.age >= 1 && !kid.avatar_prompt_sent && !kid.avata
 // 每20条消息提取一次记忆
 if (totalCount % 20 === 0) {
   const recentMessages = history.slice(-20).map(m => `${m.role === 'user' ? kid.parent_role : kid.name}：${m.content}`).join('\n');
-  claude.messages.create({
+  getClaudeAI().messages.create({
     model: process.env.DOUBAO_MODEL || "claude-sonnet-4-20250514",
     max_tokens: 200,
     system: `你是一个记忆提取助手。从以下亲子对话中提取1-3条重要的事件或信息，用简短的中文句子表达，每条不超过20个字。只输出记忆内容，每条一行，不要编号或其他内容。`,
@@ -1170,7 +1177,7 @@ app.post("/api/kids/:id/gifts", auth, async (req, res) => {
 
     // Generate instant thank-you message from kid
     const giftSystem = `You are ${kid.name}, a ${kid.age}-year-old ${kid.gender === "boy" ? "boy" : "girl"}. You are ${kid.parent_role === "爸爸" ? "your dad's" : "your mom's"} beloved child. You just received a gift: ${gift_name}. React with genuine excitement and gratitude in Chinese. Be age-appropriate, warm and enthusiastic. Keep it to 2-3 sentences.`;
-    const giftResponse = await claude.messages.create({
+    const giftResponse = await getClaudeAI().messages.create({
       model: process.env.DOUBAO_MODEL || "claude-sonnet-4-20250514",
       max_tokens: kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 150,
 
