@@ -1084,7 +1084,7 @@ if (totalCount % 20 === 0) {
   getClaudeAI().messages.create({
     model: process.env.DOUBAO_MODEL || "claude-sonnet-4-20250514",
     max_tokens: 200,
-    system: `你是一个记忆提取助手。从以下亲子对话中提取1-3条重要的事件或信息，用简短的中文句子表达，每条不超过20个字。只输出记忆内容，每条一行，不要编号或其他内容。`,
+    system: `你是记忆提取助手。从以下亲子对话中提取值得长期记住的信息，优先记录：约定和承诺、孩子的喜好、重要的人或朋友(包括名字)、特别的经历或事件、孩子的小心愿。每条用简短中文表达，不超过25字。最多4条，宁缺毋滥，普通寒暄和日常客套不要记。只输出记忆内容，每条一行，不要编号。`,
     messages: [{ role: "user", content: recentMessages }]
   }).then(async result => {
     const memories = result.content[0].text.trim().split('\n').filter(m => m.trim());
