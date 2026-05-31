@@ -468,6 +468,7 @@ app.post("/api/kids/:id/context-check", auth, async (req, res) => {
  const result = JSON.parse(check.content[0].text.trim());
  res.json(result);
  } catch(e) {
+      console.log('DETECT ERROR:', e.message);
  res.json({ type: 'none' });
  }
 });
