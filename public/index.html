@@ -2032,15 +2032,23 @@ try {
  _lastChat.getMonth() !== _todayChina.getMonth() ||
  _lastChat.getDate() !== _todayChina.getDate()
  );
- if (_isMissing) {
- req(`/api/kids/${k.id}/missing`, { method: 'POST' }).then(data => {
- if (data.reply) {
- const area = document.getElementById('msgsArea');
- area.insertAdjacentHTML('beforeend', bubble('assistant', data.reply, new Date().toISOString()));
- scrollBot();
- }
- }).catch(() => {});
- }
+  if (_isMissing) {
+    const _area = document.getElementById('msgsArea');
+    _area.insertAdjacentHTML('beforeend', bubble('assistant', `${k.name}在想你…`, new Date().toISOString()));
+    const _placeholder = _area.lastElementChild;
+    scrollBot();
+    req(`/api/kids/${k.id}/missing`, { method: 'POST' }).then(data => {
+      if (data.reply) {
+        _placeholder.querySelector('.msg-text') ? _placeholder.querySelector('.msg-text').textContent = data.reply : _placeholder.remove();
+        const _area2 = document.getElementById('msgsArea');
+        _area2.insertAdjacentHTML('beforeend', bubble('assistant', data.reply, new Date().toISOString()));
+        if (_placeholder) _placeholder.remove();
+        scrollBot();
+      } else {
+        if (_placeholder) _placeholder.remove();
+      }
+    }).catch(() => { if (_placeholder) _placeholder.remove(); });
+  }
   
   // 检查是否有待触发的晋级
   // 检测生日
