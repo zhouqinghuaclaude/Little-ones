@@ -618,11 +618,6 @@ app.post("/api/kids/:id/missing", auth, async (req, res) => {
  const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
  const kid = kidResult.rows[0];
  if (!kid) return res.status(404).json({ error: "孩子不存在" });
- // 每天只触发一次
- const todayStr = new Date(new Date().getTime() + 8*3600*1000).toISOString().slice(0,10);
- if (kid.last_missing_date && String(kid.last_missing_date).slice(0,10) === todayStr) {
- return res.json({ skip: true });
- }
  const genderDesc = kid.gender === 'boy' ? '男孩' : '女孩';
  const personalityMap = {outgoing:'外向活泼',gentle:'温柔细腻',brave:'勇敢坚强',smart:'聪慧好学',quirky:'精灵古怪',clingy:'软糯黏人'};
  const personalityDesc = kid.personality ? `性格:${personalityMap[kid.personality] || kid.personality}` : '';
@@ -659,7 +654,6 @@ app.post("/api/kids/:id/missing", auth, async (req, res) => {
  try {
  const reply = await callAI([{ role: "user", content: "(打开对话)" }], missingSystem, 30);
  await db.query("INSERT INTO messages (kid_id, role, content) VALUES ($1,'assistant',$2)", [kid.id, reply]);
- await db.query("UPDATE kids SET last_missing_date=$1 WHERE id=$2", [todayStr, kid.id]);
  res.json({ reply });
  } catch(e) {
  res.status(500).json({ error: e.message });
