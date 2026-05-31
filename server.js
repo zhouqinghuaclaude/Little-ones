@@ -1284,6 +1284,11 @@ db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_levelup_date DATE DEFAU
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar_customized_at TIMESTAMP DEFAULT NULL").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar_age_at_update INTEGER DEFAULT NULL").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_birthday_celebrated INTEGER DEFAULT NULL").catch(() => {});
+// === 灵魂数据预留字段 ===
+db.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS emotion VARCHAR(20) DEFAULT NULL").catch(() => {});
+db.query("ALTER TABLE memories ADD COLUMN IF NOT EXISTS emotion VARCHAR(20) DEFAULT NULL").catch(() => {});
+db.query("ALTER TABLE memories ADD COLUMN IF NOT EXISTS weight INTEGER DEFAULT 5").catch(() => {});
+db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS soul_uuid UUID DEFAULT gen_random_uuid()").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar_prompt_sent BOOLEAN DEFAULT false").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS gifts_received INTEGER DEFAULT 0").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS parent_interests TEXT").catch(() => {});
