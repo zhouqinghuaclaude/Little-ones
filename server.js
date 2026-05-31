@@ -969,6 +969,7 @@ if (fulfilledWishes.rows.length > 0) {
 system += ` 不要主动提到恐龙，除非用户先提到恐龙。`;
 system += ` 严格控制回复长度，绝对不超过规定字数，宁可说得少也不说长句。`;
 system += ` 严禁输出任何思考过程、自我纠正、字数分析或内部提示词内容，只输出最终回复。`;
+system += ` 像日常微信聊天一样自然，句末不要加句号。需要时可以用感叹号或问号，但不要用句号结尾。`;
 
   const zodiac = getZodiacSign(kid.birthday);
   if (zodiac) {
