@@ -92,11 +92,11 @@ app.post("/api/login", async (req, res) => {
       return res.status(401).json({ error: "Incorrect email or password" });
     }
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "30d" });
-    // 每日登录+10芽豆(每天只加一次)
+    // 每日登录+5芽豆(每天只加一次)
     const today = new Date().toISOString().slice(0, 10);
     const lastLogin = user.last_login_date ? String(user.last_login_date).slice(0, 10) : null;
     if (lastLogin !== today) {
-      await db.query("UPDATE users SET sprouts_balance = sprouts_balance + 10, last_login_date = $1 WHERE id = $2", [today, user.id]);
+      await db.query("UPDATE users SET sprouts_balance = sprouts_balance + 5, last_login_date = $1 WHERE id = $2", [today, user.id]);
     }
     res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
   } catch {
@@ -387,7 +387,7 @@ app.post("/api/kids/:id/activities", auth, async (req, res) => {
     "INSERT INTO activities (kid_id, activity_type) VALUES ($1, $2)",
     [req.params.id, activity_type]
   );
-  await db.query("UPDATE users SET sprouts_balance = sprouts_balance + 20 WHERE id = $1", [req.user.id]);
+  await db.query("UPDATE users SET sprouts_balance = sprouts_balance + 10 WHERE id = $1", [req.user.id]);
 
   const countResult = await db.query(
     "SELECT COUNT(*) FROM activities WHERE kid_id=$1 AND activity_type=$2",
@@ -1055,8 +1055,8 @@ const checkAfter = await db.query("SELECT daily_msg_count FROM kids WHERE id=$1"
 
 
     const totalCount = msgCount + 1;
-    // 每聊10条+5芽豆
-    if (totalCount % 10 === 0) {
+    // 每聊20条+5芽豆
+    if (totalCount % 20 === 0) {
       await db.query("UPDATE users SET sprouts_balance = sprouts_balance + 5 WHERE id = $1", [req.user.id]);
     }
 const storyPrompt = kid.age <= 3 && (reply.includes('故') && reply.includes('事'));
@@ -1384,7 +1384,7 @@ db.query(`CREATE TABLE IF NOT EXISTS wish_pool (
 
 // 会员芽豆发放函数
 async function grantMembershipSprouts(userId, membershipType) {
-  const sproutsMap = { vip: 1000, svip: 2000, dvip: 10000 };
+  const sproutsMap = { vip: 2000, svip: 4000, dvip: 10000 };
   const amount = sproutsMap[membershipType];
   if (!amount) return;
   const today = new Date().toISOString().slice(0, 10);
