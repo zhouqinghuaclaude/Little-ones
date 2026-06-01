@@ -2028,9 +2028,9 @@ try {
  const _lastChat = k.last_chat_at ? new Date(new Date(k.last_chat_at).getTime() + 8*3600*1000) : null;
  const _todayChina = new Date(new Date().getTime() + 8*3600*1000);
  const _isMissing = _lastChat && (
- _lastChat.getFullYear() !== _todayChina.getFullYear() ||
- _lastChat.getMonth() !== _todayChina.getMonth() ||
- _lastChat.getDate() !== _todayChina.getDate()
+ _lastChat.getUTCFullYear() !== _todayChina.getUTCFullYear() ||
+ _lastChat.getUTCMonth() !== _todayChina.getUTCMonth() ||
+ _lastChat.getUTCDate() !== _todayChina.getUTCDate()
  );
   if (_isMissing) {
     const _area = document.getElementById('msgsArea');

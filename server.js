@@ -634,7 +634,7 @@ app.post("/api/kids/:id/missing", auth, async (req, res) => {
  const lastChat = new Date(kid.last_chat_at);
  const hoursAway = Math.floor((now - lastChat) / 3600000);
  const todayDate = new Date(now.getTime() + 8*3600*1000);
- const dateDesc = `今天是${todayDate.getMonth()+1}月${todayDate.getDate()}日`;
+ const dateDesc = `今天是${todayDate.getUTCMonth()+1}月${todayDate.getUTCDate()}日`;
  let agePrompt = '';
  if (kid.birthday_locked && kid.birthday) {
  const ageInDays = Math.floor((Date.now() - new Date(kid.birthday)) / 86400000);
@@ -688,7 +688,7 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
   // Check if the child has been missing the parent (last chat > 1 day ago)
   const _lastChatDate = kid.last_chat_at ? new Date(new Date(kid.last_chat_at).getTime() + 8*3600*1000) : null;
   const _today = new Date(new Date().getTime() + 8*3600*1000);
-  const isMissing = _lastChatDate && (_lastChatDate.getFullYear() !== _today.getFullYear() || _lastChatDate.getMonth() !== _today.getMonth() || _lastChatDate.getDate() !== _today.getDate());
+  const isMissing = _lastChatDate && (_lastChatDate.getUTCFullYear() !== _today.getUTCFullYear() || _lastChatDate.getUTCMonth() !== _today.getUTCMonth() || _lastChatDate.getUTCDate() !== _today.getUTCDate());
   
   const histResult = await db.query(
     "SELECT role, content FROM messages WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 50",
