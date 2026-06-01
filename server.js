@@ -37,6 +37,7 @@ async function callAI(messages, system, maxTokens) {
  model: process.env.DOUBAO_MODEL || "doubao-seed-2-0-lite-260428",
  max_tokens: maxTokens || 1000,
  messages: msgs,
+        thinking: { type: "disabled" },
  });
  return res.choices[0].message.content.trim();
  } else {
