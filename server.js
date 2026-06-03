@@ -1404,6 +1404,18 @@ async function grantMembershipSprouts(userId, membershipType) {
   );
 }
 
+// 对话日志留存:正文保存满6个月后清理正文,保留元数据用于溯源(生成式AI备案合规)
+cron.schedule('0 3 * * *', async () => {
+ try {
+ const result = await db.query(
+ "UPDATE messages SET content = '[内容已按留存期清理]' WHERE created_at < NOW() - INTERVAL '6 months' AND content != '[内容已按留存期清理]'"
+ );
+ if (result.rowCount > 0) console.log(`日志正文清理: ${result.rowCount} 条超期消息已清理`);
+ } catch(e) {
+ console.error('日志清理错误:', e.message);
+ }
+});
+
 // 每月1日定时发放芽豆
 cron.schedule('0 0 1 * *', async () => {
   console.log('Monthly sprouts grant starting...');
