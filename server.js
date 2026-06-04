@@ -57,7 +57,7 @@ const SENSITIVE_WORDS = {
  '辱骂低俗': ['沙比', '草泥马', '尼玛', 'sb', 'nmsl', 'tmd', 'cnm']
 };
 function normalizeText(text) {
- return (text || '').toLowerCase().replace(/s/g, '').replace(/[*_-.·,,。!!??]/g, '');
+  return (text || '').toLowerCase().replace(/[\s*_.-]/g, '');
 }
 function checkContent(text) {
  const norm = normalizeText(text);
