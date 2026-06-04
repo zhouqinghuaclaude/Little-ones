@@ -1234,6 +1234,7 @@ async function initDB() {
     CREATE INDEX IF NOT EXISTS idx_messages_kid ON messages(kid_id, created_at);
     ALTER TABLE messages ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id);
     CREATE INDEX IF NOT EXISTS idx_messages_user ON messages(user_id, created_at);
+    ALTER TABLE messages ADD COLUMN IF NOT EXISTS risk_flag VARCHAR(20) DEFAULT NULL;
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS birthday DATE;
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS personality VARCHAR(20) DEFAULT 'lively';
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_chat_at TIMESTAMP;
