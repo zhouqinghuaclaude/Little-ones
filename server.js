@@ -564,6 +564,13 @@ app.get("/api/sprouts", auth, async (req, res) => {
   res.json({ balance: result.rows[0]?.sprouts_balance || 0 });
 });
 
+app.post("/api/complaints", auth, async (req, res) => {
+  const { category, content } = req.body;
+  if (!content || !content.trim()) return res.status(400).json({ error: "请填写投诉举报内容" });
+  await db.query("INSERT INTO complaints (user_id, category, content) VALUES ($1, $2, $3)", [req.user.id, category || '其他', content.trim()]);
+  res.json({ ok: true });
+});
+
 app.delete("/api/kids/:id", auth, async (req, res) => {
   await db.query("DELETE FROM kids WHERE id = $1 AND user_id = $2", [req.params.id, req.user.id]);
   res.json({ ok: true });
