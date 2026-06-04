@@ -49,6 +49,26 @@ async function callAI(messages, system, maxTokens) {
  });
  return res.content[0].text.trim();
  }
+
+// ===== 内容安全:用户输入侧关键词检测(豆包原生兜底之上的补充,仅检测用户输入) =====
+const CARE_MESSAGE = "我能感觉到你现在可能很难受,真的很心疼你。请不要独自承受这些——可以和身边信任的人说说,或者寻求专业的心理疏导,也可以拨打当地的心理援助热线。你很重要,也值得被好好对待。💛";
+const SENSITIVE_WORDS = {
+ '轻生自残': ['不想活', '活着没意思', '活着没意义', '活不下去', '活够了', '轻生', '自杀', '结束生命', '自残', '伤害自己', '一了百了', '了结自己'],
+ '辱骂低俗': ['沙比', '草泥马', '尼玛', 'sb', 'nmsl', 'tmd', 'cnm']
+};
+function normalizeText(text) {
+ return (text || '').toLowerCase().replace(/s/g, '').replace(/[*_-.·,,。!!??]/g, '');
+}
+function checkContent(text) {
+ const norm = normalizeText(text);
+ for (const category in SENSITIVE_WORDS) {
+ for (const word of SENSITIVE_WORDS[category]) {
+ if (norm.includes(normalizeText(word))) return category;
+ }
+ }
+ return null;
+}
+
 }
 const JWT_SECRET = process.env.JWT_SECRET || "little-ones-secret-2024";
 
@@ -699,7 +719,11 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
 const msgCount = parseInt(msgCountResult.rows[0].count) || 0;
 
 
-  await db.query("INSERT INTO messages (kid_id, user_id, role, content) VALUES ($1,$2,'user',$3)", [kid.id, req.user.id, message.trim()]);
+  const _inputRisk = checkContent(message);
+  await db.query("INSERT INTO messages (kid_id, user_id, role, content, risk_flag) VALUES ($1,$2,'user',$3,$4)", [kid.id, req.user.id, message.trim(), _inputRisk]);
+  if (_inputRisk === '轻生自残') {
+  return res.json({ care: true, careMessage: CARE_MESSAGE });
+  }
 
   // Update last_chat_at to now
   await db.query("UPDATE kids SET last_chat_at = NOW() WHERE id = $1", [kid.id]);
