@@ -49,6 +49,7 @@ async function callAI(messages, system, maxTokens) {
  });
  return res.content[0].text.trim();
  }
+}
 
 // ===== 内容安全:用户输入侧关键词检测(豆包原生兜底之上的补充,仅检测用户输入) =====
 const CARE_MESSAGE = "我能感觉到你现在可能很难受,真的很心疼你。请不要独自承受这些——可以和身边信任的人说说,或者寻求专业的心理疏导,也可以拨打当地的心理援助热线。你很重要,也值得被好好对待。💛";
@@ -69,7 +70,6 @@ function checkContent(text) {
  return null;
 }
 
-}
 const JWT_SECRET = process.env.JWT_SECRET || "little-ones-secret-2024";
 
 const auth = (req, res, next) => {
