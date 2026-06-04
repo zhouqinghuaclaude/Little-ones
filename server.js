@@ -1371,6 +1371,36 @@ app.post("/api/kids/:id/diary", auth, async (req, res) => {
 
 });
 
+
+// ===== 内容安全巡检后台（管理员） =====
+const adminAuth = (req, res, next) => {
+  const key = req.headers["x-admin-key"] || req.query.key;
+  if (!process.env.ADMIN_KEY || key !== process.env.ADMIN_KEY) {
+    return res.status(403).json({ error: "无权限" });
+  }
+  next();
+};
+
+app.get("/api/admin/flagged", adminAuth, async (req, res) => {
+  const r = await db.query("SELECT m.id, m.user_id, m.kid_id, m.role, m.content, m.risk_flag, m.created_at, u.email FROM messages m LEFT JOIN users u ON m.user_id=u.id WHERE m.risk_flag IS NOT NULL ORDER BY m.created_at DESC LIMIT 200");
+  res.json(r.rows);
+});
+
+app.get("/api/admin/sample", adminAuth, async (req, res) => {
+  const r = await db.query("SELECT m.id, m.user_id, m.kid_id, m.role, m.content, m.risk_flag, m.created_at, u.email FROM messages m LEFT JOIN users u ON m.user_id=u.id ORDER BY RANDOM() LIMIT 50");
+  res.json(r.rows);
+});
+
+app.get("/api/admin/complaints", adminAuth, async (req, res) => {
+  const r = await db.query("SELECT c.*, u.email FROM complaints c LEFT JOIN users u ON c.user_id=u.id ORDER BY c.created_at DESC LIMIT 200");
+  res.json(r.rows);
+});
+
+app.post("/api/admin/complaints/:id/process", adminAuth, async (req, res) => {
+  const { note } = req.body;
+  await db.query("UPDATE complaints SET status='processed', processed_at=NOW(), process_note=$1 WHERE id=$2", [note || '', req.params.id]);
+  res.json({ ok: true });
+});
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
