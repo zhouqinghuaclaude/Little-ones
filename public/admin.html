@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小陪芽 内容安全巡检后台</title>
+<style>
+ body { font-family: -apple-system, sans-serif; background: #f5f5f7; margin: 0; padding: 16px; color: #333; }
+ h1 { font-size: 18px; }
+ .key-box { background: white; padding: 16px; border-radius: 12px; margin-bottom: 16px; }
+ input, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+ button { padding: 10px 16px; border: none; border-radius: 8px; background: #9B59B6; color: white; font-size: 14px; cursor: pointer; margin: 4px 2px; }
+ .tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+ .tab { flex: 1; background: #ddd; color: #333; }
+ .tab.active { background: #9B59B6; color: white; }
+ .item { background: white; padding: 12px; border-radius: 10px; margin-bottom: 8px; font-size: 13px; }
+ .meta { color: #888; font-size: 11px; margin-bottom: 4px; }
+ .flag { display: inline-block; background: #ffe0e0; color: #c0392b; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+</style>
+</head>
+<body>
+ <h1>🌱 小陪芽 内容安全巡检后台</h1>
+ <div class="key-box">
+ <input type="password" id="adminKey" placeholder="请输入管理员密钥">
+ <button onclick="saveKey()">进入</button>
+ <div id="keyMsg" style="font-size:12px;color:#888;margin-top:6px"></div>
+ </div>
+ <div id="main" style="display:none">
+ <div class="tabs">
+ <button class="tab active" id="tab-flagged" onclick="switchTab('flagged')">风控命中</button>
+ <button class="tab" id="tab-sample" onclick="switchTab('sample')">随机抽样</button>
+ <button class="tab" id="tab-complaints" onclick="switchTab('complaints')">投诉举报</button>
+ </div>
+ <button onclick="loadCurrent()">刷新加载</button>
+ <div id="content" style="margin-top:12px"></div>
+ </div>
+<script>
+ let ADMIN_KEY = '';
+ let currentTab = 'flagged';
+ function saveKey() {
+ ADMIN_KEY = document.getElementById('adminKey').value.trim();
+ if (!ADMIN_KEY) { document.getElementById('keyMsg').textContent = '请输入密钥'; return; }
+ document.getElementById('main').style.display = 'block';
+ loadCurrent();
+ }
+ function switchTab(tab) {
+ currentTab = tab;
+ document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+ document.getElementById('tab-' + tab).classList.add('active');
+ loadCurrent();
+ }
+ async function api(path) {
+ const res = await fetch(path, { headers: { 'x-admin-key': ADMIN_KEY } });
+ if (!res.ok) throw new Error('密钥错误或无权限');
+ return res.json();
+ }
+ function esc(s) { return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+ async function loadCurrent() {
+ const content = document.getElementById('content');
+ content.innerHTML = '加载中...';
+ try {
+ if (currentTab === 'complaints') {
+ const rows = await api('/api/admin/complaints');
+ content.innerHTML = rows.map(c => `<div class="item"><div class="meta">#${c.id} · ${c.email||'用户'+c.user_id} · ${new Date(c.created_at).toLocaleString()} · ${c.status==='processed'?'已处理':'待处理'}</div><div><b>${esc(c.category)}</b>:${esc(c.content)}</div>${c.process_note?`<div class="meta">处理备注:${esc(c.process_note)}</div>`:''}${c.status!=='processed'?`<button onclick="processComplaint(${c.id})">标记已处理</button>`:''}</div>`).join('') || '暂无投诉举报';
+ } else {
+ const rows = await api('/api/admin/' + currentTab);
+ content.innerHTML = rows.map(m => `<div class="item"><div class="meta">${m.email||'用户'+m.user_id} · 孩子#${m.kid_id} · ${new Date(m.created_at).toLocaleString()} ${m.risk_flag?`<span class="flag">${m.risk_flag}</span>`:''}</div><div>${m.role==='user'?'家长':'孩子'}:${esc(m.content)}</div></div>`).join('') || '暂无数据';
+ }
+ } catch(e) { content.innerHTML = e.message; }
+ }
+ async function processComplaint(id) {
+ const note = prompt('处理备注(可选):') || '';
+ try {
+ await fetch('/api/admin/complaints/' + id + '/process', { method: 'POST', headers: { 'x-admin-key': ADMIN_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ note }) });
+ loadCurrent();
+ } catch(e) { alert('处理失败'); }
+ }
+</script>
+</body>
+</html>
+
