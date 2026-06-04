@@ -623,6 +623,14 @@ input, textarea { font-family: inherit; }
         </div>
         <span style="color:var(--sub);font-size:18px">›</span>
       </div>
+      <div onclick="showSettingsSection('complaint')" style="display:flex;align-items:center;padding:16px;cursor:pointer;border-bottom:1px solid var(--border)">
+      <span style="font-size:20px;margin-right:12px">📮</span>
+      <div style="flex:1">
+      <div style="font-size:15px;font-weight:700">投诉与举报</div>
+      <div style="font-size:12px;color:var(--sub);margin-top:2px">反馈不当内容或问题</div>
+      </div>
+      <span style="color:var(--sub);font-size:18px">›</span>
+      </div>
       <div onclick="showToast('账户信息功能即将开放 🌱')" style="display:flex;align-items:center;padding:16px;cursor:pointer">
         <span style="font-size:20px;margin-right:12px">👤</span>
         <div style="flex:1">
@@ -2307,6 +2315,20 @@ let settingsKid = null;
 let selectedAgeMode = null;
 let selectedPersonality = null;
 
+async function submitComplaint() {
+ const category = document.getElementById('complaintCategory').value;
+ const content = document.getElementById('complaintContent').value.trim();
+ const msg = document.getElementById('complaintMsg');
+ if (!content) { msg.textContent = '请填写投诉举报内容'; return; }
+ try {
+ await req('/api/complaints', { method: 'POST', body: JSON.stringify({ category, content }) });
+ msg.textContent = '感谢您的反馈,我们会尽快处理 💛';
+ document.getElementById('complaintContent').value = '';
+ } catch(e) {
+ msg.textContent = e.message || '提交失败,请稍后再试';
+ }
+}
+
 function showSettingsSection(section) {
   const body = document.getElementById('subSettingsBody');
   const title = document.getElementById('subSettingsTitle');
@@ -2320,6 +2342,7 @@ function showSettingsSection(section) {
     interests: 'Ta更懂你',
     sprouts: '芽豆余额',
     membership: '小陪芽会员',
+    complaint: '投诉与举报',
     sprouts: '芽豆余额'
   }[section] || '设置';
 
@@ -2501,6 +2524,20 @@ function showSettingsSection(section) {
       <div style="text-align:center;font-size:11px;color:#ccc;line-height:1.7;padding-bottom:8px">
         芽豆为小陪芽平台专属虚拟积分，不可转让<br>仅用于平台内容权益兑换
       </div>
+    `;
+  } else if (section === 'complaint') {
+    title.textContent = '投诉与举报';
+    body.innerHTML = `
+    <label class="field-label">类别</label>
+    <select id="complaintCategory" class="field-input">
+    <option value="内容不当">内容不当</option>
+    <option value="功能问题">功能问题</option>
+    <option value="其他">其他</option>
+    </select>
+    <label class="field-label" style="margin-top:16px">详细描述</label>
+    <textarea id="complaintContent" class="field-input" rows="5" placeholder="请描述您要投诉或举报的内容"></textarea>
+    <button class="primary-btn" style="margin-top:28px" onclick="submitComplaint()">提交</button>
+    <div id="complaintMsg" style="text-align:center;margin-top:12px;font-size:13px;color:var(--p)"></div>
     `;
   } else if (section === 'membership') {
     body.innerHTML = `
