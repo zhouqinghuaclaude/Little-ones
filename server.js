@@ -1419,6 +1419,17 @@ db.query(`CREATE TABLE IF NOT EXISTS wish_pool (
   fulfilled_at TIMESTAMP DEFAULT NULL
 )`).catch(() => {});
 
+db.query(`CREATE TABLE IF NOT EXISTS complaints (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  category VARCHAR(50),
+  content TEXT NOT NULL,
+  status VARCHAR(20) DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT NOW(),
+  processed_at TIMESTAMP DEFAULT NULL,
+  process_note TEXT DEFAULT NULL
+)`).catch(() => {});
+
 // 会员芽豆发放函数
 async function grantMembershipSprouts(userId, membershipType) {
   const sproutsMap = { vip: 2000, svip: 4000, dvip: 10000 };
