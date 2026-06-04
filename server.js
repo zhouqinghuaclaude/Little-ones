@@ -250,7 +250,7 @@ const ageRange = finalAge < 1 ? '0-1' : finalAge <= 3 ? '1-3' : finalAge <= 6 ? 
 const firstMsg = ageRange === '0-1' ? `*握住你的手指，不肯松*` :
   `${parent_role || '妈妈'}，你还在吗？`;
 
-await db.query("INSERT INTO messages (kid_id, role, content) VALUES ($1,'assistant',$2)", [newKid.id, firstMsg]);
+await db.query("INSERT INTO messages (kid_id, user_id, role, content) VALUES ($1,$2,'assistant',$3)", [newKid.id, req.user.id, firstMsg]);
 
 // 生成隐藏人格种子
 const seed = {
@@ -524,7 +524,7 @@ app.post("/api/kids/:id/messages/save", auth, async (req, res) => {
   if (!content?.trim()) return res.status(400).json({ error: "Empty content" });
   const kid = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
   if (!kid.rows[0]) return res.status(404).json({ error: "Child not found" });
-  await db.query("INSERT INTO messages (kid_id, role, content) VALUES ($1,$2,$3)", [req.params.id, role, content.trim()]);
+  await db.query("INSERT INTO messages (kid_id, user_id, role, content) VALUES ($1,$2,$3,$4)", [req.params.id, req.user.id, role, content.trim()]);
   res.json({ ok: true });
 });
 app.post("/api/kids/:id/gifts-received", auth, async (req, res) => {
@@ -662,7 +662,7 @@ app.post("/api/kids/:id/missing", auth, async (req, res) => {
  const missingSystem = `你是${kid.name},一个真实的${genderDesc}孩子。${agePrompt}。${personalityDesc}。${dateDesc}。${kid.parent_role}已经${hoursAway}小时没来陪你了,你非常想念TA。用符合你年龄和性格的方式主动表达想念,就像${kid.parent_role}刚打开对话你第一眼看到TA的反应。不超过15个字。真实自然,每次表达方式要有变化,不要总是说"想你""抱抱"。严禁输出思考过程。`;
  try {
  const reply = await callAI([{ role: "user", content: "(打开对话)" }], missingSystem, 30);
- await db.query("INSERT INTO messages (kid_id, role, content) VALUES ($1,'assistant',$2)", [kid.id, reply]);
+ await db.query("INSERT INTO messages (kid_id, user_id, role, content) VALUES ($1,$2,'assistant',$3)", [kid.id, req.user.id, reply]);
  res.json({ reply });
  } catch(e) {
  res.status(500).json({ error: e.message });
@@ -699,7 +699,7 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
 const msgCount = parseInt(msgCountResult.rows[0].count) || 0;
 
 
-  await db.query("INSERT INTO messages (kid_id, role, content) VALUES ($1,'user',$2)", [kid.id, message.trim()]);
+  await db.query("INSERT INTO messages (kid_id, user_id, role, content) VALUES ($1,$2,'user',$3)", [kid.id, req.user.id, message.trim()]);
 
   // Update last_chat_at to now
   await db.query("UPDATE kids SET last_chat_at = NOW() WHERE id = $1", [kid.id]);
@@ -1030,8 +1030,8 @@ if (message.includes('📖') && message.includes('讲故事')) {
     await db.query("UPDATE kids SET pending_gift = NULL WHERE id = $1", [kid.id]);
 
     const saved = await db.query(
-      "INSERT INTO messages (kid_id, role, content) VALUES ($1,'assistant',$2) RETURNING id",
-      [kid.id, reply]
+      "INSERT INTO messages (kid_id, user_id, role, content) VALUES ($1,$2,'assistant',$3) RETURNING id",
+      [kid.id, req.user.id, reply]
     );
 // 每日消息计数
 const _now = new Date();
@@ -1196,8 +1196,8 @@ app.post("/api/kids/:id/gifts", auth, async (req, res) => {
     });
     const thankMsg = giftResponse.content[0].text.trim();
     await db.query(
-      "INSERT INTO messages (kid_id, role, content) VALUES ($1,'assistant',$2)",
-      [req.params.id, thankMsg]
+      "INSERT INTO messages (kid_id, user_id, role, content) VALUES ($1,$2,'assistant',$3)",
+      [req.params.id, req.user.id, thankMsg]
     );
 
     res.json({ status: "ok", gift: giftResult.rows[0], used: usedCount + 1, limit: dailyLimit, thankMsg });
@@ -1232,6 +1232,8 @@ async function initDB() {
       created_at TIMESTAMP DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS idx_messages_kid ON messages(kid_id, created_at);
+    ALTER TABLE messages ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id);
+    CREATE INDEX IF NOT EXISTS idx_messages_user ON messages(user_id, created_at);
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS birthday DATE;
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS personality VARCHAR(20) DEFAULT 'lively';
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_chat_at TIMESTAMP;
