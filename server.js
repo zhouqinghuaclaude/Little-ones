@@ -112,6 +112,9 @@ app.post("/api/login", async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({ error: "Incorrect email or password" });
     }
+    if (user.status === 'suspended') {
+      return res.status(403).json({ error: "账号已被暂停，如有疑问请联系客服" });
+    }
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "30d" });
     // 每日登录+5芽豆(每天只加一次)
     const today = new Date().toISOString().slice(0, 10);
@@ -700,6 +703,11 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
   const { message } = req.body;
   if (!message?.trim()) return res.status(400).json({ error: "Message cannot be empty" });
 
+
+  const uStatus = await db.query("SELECT status FROM users WHERE id=$1", [req.user.id]);
+  if (uStatus.rows[0] && uStatus.rows[0].status === 'limited') {
+    return res.status(403).json({ error: "账号功能已被限制，暂时无法发送消息，如有疑问请联系客服" });
+  }
   const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
   const kid = kidResult.rows[0];
   if (!kid) return res.status(404).json({ error: "Child not found" });
@@ -1401,6 +1409,18 @@ app.post("/api/admin/complaints/:id/process", adminAuth, async (req, res) => {
   await db.query("UPDATE complaints SET status='processed', processed_at=NOW(), process_note=$1 WHERE id=$2", [note || '', req.params.id]);
   res.json({ ok: true });
 });
+app.post("/api/admin/users/:id/action", adminAuth, async (req, res) => {
+  const { action, reason } = req.body;
+  const valid = ['normal', 'warned', 'limited', 'suspended'];
+  if (!valid.includes(action)) return res.status(400).json({ error: "invalid action" });
+  await db.query("UPDATE users SET status=$1 WHERE id=$2", [action, req.params.id]);
+  await db.query("INSERT INTO user_actions (user_id, action, reason) VALUES ($1, $2, $3)", [req.params.id, action, reason || '']);
+  res.json({ ok: true });
+});
+app.get("/api/admin/actions", adminAuth, async (req, res) => {
+  const r = await db.query("SELECT a.*, u.email FROM user_actions a LEFT JOIN users u ON a.user_id=u.id ORDER BY a.created_at DESC LIMIT 200");
+  res.json(r.rows);
+});
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
@@ -1432,6 +1452,15 @@ db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_sprouts_grant DATE DEF
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS daily_msg_count INTEGER DEFAULT 0").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS daily_msg_date DATE DEFAULT NULL").catch(() => {});
 db.query(`ALTER TABLE kids ADD COLUMN IF NOT EXISTS personality_seed JSONB DEFAULT NULL`).catch(() => {});
+db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'normal'").catch(() => {});
+db.query(`CREATE TABLE IF NOT EXISTS user_actions (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  action VARCHAR(20),
+  reason TEXT,
+  operator VARCHAR(50) DEFAULT 'admin',
+  created_at TIMESTAMP DEFAULT NOW()
+)`).catch(() => {});
 
 db.query(`CREATE TABLE IF NOT EXISTS activities (
  id SERIAL PRIMARY KEY,
