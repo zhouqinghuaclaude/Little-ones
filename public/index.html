@@ -3343,8 +3343,8 @@ function showPolicyModal() {
  `;
  document.body.appendChild(modal);
 }
-function showTerms() { showPolicyModal(); }
-function showPrivacy() { showPolicyModal(); }
+function showTerms() { window.location.href='policy.html'; }
+function showPrivacy() { window.location.href='policy.html'; }
 
 function confirmDeleteKid() {
  if (!settingsKid) return;
