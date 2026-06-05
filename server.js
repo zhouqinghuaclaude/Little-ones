@@ -1421,6 +1421,24 @@ app.get("/api/admin/actions", adminAuth, async (req, res) => {
   const r = await db.query("SELECT a.*, u.email FROM user_actions a LEFT JOIN users u ON a.user_id=u.id ORDER BY a.created_at DESC LIMIT 200");
   res.json(r.rows);
 });
+app.post("/api/account/delete", auth, async (req, res) => {
+  const uid = req.user.id;
+  const client = await db.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("UPDATE complaints SET user_id=NULL WHERE user_id=$1", [uid]);
+    await client.query("UPDATE user_actions SET user_id=NULL WHERE user_id=$1", [uid]);
+    await client.query("DELETE FROM messages WHERE user_id=$1", [uid]);
+    await client.query("DELETE FROM users WHERE id=$1", [uid]);
+    await client.query("COMMIT");
+    res.json({ ok: true });
+  } catch (e) {
+    await client.query("ROLLBACK");
+    res.status(500).json({ error: "注销失败，请稍后重试" });
+  } finally {
+    client.release();
+  }
+});
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });

@@ -643,6 +643,7 @@ input, textarea { font-family: inherit; }
 
     <!-- 退出登录 -->
     <button onclick="logout()" style="width:100%;padding:16px;border-radius:18px;background:white;border:1.5px solid #FFD0D0;color:#E74C3C;font-size:15px;font-weight:700;margin-bottom:32px">退出登录</button>
+    <button onclick="deleteAccount()" style="width:100%;padding:14px;border-radius:18px;background:transparent;border:none;color:#999;font-size:13px;font-weight:600;margin-bottom:32px;text-decoration:underline">注销账号</button>
 
   </div>
 </div>
@@ -915,6 +916,15 @@ showScreen("homeScreen"); loadKids();
   finally { btn.textContent=isReg?"注册":"登录"; }
 }
 function logout() { token=""; localStorage.clear(); document.querySelectorAll(".screen").forEach(s => { s.classList.remove("active"); s.style.display=""; }); showScreen("loginScreen"); }
+async function deleteAccount() {
+  if (!confirm('确定要注销账号吗？\n\n注销后您的所有数据将被永久删除，包括孩子、聊天记录等，且无法恢复。')) return;
+  if (!confirm('请再次确认：此操作不可撤销，是否继续注销？')) return;
+  try {
+    await req('/api/account/delete', { method: 'POST' });
+    alert('账号已注销，感谢您的使用。');
+    logout();
+  } catch(e) { alert('注销失败，请稍后重试'); }
+}
 
 const MOODS=["😊","😄","🥰","😌","🤩","😎"];
 const BOND_LEVELS = [
