@@ -61,10 +61,10 @@
  try {
  if (currentTab === 'complaints') {
  const rows = await api('/api/admin/complaints');
- content.innerHTML = rows.map(c => `<div class="item"><div class="meta">#${c.id} · ${c.email||'用户'+c.user_id} · ${new Date(c.created_at).toLocaleString()} · ${c.status==='processed'?'已处理':'待处理'}</div><div><b>${esc(c.category)}</b>:${esc(c.content)}</div>${c.process_note?`<div class="meta">处理备注:${esc(c.process_note)}</div>`:''}${c.status!=='processed'?`<button onclick="processComplaint(${c.id})">标记已处理</button>`:''}</div>`).join('') || '暂无投诉举报';
+ content.innerHTML = rows.map(c => `<div class="item"><div class="meta">#${c.id} · ${c.email||'用户'+c.user_id} · ${new Date(c.created_at).toLocaleString()} · ${c.status==='processed'?'已处理':'待处理'}</div><div><b>${esc(c.category)}</b>:${esc(c.content)}</div>${c.process_note?`<div class="meta">处理备注:${esc(c.process_note)}</div>`:''}${c.status!=='processed'?`<button onclick="processComplaint(${c.id})">标记已处理</button>`:''}<button onclick="handleAction(${c.user_id})">处置用户</button></div>`).join('') || '暂无投诉举报';
  } else {
  const rows = await api('/api/admin/' + currentTab);
- content.innerHTML = rows.map(m => `<div class="item"><div class="meta">${m.email||'用户'+m.user_id} · 孩子#${m.kid_id} · ${new Date(m.created_at).toLocaleString()} ${m.risk_flag?`<span class="flag">${m.risk_flag}</span>`:''}</div><div>${m.role==='user'?'家长':'孩子'}:${esc(m.content)}</div></div>`).join('') || '暂无数据';
+ content.innerHTML = rows.map(m => `<div class="item"><div class="meta">${m.email||'用户'+m.user_id} · 孩子#${m.kid_id} · ${new Date(m.created_at).toLocaleString()} ${m.risk_flag?`<span class="flag">${m.risk_flag}</span>`:''}</div><div>${m.role==='user'?'家长':'孩子'}:${esc(m.content)}</div><button onclick="handleAction(${m.user_id})">处置用户</button></div>`).join('') || '暂无数据';
  }
  } catch(e) { content.innerHTML = e.message; }
  }
@@ -74,6 +74,18 @@
  await fetch('/api/admin/complaints/' + id + '/process', { method: 'POST', headers: { 'x-admin-key': ADMIN_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ note }) });
  loadCurrent();
  } catch(e) { alert('处理失败'); }
+ }
+ async function handleAction(userId) {
+ const map = { '1':'warned', '2':'limited', '3':'suspended', '4':'normal' };
+ const choice = prompt('对用户#' + userId + ' 执行处置:\n1=警示\n2=限制功能\n3=暂停账号\n4=恢复正常\n请输入数字:');
+ const action = map[choice];
+ if (!action) return;
+ const reason = prompt('处置原因(可选):') || '';
+ try {
+ await fetch('/api/admin/users/' + userId + '/action', { method: 'POST', headers: { 'x-admin-key': ADMIN_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ action, reason }) });
+ alert('处置成功');
+ loadCurrent();
+ } catch(e) { alert('处置失败'); }
  }
 </script>
 </body>
