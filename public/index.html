@@ -811,7 +811,47 @@ function showToast(msg) {
   el.textContent = msg; 
   el.classList.add("show");
   setTimeout(() => el.classList.remove("show"), 8000);
+
+
 }
+// ===== 防沉迷模块 begin =====
+function pbUsageKey() {
+  const d = new Date();
+  return "pb_usage_" + d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate();
+}
+function pbFlagKey() {
+  const d = new Date();
+  return "pb_flag_" + d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate();
+}
+let pbSessionMin = 0;
+let pbTimer = null;
+function pbCheckNight() {
+  const h = new Date().getHours();
+  if (h >= 23 || h < 6) {
+    showToast("夜深了，早点休息，明天再来陪TA吧 🌙");
+  }
+}
+function pbTick() {
+  pbSessionMin += 1;
+  const key = pbUsageKey();
+  let total = parseInt(localStorage.getItem(key) || "0", 10) + 1;
+  localStorage.setItem(key, String(total));
+  if (pbSessionMin >= 60) {
+    pbSessionMin = 0;
+    showToast("已经陪伴一个小时啦，记得让眼睛歇一歇 🌱");
+  }
+  const flagKey = pbFlagKey();
+  if (total >= 120 && localStorage.getItem(flagKey) !== "1") {
+    localStorage.setItem(flagKey, "1");
+    showToast("今天已经陪了很久啦，注意劳逸结合哦");
+  }
+}
+function pbStart() {
+  if (pbTimer) return;
+  pbCheckNight();
+  pbTimer = setInterval(pbTick, 60000);
+}
+// ===== 防沉迷模块 end =====
 
 function req(path, opts={}) {
   const controller = new AbortController();
@@ -2906,7 +2946,7 @@ function updateZodiacDisplay(value) {
 
 updateAvatarGrid();
 document.getElementById("homeScreen").classList.remove("empty-mode");
-  if(token){showScreen("homeScreen");loadKids();}
+  if(token){showScreen("homeScreen");loadKids();pbStart();}
 
 
 
