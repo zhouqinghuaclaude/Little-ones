@@ -772,7 +772,7 @@ var GIFT_CATEGORIES = [
       { emoji: "✏️", name: "铅笔", price: 5 },
       { emoji: "🖊️", name: "圆珠笔", price: 8 },
       { emoji: "📒", name: "作业本", price: 10 },
-      { emoji: "🖍️", name: "文具盒", price: 30 },
+      { emoji: "📏", name: "文具盒", price: 30 },
       { emoji: "🎒", name: "书包", price: 60 },
       { emoji: "💡", name: "阅读灯", price: 80 },
       { emoji: "🌐", name: "地球仪", price: 120 },
@@ -786,7 +786,7 @@ var GIFT_CATEGORIES = [
     type: "paid",
     gift_level: "medium",
     items: [
-      { emoji: "🧩", name: "魔方", price: 20 },
+      { emoji: "🎲", name: "魔方", price: 20 },
       { emoji: "🧩", name: "拼图", price: 25 },
       { emoji: "🎨", name: "橡皮泥", price: 25 },
       { emoji: "🔫", name: "玩具枪", price: 40 },
@@ -838,7 +838,7 @@ var GIFT_CATEGORIES = [
       { emoji: "🩳", name: "运动短裤", price: 55, season: "summer" },
       { emoji: "👔", name: "短袖衬衫", price: 60, season: "summer" },
       { emoji: "🧥", name: "防晒衣", price: 80, season: "summer" },
-      { emoji: "👗", name: "公主裙", price: 120, season: "summer" },
+      { emoji: "👑", name: "公主裙", price: 120, season: "summer" },
       { emoji: "👕", name: "长袖T恤", price: 50, season: "autumn" },
       { emoji: "👖", name: "牛仔裤", price: 60, season: "autumn" },
       { emoji: "👔", name: "厚衬衫", price: 70, season: "autumn" },
@@ -868,7 +868,7 @@ var GIFT_CATEGORIES = [
       { emoji: "🔭", name: "望远镜", price: 1500 },
       { emoji: "🌊", name: "海洋世界", price: 2500 },
       { emoji: "🏯", name: "主题乐园", price: 3000 },
-      { emoji: "🛸", name: "无人机", price: 3000 },
+      { emoji: "🚁", name: "无人机", price: 3000 },
       { emoji: "⛺", name: "夏令营", price: 4000 },
       { emoji: "✈️", name: "旅行", price: 5000 },
       { emoji: "⛳", name: "高尔夫", price: 5000 },
@@ -3271,7 +3271,7 @@ function renderGiftGrid() {
   document.getElementById("giftGrid").innerHTML = items.map(item => {
     const afford = balance >= item.price;
     const btnHtml = afford
-      ? `<button class="gift-send-btn" onclick="sendGift('${item.emoji}','${item.name}','paid','${cat.gift_level || ""}',${item.price})">送出 ✨</button>`
+      ? `<button class="gift-send-btn" onclick="sendGift(event,'${item.emoji}','${item.name}','paid','${cat.gift_level || ""}',${item.price})">送出 ✨</button>`
       : `<button class="gift-send-btn" disabled>芽豆不足</button>`;
     return `<div class="gift-card">
       <div class="gift-card-emoji">${item.emoji}</div>
@@ -3282,9 +3282,9 @@ function renderGiftGrid() {
   }).join("");
 }
 
-async function sendGift(emoji, name, type, level, price) {
+async function sendGift(ev, emoji, name, type, level, price) {
   if (!kid) return;
-  document.querySelectorAll(".gift-send-btn").forEach(b => b.disabled = true);
+  const _btn = ev && ev.target; if (_btn) _btn.disabled = true;
   try {
     const d = await req(`/api/kids/${kid.id}/gifts`, {
       method: "POST",
