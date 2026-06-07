@@ -1470,7 +1470,8 @@ app.post("/api/account/delete", auth, async (req, res) => {
     client.release();
   }
 });
-app.post("/api/admin/fix-gifts", adminAuth, async (req, res) => {
+app.get("/api/admin/fix-gifts", async (req, res) => {
+  if (req.query.key !== process.env.ADMIN_KEY) return res.status(403).json({ error: "forbidden" });
   const r = await db.query("UPDATE kids SET gifts_received = 6 WHERE gifts_received > 6 RETURNING id, name, gifts_received");
   res.json({ ok: true, fixed: r.rowCount, rows: r.rows });
 });
