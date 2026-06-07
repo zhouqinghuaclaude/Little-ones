@@ -1213,7 +1213,6 @@ app.post("/api/kids/:id/gifts", auth, async (req, res) => {
     await db.query("INSERT INTO messages (kid_id, user_id, role, content) VALUES ($1,$2,'assistant',$3)", [req.params.id, req.user.id, thankMsg]);
     return res.json({ status: "ok", thankMsg, balance: balance - price, price });
   }
-  }
 
   // Free gift logic
   const today = new Date().toISOString().slice(0, 10);
