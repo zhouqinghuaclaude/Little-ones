@@ -364,7 +364,7 @@ input, textarea { font-family: inherit; }
         <button class="gift-close-btn" onclick="closeGiftShop()">✕</button>
       </div>
     </div>
-    <div id="giftBalanceBar" style="text-align:center;padding:8px;font-size:15px;font-weight:700;color:#E8954A;background:rgba(232,149,74,0.08);border-radius:12px;margin:8px 0">🌱 我的芽豆：<span id="giftBalanceNum">0</span></div>
+    <div id="giftBalanceBar" style="text-align:center;padding:8px;font-size:15px;font-weight:700;color:#E8954A;background:rgba(232,149,74,0.08);border-radius:12px;margin:8px 0">🫘 我的芽豆：<span id="giftBalanceNum">0</span></div>
     <div id="giftSuccessBanner" class="gift-success-banner"></div>
    <div class="gift-tabs" id="giftTabs"></div>
  
@@ -3276,7 +3276,7 @@ function renderGiftGrid() {
     return `<div class="gift-card">
       <div class="gift-card-emoji">${item.emoji}</div>
       <div class="gift-card-name">${item.name}</div>
-      <div class="gift-card-price" style="font-size:12px;color:#E8954A;font-weight:700;margin:2px 0 6px">🌱 ${item.price}</div>
+      <div class="gift-card-price" style="font-size:12px;color:#E8954A;font-weight:700;margin:2px 0 6px">🫘 ${item.price}</div>
       ${btnHtml}
     </div>`;
   }).join("");
