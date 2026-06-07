@@ -364,6 +364,7 @@ input, textarea { font-family: inherit; }
         <button class="gift-close-btn" onclick="closeGiftShop()">✕</button>
       </div>
     </div>
+    <div id="giftBalanceBar" style="text-align:center;padding:8px;font-size:15px;font-weight:700;color:#E8954A;background:rgba(232,149,74,0.08);border-radius:12px;margin:8px 0">🌱 我的芽豆：<span id="giftBalanceNum">0</span></div>
     <div id="giftSuccessBanner" class="gift-success-banner"></div>
    <div class="gift-tabs" id="giftTabs"></div>
  
@@ -734,14 +735,15 @@ var GIFT_CATEGORIES = [
     type: "paid",
     gift_level: "medium",
     items: [
-      { emoji: "🎨", name: "画笔套装" },
-      { emoji: "🎹", name: "钢琴课" },
-      { emoji: "🎻", name: "小提琴课" },
-      { emoji: "🎸", name: "吉他课" },
-      { emoji: "💃", name: "舞蹈课" },
-      { emoji: "🎭", name: "表演课" },
-      { emoji: "📚", name: "故事书" },
-      { emoji: "🎵", name: "音乐盒" },
+      { emoji: "🎵", name: "音乐盒", price: 40 },
+      { emoji: "🎨", name: "画笔套装", price: 60 },
+      { emoji: "🎤", name: "演唱课", price: 150 },
+      { emoji: "🏺", name: "陶艺课", price: 180 },
+      { emoji: "💃", name: "舞蹈课", price: 200 },
+      { emoji: "🎭", name: "表演课", price: 200 },
+      { emoji: "🎸", name: "吉他课", price: 220 },
+      { emoji: "🎻", name: "小提琴课", price: 280 },
+      { emoji: "🎹", name: "钢琴课", price: 300 },
     ]
   },
   {
@@ -750,30 +752,111 @@ var GIFT_CATEGORIES = [
     type: "paid",
     gift_level: "medium",
     items: [
-      { emoji: "⚽", name: "足球" },
-      { emoji: "🏀", name: "篮球" },
-      { emoji: "🏐", name: "排球" },
-      { emoji: "🎾", name: "网球拍" },
-      { emoji: "🏸", name: "羽毛球拍" },
-      { emoji: "🏓", name: "乒乓球拍" },
-      { emoji: "🏊", name: "游泳装备" },
-      { emoji: "🚴", name: "自行车" },
-      { emoji: "🥊", name: "拳击手套" },
+      { emoji: "🏓", name: "乒乓球拍", price: 30 },
+      { emoji: "🏸", name: "羽毛球拍", price: 40 },
+      { emoji: "⚽", name: "足球", price: 50 },
+      { emoji: "🏀", name: "篮球", price: 50 },
+      { emoji: "🏐", name: "排球", price: 50 },
+      { emoji: "🎾", name: "网球拍", price: 80 },
+      { emoji: "🥊", name: "拳击手套", price: 100 },
+      { emoji: "🏊", name: "游泳装备", price: 120 },
+      { emoji: "🚴", name: "自行车", price: 250 },
     ]
   },
   {
-    id: "princess",
-    label: "👑 公主",
+    id: "study",
+    label: "📚 学习",
     type: "paid",
     gift_level: "medium",
     items: [
-      { emoji: "👗", name: "公主裙" },
-      { emoji: "🧸", name: "Labubu" },
-      { emoji: "🪆", name: "芭比娃娃" },
-      { emoji: "💄", name: "化妆套装" },
-      { emoji: "🎀", name: "发饰礼盒" },
-      { emoji: "🏰", name: "梦想城堡" },
-      { emoji: "🌙", name: "星月夜灯" },
+      { emoji: "✏️", name: "铅笔", price: 5 },
+      { emoji: "🖊️", name: "圆珠笔", price: 8 },
+      { emoji: "📒", name: "作业本", price: 10 },
+      { emoji: "🖍️", name: "文具盒", price: 30 },
+      { emoji: "🎒", name: "书包", price: 60 },
+      { emoji: "💡", name: "阅读灯", price: 80 },
+      { emoji: "🌐", name: "地球仪", price: 120 },
+      { emoji: "📱", name: "学习机", price: 300 },
+      { emoji: "💻", name: "电脑", price: 450 },
+    ]
+  },
+  {
+    id: "toys",
+    label: "🧸 玩具",
+    type: "paid",
+    gift_level: "medium",
+    items: [
+      { emoji: "🧩", name: "魔方", price: 20 },
+      { emoji: "🧩", name: "拼图", price: 25 },
+      { emoji: "🎨", name: "橡皮泥", price: 25 },
+      { emoji: "🔫", name: "玩具枪", price: 40 },
+      { emoji: "🪆", name: "芭比娃娃", price: 60 },
+      { emoji: "🚗", name: "遥控汽车", price: 90 },
+      { emoji: "🧸", name: "LABUBU", price: 120 },
+      { emoji: "🧱", name: "乐高积木", price: 150 },
+      { emoji: "🐕", name: "机器狗", price: 250 },
+    ]
+  },
+  {
+    id: "tech",
+    label: "🔬 科技",
+    type: "paid",
+    gift_level: "medium",
+    items: [
+      { emoji: "⚡", name: "电路启蒙课", price: 120 },
+      { emoji: "🚀", name: "火箭模型", price: 150 },
+      { emoji: "🤖", name: "电动模型", price: 150 },
+      { emoji: "🔬", name: "显微镜", price: 180 },
+      { emoji: "🦾", name: "DIY机器人", price: 220 },
+      { emoji: "🎬", name: "动画制作", price: 250 },
+      { emoji: "💻", name: "编程课", price: 280 },
+      { emoji: "🔭", name: "天文馆", price: 300 },
+      { emoji: "✨", name: "AI创作", price: 300 },
+    ]
+  },
+  {
+    id: "clothes",
+    label: "👕 服装",
+    type: "paid",
+    gift_level: "medium",
+    seasonal: true,
+    items: [
+      { emoji: "👖", name: "休闲裤", price: 50, season: "spring" },
+      { emoji: "👖", name: "牛仔裤", price: 60, season: "spring" },
+      { emoji: "👔", name: "格子衬衫", price: 70, season: "spring" },
+      { emoji: "👖", name: "工装长裤", price: 70, season: "spring" },
+      { emoji: "🧶", name: "细织毛衣", price: 80, season: "spring" },
+      { emoji: "🧥", name: "针织开衫", price: 90, season: "spring" },
+      { emoji: "👗", name: "连衣裙", price: 100, season: "spring" },
+      { emoji: "🧥", name: "牛仔外套", price: 110, season: "spring" },
+      { emoji: "🧥", name: "防风风衣", price: 130, season: "spring" },
+      { emoji: "🎽", name: "运动背心", price: 35, season: "summer" },
+      { emoji: "👕", name: "短袖T恤", price: 40, season: "summer" },
+      { emoji: "👗", name: "短裙", price: 50, season: "summer" },
+      { emoji: "🩳", name: "沙滩裤", price: 50, season: "summer" },
+      { emoji: "🩳", name: "牛仔短裤", price: 55, season: "summer" },
+      { emoji: "🩳", name: "运动短裤", price: 55, season: "summer" },
+      { emoji: "👔", name: "短袖衬衫", price: 60, season: "summer" },
+      { emoji: "🧥", name: "防晒衣", price: 80, season: "summer" },
+      { emoji: "👗", name: "公主裙", price: 120, season: "summer" },
+      { emoji: "👕", name: "长袖T恤", price: 50, season: "autumn" },
+      { emoji: "👖", name: "牛仔裤", price: 60, season: "autumn" },
+      { emoji: "👔", name: "厚衬衫", price: 70, season: "autumn" },
+      { emoji: "👖", name: "休闲长裤", price: 75, season: "autumn" },
+      { emoji: "🧶", name: "针织毛衣", price: 90, season: "autumn" },
+      { emoji: "🧥", name: "牛仔外套", price: 110, season: "autumn" },
+      { emoji: "🧥", name: "薄棉夹克", price: 120, season: "autumn" },
+      { emoji: "👗", name: "长袖连衣裙", price: 130, season: "autumn" },
+      { emoji: "👗", name: "加厚长裙", price: 140, season: "autumn" },
+      { emoji: "🧢", name: "保暖帽", price: 30, season: "winter" },
+      { emoji: "👖", name: "牛仔裤", price: 60, season: "winter" },
+      { emoji: "👖", name: "厚长裤", price: 80, season: "winter" },
+      { emoji: "👖", name: "厚毛裤", price: 80, season: "winter" },
+      { emoji: "🧶", name: "厚毛衣", price: 120, season: "winter" },
+      { emoji: "👗", name: "夹棉衣裙", price: 150, season: "winter" },
+      { emoji: "👗", name: "加厚长裙", price: 160, season: "winter" },
+      { emoji: "🧥", name: "棉大衣", price: 220, season: "winter" },
+      { emoji: "🧥", name: "羽绒服", price: 250, season: "winter" },
     ]
   },
   {
@@ -782,14 +865,17 @@ var GIFT_CATEGORIES = [
     type: "paid",
     gift_level: "premium",
     items: [
-      { emoji: "🏯", name: "主题乐园" },
-      { emoji: "✈️", name: "旅行" },
-      { emoji: "🔭", name: "望远镜" },
-      { emoji: "🚀", name: "太空探索" },
-      { emoji: "🌊", name: "海洋世界" },
-      { emoji: "⛺", name: "夏令营" },
+      { emoji: "🔭", name: "望远镜", price: 1500 },
+      { emoji: "🌊", name: "海洋世界", price: 2500 },
+      { emoji: "🏯", name: "主题乐园", price: 3000 },
+      { emoji: "🛸", name: "无人机", price: 3000 },
+      { emoji: "⛺", name: "夏令营", price: 4000 },
+      { emoji: "✈️", name: "旅行", price: 5000 },
+      { emoji: "⛳", name: "高尔夫", price: 5000 },
+      { emoji: "🐎", name: "马术", price: 6000 },
+      { emoji: "🚀", name: "太空探索", price: 8000 },
     ]
-  }
+  },
 ];
 
 const API = "";
@@ -3123,7 +3209,11 @@ async function openGiftShop() {
   document.getElementById("giftOverlay").classList.add("open");
   renderGiftTabs();
   renderGiftGrid();
-  refreshGiftCounter().then(() => renderGiftGrid()).catch(() => {});
+  req("/api/sprouts").then(d => { window._sproutsBalance = d.balance; updateGiftBalanceBar(); renderGiftGrid(); }).catch(() => {});
+}
+function updateGiftBalanceBar() {
+  const el = document.getElementById("giftBalanceNum");
+  if (el) el.textContent = window._sproutsBalance || 0;
 }
 
 function closeGiftShop(e) {
@@ -3162,52 +3252,56 @@ function switchGiftTab(catId) {
   renderGiftGrid();
 }
 
+function getCurrentSeason() {
+  const m = new Date().getMonth() + 1;
+  if (m >= 3 && m <= 5) return "spring";
+  if (m >= 6 && m <= 8) return "summer";
+  if (m >= 9 && m <= 11) return "autumn";
+  return "winter";
+}
 function renderGiftGrid() {
   const cat = GIFT_CATEGORIES.find(c => c.id === giftActiveCat);
- if (!cat) { return; } 
-  const isFree = cat.type === "free";
-  const limitReached = isFree && giftUsed >= giftLimit;
-  const level = cat.gift_level || "free";
-document.getElementById("giftGrid").innerHTML = cat.items.map(item => {
-    const btnHtml = isFree
-      ? `<button class="gift-send-btn" ${limitReached ? "disabled" : ""}
-           onclick="${limitReached ? 'showUpgradePrompt()' : `sendGift('${item.emoji}','${item.name}','free','${level}')`}">
-
-          ${limitReached ? "升级解锁 🌿" : "送出 ✨"}
- 
-         </button>`
-      : `<button class="gift-paid-btn" disabled>💰 即将开放</button>`;
+  if (!cat) { return; }
+  const balance = window._sproutsBalance || 0;
+  let items = cat.items;
+  if (cat.seasonal) {
+    const season = getCurrentSeason();
+    items = items.filter(it => it.season === season);
+  }
+  document.getElementById("giftGrid").innerHTML = items.map(item => {
+    const afford = balance >= item.price;
+    const btnHtml = afford
+      ? `<button class="gift-send-btn" onclick="sendGift('${item.emoji}','${item.name}','paid','${cat.gift_level || ""}',${item.price})">送出 ✨</button>`
+      : `<button class="gift-send-btn" disabled>芽豆不足</button>`;
     return `<div class="gift-card">
       <div class="gift-card-emoji">${item.emoji}</div>
       <div class="gift-card-name">${item.name}</div>
+      <div class="gift-card-price" style="font-size:12px;color:#E8954A;font-weight:700;margin:2px 0 6px">🌱 ${item.price}</div>
       ${btnHtml}
     </div>`;
   }).join("");
 }
 
-async function sendGift(emoji, name, type, level) {
+async function sendGift(emoji, name, type, level, price) {
   if (!kid) return;
-  // Disable all send buttons during request
   document.querySelectorAll(".gift-send-btn").forEach(b => b.disabled = true);
   try {
     const d = await req(`/api/kids/${kid.id}/gifts`, {
       method: "POST",
-      body: JSON.stringify({ gift_emoji: emoji, gift_name: name, gift_type: type, gift_level: level || "free" })
+      body: JSON.stringify({ gift_emoji: emoji, gift_name: name, gift_type: type, gift_level: level || "" })
     });
-    if (d.status === "payment_required") {
-      showToast("💰 " + d.message);
+    if (d.status === "insufficient") {
+      showToast(`🌱 芽豆不足，还差 ${d.price - d.balance} 颗～`);
+      renderGiftGrid();
       return;
     }
-    giftUsed = d.used;
-    giftLimit = d.limit || 1;
-    updateGiftCounterUI();
+    if (typeof d.balance === "number") { window._sproutsBalance = d.balance; updateGiftBalanceBar(); }
     const banner = document.getElementById("giftSuccessBanner");
     banner.textContent = `✨ ${emoji} ${name} 已送出！宝宝会很开心的～`;
     banner.classList.add("show");
     setTimeout(() => banner.classList.remove("show"), 3500);
     renderGiftGrid();
     if (d.thankMsg) { const msgs = await req(`/api/kids/${kid.id}/messages`); renderMsgs(msgs); closeGiftShop(); }
-
   } catch(e) {
     showToast(e.message || "送礼失败");
     renderGiftGrid();

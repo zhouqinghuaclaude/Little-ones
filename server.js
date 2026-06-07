@@ -14,6 +14,18 @@ app.use(express.json());
 app.use(express.static("public"));
 
 const db = new Pool({ connectionString: process.env.DATABASE_URL });
+const GIFT_PRICES = {
+  "音乐盒":40,"画笔套装":60,"演唱课":150,"陶艺课":180,"舞蹈课":200,"表演课":200,"吉他课":220,"小提琴课":280,"钢琴课":300,
+  "乒乓球拍":30,"羽毛球拍":40,"足球":50,"篮球":50,"排球":50,"网球拍":80,"拳击手套":100,"游泳装备":120,"自行车":250,
+  "铅笔":5,"圆珠笔":8,"作业本":10,"文具盒":30,"书包":60,"阅读灯":80,"地球仪":120,"学习机":300,"电脑":450,
+  "魔方":20,"拼图":25,"橡皮泥":25,"玩具枪":40,"芭比娃娃":60,"遥控汽车":90,"LABUBU":120,"乐高积木":150,"机器狗":250,
+  "电路启蒙课":120,"火箭模型":150,"电动模型":150,"显微镜":180,"DIY机器人":220,"动画制作":250,"编程课":280,"天文馆":300,"AI创作":300,
+  "休闲裤":50,"格子衬衫":70,"工装长裤":70,"细织毛衣":80,"针织开衫":90,"连衣裙":100,"防风风衣":130,
+  "运动背心":35,"短袖T恤":40,"短裙":50,"沙滩裤":50,"牛仔短裤":55,"运动短裤":55,"短袖衬衫":60,"防晒衣":80,"公主裙":120,
+  "长袖T恤":50,"厚衬衫":70,"休闲长裤":75,"针织毛衣":90,"牛仔外套":110,"薄棉夹克":120,"长袖连衣裙":130,
+  "牛仔裤":60,"保暖帽":30,"厚长裤":80,"厚毛裤":80,"厚毛衣":120,"夹棉衣裙":150,"加厚长裙":150,"棉大衣":220,"羽绒服":250,
+  "望远镜":1500,"海洋世界":2500,"主题乐园":3000,"无人机":3000,"夏令营":4000,"旅行":5000,"高尔夫":5000,"马术":6000,"太空探索":8000
+};
 let _claudeAI = null;
 function getClaudeAI() {
   if (_claudeAI) return _claudeAI;
@@ -1179,9 +1191,28 @@ app.post("/api/kids/:id/gifts", auth, async (req, res) => {
 
   const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
   if (!kidResult.rows[0]) return res.status(404).json({ error: "Child not found" });
-
   if (gift_type === "paid") {
-    return res.json({ status: "payment_required", message: "即将开放" });
+    const price = GIFT_PRICES[gift_name];
+    if (!price) return res.status(400).json({ error: "礼物价格异常" });
+    const uRes = await db.query("SELECT sprouts_balance FROM users WHERE id=$1", [req.user.id]);
+    const balance = uRes.rows[0]?.sprouts_balance || 0;
+    if (balance < price) {
+      return res.json({ status: "insufficient", message: "芽豆不足", balance, price });
+    }
+    await db.query("UPDATE users SET sprouts_balance = sprouts_balance - $1 WHERE id=$2", [price, req.user.id]);
+    const pkid = kidResult.rows[0];
+    const giftSystem = `You are ${pkid.name}, a ${pkid.age}-year-old ${pkid.gender === "boy" ? "boy" : "girl"}. You just received a gift: ${gift_name}. React with genuine excitement and gratitude in Chinese. Be age-appropriate, warm and enthusiastic. Keep it to 2-3 sentences.`;
+    const giftResp = await getClaudeAI().messages.create({
+      model: process.env.DOUBAO_MODEL || "claude-sonnet-4-20250514",
+      max_tokens: pkid.age <= 1 ? 30 : pkid.age <= 6 ? 60 : 150,
+      system: giftSystem,
+      messages: [{ role: "user", content: `${pkid.parent_role}送给你${gift_name}！` }]
+    });
+    const thankMsg = giftResp.content[0].text.trim();
+    await db.query("INSERT INTO gifts (kid_id, gift_emoji, gift_name, gift_type) VALUES ($1,$2,$3,'paid')", [req.params.id, gift_emoji, gift_name]);
+    await db.query("INSERT INTO messages (kid_id, user_id, role, content) VALUES ($1,$2,'assistant',$3)", [req.params.id, req.user.id, thankMsg]);
+    return res.json({ status: "ok", thankMsg, balance: balance - price, price });
+  }
   }
 
   // Free gift logic
