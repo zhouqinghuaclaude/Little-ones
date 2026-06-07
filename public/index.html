@@ -1851,7 +1851,7 @@ try {
     method: 'POST',
     body: JSON.stringify({ level: levelUp.level })
   });
-  kid.gifts_received = (kid.gifts_received || 0) + 1;
+  kid.gifts_received = Math.min((kid.gifts_received || 0) + 1, 6);
 } catch(e) {}
 
 }, 500);
