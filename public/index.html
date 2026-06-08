@@ -1370,6 +1370,7 @@ async function sendSurprise(emoji, name) {
 }
 
 async function fulfillWishInShop(wishId, content, emoji) {
+  _wishCart = [];
   document.getElementById('wishPoolOverlay')?.remove();
   
   // 显示加载中
