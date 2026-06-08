@@ -1392,6 +1392,7 @@ async function fulfillWishInShop(wishId, content, emoji) {
   
   const products = data.products || [];
   const maxItems = data.maxItems || 1;
+  products.forEach(p => { if (!p.price || isNaN(p.price)) p.price = 50; });
   const productsHTML = products.map((p, idx) => {
   const isLocked = idx >= maxItems;
   return `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:${isLocked ? '#F5F5F5' : '#FAF5FF'};border-radius:14px;margin-bottom:8px;${isLocked ? 'opacity:0.6' : ''}">
