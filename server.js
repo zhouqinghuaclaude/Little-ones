@@ -453,10 +453,7 @@ app.post("/api/kids/:id/wish-products", auth, async (req, res) => {
  // 获取会员等级
  const userResult = await db.query("SELECT membership_type FROM users WHERE id=$1", [req.user.id]);
  const membershipType = userResult.rows[0]?.membership_type || 'free';
- const maxItems = membershipType === 'dvip' ? 999 
- : membershipType === 'svip' ? 4 
- : membershipType === 'vip' ? 3 
- : 1;
+ const maxItems = 6;
  try {
  const result = await getClaudeAI().messages.create({
  model: process.env.DOUBAO_MODEL || "claude-sonnet-4-20250514",
@@ -549,6 +546,13 @@ app.get("/api/kids/:id/wishes", auth, async (req, res) => {
 app.post("/api/kids/:id/wishes/:wishId/fulfill", auth, async (req, res) => {
   const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
   if (!kidResult.rows[0]) return res.status(404).json({ error: "孩子不存在" });
+  const { total } = req.body;
+  if (total && total > 0) {
+    const uRes = await db.query("SELECT sprouts_balance FROM users WHERE id=$1", [req.user.id]);
+    const bal = uRes.rows[0]?.sprouts_balance || 0;
+    if (bal < total) return res.json({ status: "insufficient", balance: bal, total });
+    await db.query("UPDATE users SET sprouts_balance = sprouts_balance - $1 WHERE id=$2", [total, req.user.id]);
+  }
   await db.query("UPDATE wish_pool SET fulfilled_at=NOW() WHERE id=$1 AND kid_id=$2", [req.params.wishId, req.params.id]);
   res.json({ ok: true });
 });

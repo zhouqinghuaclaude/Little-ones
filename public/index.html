@@ -1453,20 +1453,31 @@ async function checkoutWishCart(wishId, content, emoji) {
   if (_wishCart.length === 0) return;
   const role = kid?.parent_role || '妈妈';
   const age = kid?.age || 1;
-  const area = document.getElementById('msgsArea');
-  
+  const total = _wishCart.reduce((sum, i) => sum + i.price, 0);
+  const cart = _wishCart.slice();
+  // 先扣芽豆 + 标记心愿实现
+  let resp;
+  try {
+    resp = await req(`/api/kids/${kid.id}/wishes/${wishId}/fulfill`, {
+      method: 'POST',
+      body: JSON.stringify({ total })
+    });
+  } catch(e) { showToast('实现失败,请重试'); return; }
+  if (resp && resp.status === 'insufficient') {
+    showToast(`🫘 芽豆不足,还差 ${resp.total - resp.balance} 颗~`);
+    return;
+  }
   document.getElementById('wishProductsOverlay')?.remove();
-  
-  // 孩子逐一感谢每件礼物
-  for (let i = 0; i < _wishCart.length; i++) {
-    const item = _wishCart[i];
+  if (typeof resp.balance === 'number') { window._sproutsBalance = resp.balance; }
+  const area = document.getElementById('msgsArea');
+  for (let i = 0; i < cart.length; i++) {
+    const item = cart[i];
     setTimeout(async () => {
-      const lines = age <= 3 
-        ? [`${role}!谢谢!我好喜欢${item.emoji}!`]
-        : age <= 6 
-        ? [`${role},${item.name}!你真好!`]
-        : [`${role},谢谢你送我${item.name} ${item.emoji}`];
-      const line = lines[0];
+      const line = age <= 3
+        ? `${role}!谢谢!我好喜欢${item.emoji}!`
+        : age <= 6
+        ? `${role},${item.name}!你真好!`
+        : `${role},谢谢你送我${item.name} ${item.emoji}`;
       if (area) {
         area.insertAdjacentHTML('beforeend', bubble('assistant', line, new Date().toISOString()));
         scrollBot();
@@ -1477,17 +1488,11 @@ async function checkoutWishCart(wishId, content, emoji) {
       }
     }, i * 1500);
   }
-  
-  // 标记愿望已实现
-  await req(`/api/kids/${kid.id}/wishes/${wishId}/fulfill`, { method: 'POST' }).catch(() => {});
-  
-  // 更新本地愿望池缓存
   if (kid._wishPool) {
-    kid._wishPool = kid._wishPool.map(w => 
+    kid._wishPool = kid._wishPool.map(w =>
       w.id == wishId ? {...w, fulfilled_at: new Date().toISOString()} : w
     );
   }
-  
   _wishCart = [];
   showToast(`${emoji} 心愿已实现!${kid?.name}好开心!`);
 }
