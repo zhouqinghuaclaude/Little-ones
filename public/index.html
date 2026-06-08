@@ -1464,6 +1464,7 @@ async function checkoutWishCart(wishId, content, emoji) {
       body: JSON.stringify({ total })
     });
   } catch(e) { showToast('实现失败,请重试'); return; }
+  alert('DEBUG resp: ' + JSON.stringify(resp));
   if (resp && resp.status === 'insufficient') {
     showToast(`🫘 芽豆不足,还差 ${resp.total - resp.balance} 颗~`);
     return;
