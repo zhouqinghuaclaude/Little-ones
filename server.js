@@ -45,15 +45,20 @@ function getDoubao() {
 async function callAI(messages, system, maxTokens) {
  if (getDoubao()) {
  const msgs = system ? [{ role: "system", content: system }, ...messages] : messages;
- const res = await getDoubao().chat.completions.create({
- model: process.env.DOUBAO_MODEL || "doubao-seed-2-0-lite-260428",
- max_tokens: maxTokens || 1000,
- messages: msgs,
-        thinking: { type: "disabled" },
+ const _call = async () => await getDoubao().chat.completions.create({
+   model: process.env.DOUBAO_MODEL || "doubao-seed-2-0-lite-260428",
+   max_tokens: maxTokens || 1000,
+   messages: msgs,
+   thinking: { type: "disabled" },
  });
- const _c = res.choices[0]?.message?.content;
+ let res = await _call();
+ let _c = res.choices[0]?.message?.content;
  if (_c && _c.trim()) return _c.trim();
- console.log('[EMPTY_REPLY] finish_reason:', res.choices[0]?.finish_reason, '| content:', JSON.stringify(res.choices[0]?.message?.content), '| usage:', JSON.stringify(res.usage));
+ console.log('[EMPTY_REPLY] 第一次空, finish_reason:', res.choices[0]?.finish_reason, '| usage:', JSON.stringify(res.usage));
+ res = await _call();
+ _c = res.choices[0]?.message?.content;
+ if (_c && _c.trim()) return _c.trim();
+ console.log('[EMPTY_REPLY] 重试后仍空, finish_reason:', res.choices[0]?.finish_reason);
  return "嗯？我刚才走神了一下，你再说一遍好不好～";
  } else {
  const res = await claude.messages.create({
