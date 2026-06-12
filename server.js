@@ -51,7 +51,9 @@ async function callAI(messages, system, maxTokens) {
  messages: msgs,
         thinking: { type: "disabled" },
  });
- return res.choices[0].message.content.trim();
+ const _c = res.choices[0]?.message?.content;
+ if (_c && _c.trim()) return _c.trim();
+ return "嗯？我刚才走神了一下，你再说一遍好不好～";
  } else {
  const res = await claude.messages.create({
  model: "claude-sonnet-4-20250514",
