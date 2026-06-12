@@ -53,6 +53,7 @@ async function callAI(messages, system, maxTokens) {
  });
  const _c = res.choices[0]?.message?.content;
  if (_c && _c.trim()) return _c.trim();
+ console.log('[EMPTY_REPLY] finish_reason:', res.choices[0]?.finish_reason, '| content:', JSON.stringify(res.choices[0]?.message?.content), '| usage:', JSON.stringify(res.usage));
  return "嗯？我刚才走神了一下，你再说一遍好不好～";
  } else {
  const res = await claude.messages.create({
