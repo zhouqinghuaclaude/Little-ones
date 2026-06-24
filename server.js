@@ -284,7 +284,7 @@ app.post("/api/kids", auth, async (req, res) => {
 
   const r = await db.query(
   "INSERT INTO kids (user_id, name, gender, age, parent_role, birthday, personality, avatar, age_mode) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *",
-  [req.user.id, name.trim(), gender || "boy", finalAge, parent_role || "mom", birthday || null, personality || "lively", avatar || null, age_mode || "fixed"]
+  [req.user.id, name.trim(), gender || "boy", finalAge, parent_role || "mom", birthday || null, personality || null, avatar || null, age_mode || "fixed"]
 );
 const newKid = r.rows[0];
 const ageInDays = birthday ? Math.floor((Date.now() - new Date(birthday)) / 86400000) : (finalAge * 365);
