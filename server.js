@@ -362,10 +362,10 @@ if (req.body.parent_interests !== undefined) {
 
 
   // 成长模式切换（只允许一次，付费功能）
-  if (age_mode && age_mode !== kid.age_mode) {
-    if (kid.age_mode_locked) return res.status(400).json({ error: "成长模式只能切换一次" });
+    if (age_mode && !kid.age_mode_locked) {
     await db.query("UPDATE kids SET age_mode=$1, age_mode_locked=true WHERE id=$2", [age_mode, kid.id]);
   }
+
 
   const updated = await db.query("SELECT * FROM kids WHERE id=$1", [kid.id]);
   res.json(updated.rows[0]);
