@@ -650,6 +650,7 @@ app.get("/api/kids/:id/soul-export", auth, async (req, res) => {
         birthday: kid.birthday,
         age: kid.age,
         age_mode: kid.age_mode,
+        age_mode_locked: kid.age_mode_locked,
         personality: kid.personality,
         personality_custom: kid.personality_custom,
         personality_seed: kid.personality_seed,
