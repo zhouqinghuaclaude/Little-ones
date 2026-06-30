@@ -40,7 +40,14 @@ function getDoubao() {
   if (!_doubao && process.env.DOUBAO_API_KEY) {
     _doubao = new OpenAI({ apiKey: process.env.DOUBAO_API_KEY, baseURL: "https://ark.cn-beijing.volces.com/api/v3" });
   }
-  return _doubao;
+    return _doubao;
+}
+function cleanReply(text) {
+  if (!text) return text;
+  let t = text;
+  t = t.replace(/<think[^>]*>[\s\S]*?<\/think[^>]*>/gi, '');
+  t = t.replace(/<\/?think[^>]*>/gi, '');
+  return t.trim();
 }
 async function callAI(messages, system, maxTokens) {
  if (getDoubao()) {
@@ -53,11 +60,11 @@ async function callAI(messages, system, maxTokens) {
  });
  let res = await _call();
  let _c = res.choices[0]?.message?.content;
- if (_c && _c.trim()) return _c.trim();
+  if (_c && _c.trim()) return cleanReply(_c);
  console.log('[EMPTY_REPLY] 第一次空, finish_reason:', res.choices[0]?.finish_reason, '| usage:', JSON.stringify(res.usage));
  res = await _call();
  _c = res.choices[0]?.message?.content;
- if (_c && _c.trim()) return _c.trim();
+  if (_c && _c.trim()) return cleanReply(_c);
  console.log('[EMPTY_REPLY] 重试后仍空, finish_reason:', res.choices[0]?.finish_reason);
  return "嗯？我刚才走神了一下，你再说一遍好不好～";
  } else {
@@ -1412,7 +1419,15 @@ app.get("/api/kids/:id/diary", auth, async (req, res) => {
   );
   res.json(entries.rows);
 });
-
+app.get("/api/kids/:id/memories", auth, async (req, res) => {
+  const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
+  if (!kidResult.rows[0]) return res.status(404).json({ error: "孩子不存在" });
+  const memories = await db.query(
+    "SELECT id, content, emotion, weight, created_at FROM memories WHERE kid_id=$1 ORDER BY created_at DESC",
+    [req.params.id]
+  );
+  res.json(memories.rows);
+});
 app.post("/api/kids/:id/diary", auth, async (req, res) => {
   const { content } = req.body;
   if (!content?.trim()) return res.status(400).json({ error: "Content cannot be empty" });
