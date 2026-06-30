@@ -1041,6 +1041,47 @@ const chinaHours = (now.getUTCHours() + 8) % 24;
 const chinaMinutes = now.getUTCMinutes();
 const timeStr = `${chinaHours}时${chinaMinutes < 10 ? "0" + chinaMinutes : chinaMinutes}分`;
 system += ` 今天是${dateStr},${weekStr},现在是${timeStr}。你知道今天的日期和当前时间。`;
+  // 时段语义
+let periodStr;
+if (chinaHours >= 5 && chinaHours < 8) periodStr = "清晨";
+else if (chinaHours >= 8 && chinaHours < 11) periodStr = "上午";
+else if (chinaHours >= 11 && chinaHours < 13) periodStr = "中午";
+else if (chinaHours >= 13 && chinaHours < 17) periodStr = "下午";
+else if (chinaHours >= 17 && chinaHours < 19) periodStr = "傍晚";
+else if (chinaHours >= 19 && chinaHours < 23) periodStr = "晚上";
+else periodStr = "深夜";
+
+// 季节（按北京时间月份）
+const _m = now.getMonth() + 1;
+let seasonStr;
+if (_m >= 3 && _m <= 5) seasonStr = "春季";
+else if (_m >= 6 && _m <= 8) seasonStr = "夏季";
+else if (_m >= 9 && _m <= 11) seasonStr = "秋季";
+else seasonStr = "冬季";
+
+// 节日（公历公共/通行节日）
+const _d = now.getDate();
+const FESTIVALS = {
+  '1-1': '元旦', '5-1': '劳动节', '10-1': '国庆节',
+  '12-24': '平安夜', '12-25': '圣诞节'
+};
+const _key = `${_m}-${_d}`;
+let festivalStr = '';
+if (FESTIVALS[_key]) {
+  festivalStr = ` 今天是${FESTIVALS[_key]}。`;
+} else {
+  for (let i = 1; i <= 7; i++) {
+    const future = new Date(now.getTime() + i * 86400000);
+    const fk = `${future.getMonth() + 1}-${future.getDate()}`;
+    if (FESTIVALS[fk]) {
+      festivalStr = ` 再过${i}天就是${FESTIVALS[fk]}了。`;
+      break;
+    }
+  }
+}
+
+system += ` 现在是${periodStr}，季节是${seasonStr}。${festivalStr}请让你的话自然符合当前的时段、季节和节令，不要说不合时宜的话（比如深夜不提议出门、夏天不聊堆雪人）。`;
+
 if (kid.personality_seed) {
   const seed = typeof kid.personality_seed === 'string' ? JSON.parse(kid.personality_seed) : kid.personality_seed;
   const stickyDesc = seed.sticky > 70 ? '非常黏人，很怕被忽视' : seed.sticky > 40 ? '适度依赖，需要陪伴' : '比较独立，不太黏人';
