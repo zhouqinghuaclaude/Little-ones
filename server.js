@@ -254,9 +254,7 @@ const isBirthday = kid.birthday &&
  kid.age >= 1 &&
  kid.last_birthday_celebrated !== thisYear;
 
-if (isBirthday) {
- await db.query("UPDATE kids SET last_birthday_celebrated=$1 WHERE id=$2", [thisYear, kid.id]);
-}
+
 
 return {
   ...kid,
@@ -595,6 +593,11 @@ app.post("/api/kids/:id/gifts-received", auth, async (req, res) => {
 app.post("/api/kids/:id/clear-pending-levelup", auth, async (req, res) => {
  await db.query("UPDATE kids SET pending_level_up=NULL WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
  res.json({ ok: true });
+});
+app.post("/api/kids/:id/celebrate-birthday", auth, async (req, res) => {
+  const thisYear = new Date().getFullYear();
+  await db.query("UPDATE kids SET last_birthday_celebrated=$1 WHERE id=$2 AND user_id=$3", [thisYear, req.params.id, req.user.id]);
+  res.json({ ok: true });
 });
 
 app.get("/api/sprouts", auth, async (req, res) => {
@@ -1028,7 +1031,9 @@ if (kid.age >= 3 && kid.parent_interests) {
   system += ` ${ageGuide}`;
 }
 if (kid.birthday) {
-  const birthdayStr = new Date(kid.birthday).toISOString().slice(0, 10);
+  const _bd = new Date(kid.birthday);
+const birthdayStr = `${_bd.getFullYear()}-${String(_bd.getMonth()+1).padStart(2,'0')}-${String(_bd.getDate()).padStart(2,'0')}`;
+  
   system += ` 你的生日是${birthdayStr}。当${kid.parent_role}问你生日时，你知道自己的生日。`;
 }
 
