@@ -1214,16 +1214,36 @@ if (totalCount % 20 === 0) {
   const recentMessages = history.slice(-20).map(m => `${m.role === 'user' ? kid.parent_role : kid.name}：${m.content}`).join('\n');
   getClaudeAI().messages.create({
     model: process.env.DOUBAO_MODEL || "claude-sonnet-4-20250514",
-    max_tokens: 200,
-    system: `你是记忆提取助手。从以下亲子对话中提取值得长期记住的信息，优先记录：约定和承诺、孩子的喜好、重要的人或朋友(包括名字)、特别的经历或事件、孩子的小心愿。每条用简短中文表达，不超过25字。最多4条，宁缺毋滥，普通寒暄和日常客套不要记。只输出记忆内容，每条一行，不要编号。`,
+    max_tokens: 300,
+    system: `你是${kid.name}的记忆整理助手。从以下亲子对话中，提取${kid.name}值得长期记住的记忆。用第一人称"我"来表达，就像${kid.name}自己在记录（例如"我的好朋友叫踢踢"、"我被叫做足球小王子，很自豪"）。
+
+只提取有长期价值的记忆：我的自我认知、我稳定的喜好、对我重要的人、我难忘的情感体验、我的成长里程碑、长期的约定。
+
+绝对不要记录这些：一次性的日程（如"明天要去踢球"）、临时的许可（如"这次妈妈允许出去玩"）、过一天就没意义的事、普通的寒暄和客套。
+
+每条不超过25字，最多4条，宁缺毋滥。给每条记忆打一个重要性分数weight(1-10)：涉及我的自我认知、对我最重要的人、深刻情感的，打8-10分；我稳定的喜好、成长里程碑，打5-7分；一般的记忆打3-4分。
+
+只输出一个JSON数组，格式：[{"content":"我...","weight":8}]，不要输出任何其他内容。`,
     messages: [{ role: "user", content: recentMessages }]
   }).then(async result => {
-    const memories = result.content[0].text.trim().split('\n').filter(m => m.trim());
-    for (const memory of memories) {
-      await db.query("INSERT INTO memories (kid_id, content) VALUES ($1, $2)", [kid.id, memory.trim()]);
+    let memArr = [];
+    try {
+      const raw = result.content[0].text.trim().replace(/```json/gi, '').replace(/```/g, '').trim();
+      memArr = JSON.parse(raw);
+    } catch (e) { memArr = []; }
+    if (Array.isArray(memArr)) {
+      for (const m of memArr) {
+        if (m && m.content && String(m.content).trim()) {
+          const w = Math.max(1, Math.min(10, parseInt(m.weight) || 5));
+          await db.query("INSERT INTO memories (kid_id, content, weight) VALUES ($1, $2, $3)", [kid.id, String(m.content).trim(), w]);
+        }
+      }
     }
-    // 只保留最近50条记忆
-    await db.query("DELETE FROM memories WHERE kid_id=$1 AND id NOT IN (SELECT id FROM memories WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 200)", [kid.id]);
+    // 分层保留：高价值记忆(weight>=8)永久保留，其余按时间滚动，总量控制
+    await db.query(
+      "DELETE FROM memories WHERE kid_id=$1 AND weight < 8 AND id NOT IN (SELECT id FROM memories WHERE kid_id=$1 AND weight < 8 ORDER BY created_at DESC LIMIT 200)",
+      [kid.id]
+    );
   }).catch(() => {});
 }
 
