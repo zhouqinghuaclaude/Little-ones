@@ -13,6 +13,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
 
+const pgTypes = require('pg').types;
+pgTypes.setTypeParser(1082, (val) => val);
 const db = new Pool({ connectionString: process.env.DATABASE_URL });
 const GIFT_PRICES = {
   "音乐盒":40,"画笔套装":60,"演唱课":150,"陶艺课":180,"舞蹈课":200,"表演课":200,"吉他课":220,"小提琴课":280,"钢琴课":300,
