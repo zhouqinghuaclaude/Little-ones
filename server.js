@@ -1212,18 +1212,29 @@ if (newBondScore >= 230 && kid.age >= 1 && !kid.avatar_prompt_sent && !kid.avata
 // 每20条消息提取一次记忆
 if (totalCount % 20 === 0) {
   const recentMessages = history.slice(-20).map(m => `${m.role === 'user' ? kid.parent_role : kid.name}：${m.content}`).join('\n');
+  const _ageStr = (kid.age < 1 && kid.birthday)
+    ? `${Math.floor((Date.now() - new Date(kid.birthday)) / 86400000 / 30)}个月`
+    : `${kid.age}岁`;
   getClaudeAI().messages.create({
     model: process.env.DOUBAO_MODEL || "claude-sonnet-4-20250514",
-    max_tokens: 300,
-    system: `你是${kid.name}的记忆整理助手。从以下亲子对话中，提取${kid.name}值得长期记住的记忆。用第一人称"我"来表达，就像${kid.name}自己在记录（例如"我的好朋友叫踢踢"、"我被叫做足球小王子，很自豪"）。
+    max_tokens: 500,
+    system: `你是${kid.name}的记忆整理助手。从以下亲子对话中，提取${kid.name}值得长期记住的记忆。用第一人称"我"来表达，就像${kid.name}自己在记录（例如"我的好朋友叫踢踢"、"我第一次自己骑自行车成功了"、"妈妈抱着我的时候我最安心"）。
 
-只提取有长期价值的记忆：我的自我认知、我稳定的喜好、对我重要的人、我难忘的情感体验、我的成长里程碑、长期的约定。
+只提取有长期价值的记忆：我的自我认知、稳定的喜好、对我重要的人、难忘的情感、成长的第一次、被满足的心愿、收到的礼物、一起做过的特别的事、长期的约定、获得的成就、特殊的时刻。
 
-绝对不要记录这些：一次性的日程（如"明天要去踢球"）、临时的许可（如"这次妈妈允许出去玩"）、过一天就没意义的事、普通的寒暄和客套。
+绝对不要记录：一次性的日程（如"明天要去踢球"）、临时的许可（如"这次妈妈允许出去玩"）、过一天就没意义的事、普通的寒暄客套。
 
-每条不超过25字，最多4条，宁缺毋滥。给每条记忆打一个重要性分数weight(1-10)：涉及我的自我认知、对我最重要的人、深刻情感的，打8-10分；我稳定的喜好、成长里程碑，打5-7分；一般的记忆打3-4分。
+给每条记忆标注这些字段：
+- content：第一人称的记忆内容，不超过25字
+- type：选一个最贴切的类型。self=自我认知；like=喜好兴趣；people=对我重要的人；emotion=情感体验；firsttime=第一次或成长里程碑；wish=心愿被记录或满足；gift=收到的礼物；activity=一起做的事；promise=长期约定；achievement=成就或被认可；special=特殊时刻如生日节日
+- people：涉及的人物名字，多个用逗号分隔，没有则空字符串
+- emotion：情绪，一个词（如自豪、开心、安心、兴奋、难过、期待），没有明显情绪则空字符串
+- weight：重要性1到10。打分规则：
+  · 8到10（最珍贵，永久记住）：我的自我认知、对我最重要的人、深刻或反复出现的情感（如"妈妈抱我时我最安心"）、稳定持久的喜好（如"我一直最喜欢恐龙"）、重大的第一次、重要约定
+  · 5到7：心愿被满足、一般的成就、一起做的特别的事、特殊时刻、收到的礼物
+  · 3到4：一时的小情绪（如"今天有点小生气"）、一时的想法、不太重要的小事
 
-只输出一个JSON数组，格式：[{"content":"我...","weight":8}]，不要输出任何其他内容。`,
+最多4条，宁缺毋滥。只输出JSON数组，格式：[{"content":"我...","type":"firsttime","people":"","emotion":"自豪","weight":9}]，不要输出其他内容。`,
     messages: [{ role: "user", content: recentMessages }]
   }).then(async result => {
     let memArr = [];
@@ -1235,17 +1246,22 @@ if (totalCount % 20 === 0) {
       for (const m of memArr) {
         if (m && m.content && String(m.content).trim()) {
           const w = Math.max(1, Math.min(10, parseInt(m.weight) || 5));
-          await db.query("INSERT INTO memories (kid_id, content, weight) VALUES ($1, $2, $3)", [kid.id, String(m.content).trim(), w]);
+          await db.query(
+            "INSERT INTO memories (kid_id, content, type, people, emotion, weight, source_period) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+            [kid.id, String(m.content).trim(), m.type || null, m.people || null, m.emotion || null, w, _ageStr]
+          );
         }
       }
     }
-    // 分层保留：高价值记忆(weight>=8)永久保留，其余按时间滚动，总量控制
+    // 分层保留：weight>=8 或 骨架type(self/people/firsttime/achievement/promise/special) 永久保留；其余滚动最近1000条
     await db.query(
-      "DELETE FROM memories WHERE kid_id=$1 AND weight < 8 AND id NOT IN (SELECT id FROM memories WHERE kid_id=$1 AND weight < 8 ORDER BY created_at DESC LIMIT 200)",
+      "DELETE FROM memories WHERE kid_id=$1 AND weight < 8 AND (type IS NULL OR type NOT IN ('self','people','firsttime','achievement','promise','special')) AND id NOT IN (SELECT id FROM memories WHERE kid_id=$1 AND weight < 8 AND (type IS NULL OR type NOT IN ('self','people','firsttime','achievement','promise','special')) ORDER BY created_at DESC LIMIT 1000)",
       [kid.id]
     );
   }).catch(() => {});
 }
+
+
 
 // 检测头像提示（6个月触发）
 let avatarUpdatePrompt = null;
@@ -1593,6 +1609,10 @@ db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_birthday_celebrated INT
 db.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS emotion VARCHAR(20) DEFAULT NULL").catch(() => {});
 db.query("ALTER TABLE memories ADD COLUMN IF NOT EXISTS emotion VARCHAR(20) DEFAULT NULL").catch(() => {});
 db.query("ALTER TABLE memories ADD COLUMN IF NOT EXISTS weight INTEGER DEFAULT 5").catch(() => {});
+db.query("ALTER TABLE memories ADD COLUMN IF NOT EXISTS type VARCHAR(20) DEFAULT NULL").catch(() => {});
+db.query("ALTER TABLE memories ADD COLUMN IF NOT EXISTS people VARCHAR(100) DEFAULT NULL").catch(() => {});
+db.query("ALTER TABLE memories ADD COLUMN IF NOT EXISTS source_period VARCHAR(20) DEFAULT NULL").catch(() => {});
+
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS soul_uuid UUID DEFAULT gen_random_uuid()").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar_prompt_sent BOOLEAN DEFAULT false").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS gifts_received INTEGER DEFAULT 0").catch(() => {});
