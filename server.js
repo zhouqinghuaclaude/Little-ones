@@ -156,7 +156,52 @@ app.post("/api/login", async (req, res) => {
     res.status(500).json({ error: "Login failed" });
   }
 });
+app.post("/api/wx-login", async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ error: "缺少code" });
 
+    // 用code换openid
+    const wxUrl = `https://api.weixin.qq.com/sns/jscode2session?appid=${process.env.WX_APPID}&secret=${process.env.WX_SECRET}&js_code=${code}&grant_type=authorization_code`;
+    const wxResp = await fetch(wxUrl);
+    const wxData = await wxResp.json();
+
+    if (!wxData.openid) {
+      return res.status(400).json({ error: "微信登录失败", detail: wxData.errmsg || "" });
+    }
+    const openid = wxData.openid;
+
+    // 查找或创建用户
+    let userResult = await db.query("SELECT * FROM users WHERE openid=$1", [openid]);
+    let user = userResult.rows[0];
+
+    if (!user) {
+      // 新用户：openid对应，email/password填占位值（满足NOT NULL约束）
+      const placeholderEmail = `wx_${openid}@wechat.local`;
+      const placeholderHash = await bcrypt.hash(openid + Date.now(), 10);
+      const created = await db.query(
+        "INSERT INTO users (email, password_hash, name, openid) VALUES ($1, $2, $3, $4) RETURNING *",
+        [placeholderEmail, placeholderHash, "家长", openid]
+      );
+      user = created.rows[0];
+    }
+
+    // 发JWT（复用现有逻辑）
+    const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "30d" });
+
+    // 每日登录送芽豆（复用邮箱登录的逻辑）
+    const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+    const lastLogin = user.last_login_date ? String(user.last_login_date).slice(0, 10) : null;
+    if (lastLogin !== today) {
+      await db.query("UPDATE users SET sprouts_balance = sprouts_balance + 5, last_login_date = $1 WHERE id = $2", [today, user.id]);
+    }
+
+    res.json({ token, user: { id: user.id, name: user.name, openid: user.openid } });
+  } catch (e) {
+    console.error("wx-login error:", e);
+    res.status(500).json({ error: "微信登录出错" });
+  }
+});
 function getZodiacSign(birthday) {
   if (!birthday) return null;
   const d = new Date(birthday);
@@ -1627,6 +1672,8 @@ db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS daily_msg_count INTEGER DEFA
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS daily_msg_date DATE DEFAULT NULL").catch(() => {});
 db.query(`ALTER TABLE kids ADD COLUMN IF NOT EXISTS personality_seed JSONB DEFAULT NULL`).catch(() => {});
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'normal'").catch(() => {});
+db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS openid VARCHAR(64) DEFAULT NULL").catch(() => {});
+db.query("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_openid ON users(openid) WHERE openid IS NOT NULL").catch(() => {});
 db.query(`CREATE TABLE IF NOT EXISTS user_actions (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id),
