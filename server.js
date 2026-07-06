@@ -822,7 +822,10 @@ const msgCount = parseInt(msgCountResult.rows[0].count) || 0;
 
 
   const _inputRisk = checkContent(message);
-  await db.query("INSERT INTO messages (kid_id, user_id, role, content, risk_flag) VALUES ($1,$2,'user',$3,$4)", [kid.id, req.user.id, message.trim(), _inputRisk]);
+ 
+ if (!req.body.silent) {
+    await db.query("INSERT INTO messages (kid_id, user_id, role, content, risk_flag) VALUES ($1,$2,'user',$3,$4)", [kid.id, req.user.id, message.trim(), _inputRisk]);
+  }
   if (_inputRisk === '轻生自残') {
   return res.json({ care: true, careMessage: CARE_MESSAGE });
   }
