@@ -649,8 +649,13 @@ app.post("/api/kids/:id/celebrate-birthday", auth, async (req, res) => {
 });
 
 app.get("/api/sprouts", auth, async (req, res) => {
-  const result = await db.query("SELECT sprouts_balance FROM users WHERE id = $1", [req.user.id]);
-  res.json({ balance: result.rows[0]?.sprouts_balance || 0 });
+  const result = await db.query("SELECT sprouts_balance, membership_type, membership_expiry FROM users WHERE id = $1", [req.user.id]);
+  const u = result.rows[0] || {};
+  res.json({
+    balance: u.sprouts_balance || 0,
+    membership_type: u.membership_type || 'free',
+    membership_expiry: u.membership_expiry || null
+  });
 });
 
 app.post("/api/complaints", auth, async (req, res) => {
