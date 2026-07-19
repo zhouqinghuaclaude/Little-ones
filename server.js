@@ -1580,6 +1580,56 @@ app.post("/api/kids/:id/diary", auth, async (req, res) => {
 
 });
 
+// ===== 百度人脸年龄编辑 =====
+let baiduToken = { value: null, expire: 0 };
+
+async function getBaiduToken() {
+  // 缓存有效则复用
+  if (baiduToken.value && Date.now() < baiduToken.expire) {
+    return baiduToken.value;
+  }
+  const url = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${process.env.BAIDU_FACE_AK}&client_secret=${process.env.BAIDU_FACE_SK}`;
+  const resp = await fetch(url);
+  const data = await resp.json();
+  if (!data.access_token) {
+    throw new Error('百度token获取失败: ' + (data.error_description || JSON.stringify(data)));
+  }
+  baiduToken.value = data.access_token;
+  // 有效期30天，提前1天过期重取
+  baiduToken.expire = Date.now() + (data.expires_in - 86400) * 1000;
+  return baiduToken.value;
+}
+
+// 测试接口：传家长照片base64 + 目标年龄 → 返回生成图base64
+app.post("/api/face/test", auth, async (req, res) => {
+  try {
+    const { image, age } = req.body;  // image是base64(不含头), age目标年龄
+    if (!image || !age) return res.status(400).json({ error: "缺少图片或年龄" });
+
+    const token = await getBaiduToken();
+    const url = `https://aip.baidubce.com/rest/2.0/face/v1/editattr?access_token=${token}`;
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image: image,
+        image_type: 'BASE64',
+        action_type: 'V2_AGE',
+        target: parseInt(age),
+        quality_control: 'NORMAL'
+      })
+    });
+    const data = await resp.json();
+
+    if (data.error_code !== 0) {
+      return res.status(400).json({ error: '生成失败', code: data.error_code, msg: data.error_msg });
+    }
+    res.json({ image: data.result.image });  // 返回生成图base64
+  } catch (e) {
+    console.error('face test error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
 
 // ===== 内容安全巡检后台（管理员） =====
 const adminAuth = (req, res, next) => {
