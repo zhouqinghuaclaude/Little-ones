@@ -1580,8 +1580,68 @@ app.post("/api/kids/:id/diary", auth, async (req, res) => {
 
 });
 
+// ===== 通义万相 图像生成（验证阶段） =====
+app.post("/api/face/generate", auth, async (req, res) => {
+  try {
+    const { image, age, gender } = req.body;  // image=base64(不含头), age年龄, gender性别
+    if (!image || !age) return res.status(400).json({ error: "缺少照片或年龄" });
 
+    const genderWord = gender === 'girl' ? '女孩' : '男孩';
+    // 系统组织提示词（第一版，半写实插画风）
+    const prompt = `参考图中人物，生成一个${age}岁的可爱${genderWord}，保留参考人物的面部特征基因（相似的脸型轮廓、眼睛形状、五官比例），转化为与${age}岁相符的儿童面孔，符合该年龄的发型、表情，温暖治愈的半写实插画风格，正脸头像，明亮天真的笑容，柔和光线，高画质`;
+    const negativePrompt = `成年面孔,青少年,老态,皱纹,多张脸,重复面孔,变形,多余手指,模糊,低画质,过度曝光,恐怖谷效应,文字水印`;
 
+    const dataUrl = `data:image/jpeg;base64,${image}`;
+
+    const resp = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + process.env.DASHSCOPE_API_KEY
+      },
+      body: JSON.stringify({
+        model: 'wan2.7-image-pro',
+        input: {
+          messages: [{
+            role: 'user',
+            content: [
+              { image: dataUrl },
+              { text: prompt }
+            ]
+          }]
+        },
+        parameters: {
+          negative_prompt: negativePrompt,
+          prompt_extend: true,
+          watermark: true,
+          n: 1,
+          size: '1024*1024'
+        }
+      })
+    });
+
+    const data = await resp.json();
+
+    // 提取生成图URL
+    const choices = data.output?.choices;
+    let imgUrl = null;
+    if (choices && choices[0]?.message?.content) {
+      for (const c of choices[0].message.content) {
+        if (c.image) { imgUrl = c.image; break; }
+      }
+    }
+
+    if (!imgUrl) {
+      console.error('wan generate no image:', JSON.stringify(data));
+      return res.status(400).json({ error: '生成失败', detail: data.message || data.code || JSON.stringify(data).slice(0, 200) });
+    }
+
+    res.json({ image_url: imgUrl });
+  } catch (e) {
+    console.error('face generate error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
 // ===== 内容安全巡检后台（管理员） =====
 const adminAuth = (req, res, next) => {
   const key = req.headers["x-admin-key"] || req.query.key;
