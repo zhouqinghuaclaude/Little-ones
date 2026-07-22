@@ -1723,6 +1723,75 @@ app.post("/api/dev/activate", auth, async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
+// ===== 照片额度检查/重置 =====
+// 检查并处理额度重置，返回当前额度状态
+async function checkPhotoQuota(userId) {
+  const r = await db.query(
+    "SELECT membership_type, membership_expiry, photo_quota_total, photo_quota_used, photo_quota_reset_at, sprouts_balance FROM users WHERE id=$1",
+    [userId]
+  );
+  const u = r.rows[0];
+  if (!u) throw new Error('用户不存在');
+
+  const now = new Date();
+  const isPaid = u.membership_type && u.membership_type !== 'free'
+    && u.membership_expiry && new Date(u.membership_expiry) > now;
+
+  let total = u.photo_quota_total || 1;
+  let used = u.photo_quota_used || 0;
+  let resetAt = u.photo_quota_reset_at ? new Date(u.photo_quota_reset_at) : null;
+  let needUpdate = false;
+
+  if (isPaid) {
+    // 付费：到 reset_at（会员到期日）才重置。会员期内不重置（年卡累计用）
+    // reset_at 已在开通时设为会员到期日，到期前不动
+    if (resetAt && now >= resetAt) {
+      // 会员到期了 → 降级免费逻辑（下面免费分支处理）
+      // 实际上到期后 isPaid 已是 false，走不到这里；保险起见
+    }
+  } else {
+    // 免费：日历月重置
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    if (!resetAt || resetAt < thisMonthStart) {
+      // 新月了，或从未设置 → 重置
+      total = 1;
+      used = 0;
+      // 下月1号为下次重置点
+      resetAt = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      needUpdate = true;
+    } else {
+      total = 1; // 免费固定1张
+    }
+  }
+
+  if (needUpdate) {
+    await db.query(
+      "UPDATE users SET photo_quota_total=$1, photo_quota_used=$2, photo_quota_reset_at=$3 WHERE id=$4",
+      [total, used, resetAt, userId]
+    );
+  }
+
+  return {
+    membership_type: isPaid ? u.membership_type : 'free',
+    total, used,
+    remaining: Math.max(0, total - used),
+    sprouts: u.sprouts_balance || 0,
+    reset_at: resetAt
+  };
+}
+
+// 额度查询接口
+app.get("/api/photo/quota", auth, async (req, res) => {
+  try {
+    const q = await checkPhotoQuota(req.user.id);
+    res.json(q);
+  } catch (e) {
+    console.error('photo quota error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ===== 内容安全巡检后台（管理员） =====
 const adminAuth = (req, res, next) => {
   const key = req.headers["x-admin-key"] || req.query.key;
