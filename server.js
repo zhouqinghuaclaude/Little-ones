@@ -1588,9 +1588,9 @@ app.post("/api/face/generate", auth, async (req, res) => {
 
     const genderWord = gender === 'girl' ? '女孩' : '男孩';
     // 系统组织提示词（第一版，半写实插画风）
-    const prompt = `参考图中人物，生成一个${age}岁的可爱${genderWord}，保留参考人物的面部特征基因（相似的脸型轮廓、眼睛形状、五官比例），转化为与${age}岁相符的儿童面孔，符合该年龄的发型、表情，温暖治愈的半写实插画风格，正脸头像，明亮天真的笑容，柔和光线，高画质`;
-    const negativePrompt = `成年面孔,青少年,老态,皱纹,多张脸,重复面孔,变形,多余手指,模糊,低画质,过度曝光,恐怖谷效应,文字水印`;
-
+    
+    const prompt = `参考图中人物，生成一个${age}岁的可爱${genderWord}，保留参考人物的面部特征基因（相似的脸型轮廓、眼睛形状、五官比例），转化为与${age}岁相符的真实儿童面孔，符合该年龄的发型、表情，写实摄影风格，真实的皮肤质感和光影，儿童写真照片，正脸，明亮天真的笑容，自然柔和的光线，高清细节`;
+    const negativePrompt = `卡通,动漫,插画,3D渲染,绘画风格,成年面孔,青少年,老态,皱纹,多张脸,重复面孔,变形,多余手指,模糊,低画质,过度曝光,恐怖谷效应,文字水印`;
     const dataUrl = `data:image/jpeg;base64,${image}`;
 
     const resp = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', {
