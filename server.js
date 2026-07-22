@@ -1681,6 +1681,48 @@ app.post("/api/face/generate", auth, async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
+// ===== 会员开通核心逻辑（永久，支付回调和测试都调用）=====
+// 各档位每月照片额度
+const PHOTO_QUOTA_BY_TIER = { free: 1, vip: 5, svip: 10, dvip: 20 };
+
+// 开通/更新会员 + 设定照片额度
+async function activateMembership(userId, tier, planType) {
+  // tier: 'vip'|'svip'|'dvip'  planType: 'month'|'year'
+  const now = new Date();
+  const days = planType === 'year' ? 365 : 30;
+  const expiry = new Date(now.getTime() + days * 86400000);
+
+  const monthlyQuota = PHOTO_QUOTA_BY_TIER[tier] || 1;
+  // 月卡=月额度；年卡=月额度×12，一次性给
+  const total = planType === 'year' ? monthlyQuota * 12 : monthlyQuota;
+
+  await db.query(
+    `UPDATE users SET membership_type=$1, membership_expiry=$2,
+     photo_quota_total=$3, photo_quota_used=0, photo_quota_reset_at=$4
+     WHERE id=$5`,
+    [tier, expiry, total, expiry, userId]
+  );
+  return { tier, expiry, total };
+}
+
+// 临时开通接口（测试用，上线前删除或加严格权限）
+// 用密钥保护，防止滥用
+app.post("/api/dev/activate", auth, async (req, res) => {
+  try {
+    const { tier, plan, secret } = req.body;
+    // 简单密钥保护——换成你自己的口令
+    if (secret !== 'budpei_dev_2026') return res.status(403).json({ error: '无权限' });
+    if (!['vip','svip','dvip'].includes(tier)) return res.status(400).json({ error: 'tier错误' });
+    if (!['month','year'].includes(plan)) return res.status(400).json({ error: 'plan错误' });
+
+    const result = await activateMembership(req.user.id, tier, plan);
+    res.json({ ok: true, ...result });
+  } catch (e) {
+    console.error('dev activate error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
 // ===== 内容安全巡检后台（管理员） =====
 const adminAuth = (req, res, next) => {
   const key = req.headers["x-admin-key"] || req.query.key;
