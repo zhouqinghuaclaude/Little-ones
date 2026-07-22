@@ -1628,22 +1628,44 @@ function getCosSignedUrl(key, expires = 3600) {
 
 app.post("/api/face/generate", auth, async (req, res) => {
   try {
-    const { image, age, gender, kid_id } = req.body;
+    const { image, age, gender, kid_id, use_sprouts } = req.body;
     if (!image || !age) return res.status(400).json({ error: "缺少照片或年龄" });
 
+    // 1. 查额度
+    const quota = await checkPhotoQuota(req.user.id);
+    const SPROUT_COST = 100;
+    let payMethod = null;  // 'quota' 或 'sprouts'
+
+    if (quota.remaining > 0) {
+      payMethod = 'quota';
+    } else {
+      // 额度用完
+      if (!use_sprouts) {
+        // 前端未确认用芽豆 → 返回需确认
+        return res.json({
+          need_confirm: true,
+          quota_used_up: true,
+          sprouts: quota.sprouts,
+          cost: SPROUT_COST,
+          can_use_sprouts: quota.sprouts >= SPROUT_COST
+        });
+      }
+      // 已确认用芽豆
+      if (quota.sprouts < SPROUT_COST) {
+        return res.status(400).json({ error: '芽豆不足', need_upgrade: true });
+      }
+      payMethod = 'sprouts';
+    }
+
+    // 2. 调万相生成
     const genderWord = gender === 'girl' ? '女孩' : '男孩';
     const prompt = `参考图中人物，生成一个${age}岁的可爱${genderWord}，保留参考人物的面部特征基因（相似的脸型轮廓、眼睛形状、五官比例），转化为与${age}岁相符的真实儿童面孔，符合该年龄的发型、表情，写实摄影风格，真实的皮肤质感和光影，儿童写真照片，正脸，明亮天真的笑容，自然柔和的光线，高清细节`;
     const negativePrompt = `卡通,动漫,插画,3D渲染,绘画风格,成年面孔,青少年,老态,皱纹,多张脸,重复面孔,变形,多余手指,模糊,低画质,过度曝光,恐怖谷效应,文字水印`;
-
     const dataUrl = `data:image/jpeg;base64,${image}`;
 
-    // 1. 调万相生成
     const resp = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + process.env.DASHSCOPE_API_KEY
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + process.env.DASHSCOPE_API_KEY },
       body: JSON.stringify({
         model: 'wan2.7-image-pro',
         input: { messages: [{ role: 'user', content: [{ image: dataUrl }, { text: prompt }] }] },
@@ -1664,18 +1686,32 @@ app.post("/api/face/generate", auth, async (req, res) => {
       return res.status(400).json({ error: '生成失败', detail: data.message || data.code || JSON.stringify(data).slice(0, 200) });
     }
 
-    // 2. 下载生成图
+    // 3. 下载 + 存COS
     const buffer = await downloadImage(imgUrl);
-
-    // 3. 上传COS
     const kidKey = kid_id || 'temp';
     const cosKey = `photos/${kidKey}/avatar_${Date.now()}.png`;
     await uploadToCos(cosKey, buffer);
-
-    // 4. 生成签名访问URL返回
     const signedUrl = await getCosSignedUrl(cosKey, 3600);
 
-    res.json({ image_url: signedUrl, cos_key: cosKey });
+    // 4. 写photos表
+    await db.query(
+      "INSERT INTO photos (kid_id, user_id, cos_key, type, age, style) VALUES ($1,$2,$3,$4,$5,$6)",
+      [kid_id || null, req.user.id, cosKey, 'avatar', parseInt(age), 'realistic']
+    );
+
+    // 5. 更新kids.avatar_generated
+    if (kid_id) {
+      await db.query("UPDATE kids SET avatar_generated=true WHERE id=$1", [kid_id]);
+    }
+
+    // 6. 扣费
+    if (payMethod === 'quota') {
+      await db.query("UPDATE users SET photo_quota_used = photo_quota_used + 1 WHERE id=$1", [req.user.id]);
+    } else {
+      await db.query("UPDATE users SET sprouts_balance = sprouts_balance - $1 WHERE id=$2", [SPROUT_COST, req.user.id]);
+    }
+
+    res.json({ image_url: signedUrl, cos_key: cosKey, pay_method: payMethod });
   } catch (e) {
     console.error('face generate error:', e);
     res.status(500).json({ error: e.message });
