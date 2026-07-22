@@ -1768,7 +1768,22 @@ db.query("ALTER TABLE memories ADD COLUMN IF NOT EXISTS people VARCHAR(100) DEFA
 db.query("ALTER TABLE memories ADD COLUMN IF NOT EXISTS source_period VARCHAR(20) DEFAULT NULL").catch(() => {});
 
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS soul_uuid UUID DEFAULT gen_random_uuid()").catch(() => {});
-db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar_prompt_sent BOOLEAN DEFAULT false").catch(() => {});
+// ===== 影像功能：相册表 + 字段 =====
+db.query(`CREATE TABLE IF NOT EXISTS photos (
+  id SERIAL PRIMARY KEY,
+  kid_id INTEGER REFERENCES kids(id) ON DELETE CASCADE,
+  user_id INTEGER REFERENCES users(id),
+  cos_key VARCHAR(300) NOT NULL,
+  type VARCHAR(20) DEFAULT 'avatar',
+  theme VARCHAR(100) DEFAULT NULL,
+  age INTEGER DEFAULT NULL,
+  style VARCHAR(20) DEFAULT 'realistic',
+  created_at TIMESTAMP DEFAULT NOW()
+)`).catch(() => {});
+db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar_generated BOOLEAN DEFAULT false").catch(() => {});
+db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar_intro_shown BOOLEAN DEFAULT false").catch(() => {});
+db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_quota_used INTEGER DEFAULT 0").catch(() => {});
+db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_quota_month VARCHAR(7) DEFAULT NULL").catch(() => {});db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar_prompt_sent BOOLEAN DEFAULT false").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS gifts_received INTEGER DEFAULT 0").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS parent_interests TEXT").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar_prompt_date TIMESTAMP DEFAULT NULL").catch(() => {});
