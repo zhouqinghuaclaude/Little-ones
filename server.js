@@ -1223,7 +1223,15 @@ if (message.includes('📖') && message.includes('讲故事')) {
 
 
   try {
-    const reply = await callAI(chatMessages, system, kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 100);
+   
+    let reply = await callAI(chatMessages, system, kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 100);
+    // 兜底：用户本轮没说英文时，过滤回复中泄漏的英文碎片
+    if (!/[a-zA-Z]{2,}/.test(message)) {
+      const _before = reply;
+      reply = reply.replace(/\b[a-zA-Z]{3,}(\s+[a-zA-Z]{2,})*\b/g, '').replace(/\s{2,}/g, ' ').trim();
+      if (_before !== reply) console.log('[EN_LEAK] 过滤英文碎片:', _before, '=>', reply);
+    }
+   
     await db.query("UPDATE kids SET pending_gift = NULL WHERE id = $1", [kid.id]);
 
     const saved = await db.query(
