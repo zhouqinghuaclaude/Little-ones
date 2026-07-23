@@ -1628,8 +1628,20 @@ function getCosSignedUrl(key, expires = 3600) {
 
 app.post("/api/face/generate", auth, async (req, res) => {
   try {
-    const { image, age, gender, kid_id, use_sprouts } = req.body;
-    if (!image || !age) return res.status(400).json({ error: "缺少照片或年龄" });
+   
+    const { image, kid_id, use_sprouts } = req.body;
+    if (!image) return res.status(400).json({ error: "缺少照片" });
+    if (!kid_id) return res.status(400).json({ error: "缺少孩子信息" });
+
+    // 取孩子信息，后端算年龄
+    const kidRes = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [kid_id, req.user.id]);
+    const kid = kidRes.rows[0];
+    if (!kid) return res.status(404).json({ error: "孩子不存在或无权访问" });
+    if (!kid.birthday) {
+      return res.status(400).json({ error: "需要精准生日", need_birthday: true });
+    }
+    const age = kid.age_mode === 'natural' ? calcAge(kid.birthday) : kid.age;
+    const gender = kid.gender;
 
     // 1. 查额度
     const quota = await checkPhotoQuota(req.user.id);
@@ -1688,8 +1700,8 @@ app.post("/api/face/generate", auth, async (req, res) => {
 
     // 3. 下载 + 存COS
     const buffer = await downloadImage(imgUrl);
-    const kidKey = kid_id || 'temp';
-    const cosKey = `photos/${kidKey}/avatar_${Date.now()}.png`;
+    
+    const cosKey = `photos/${kid_id}/avatar_${Date.now()}.png`;
     await uploadToCos(cosKey, buffer);
     const signedUrl = await getCosSignedUrl(cosKey, 3600);
 
@@ -1714,6 +1726,86 @@ app.post("/api/face/generate", auth, async (req, res) => {
     res.json({ image_url: signedUrl, cos_key: cosKey, pay_method: payMethod });
   } catch (e) {
     console.error('face generate error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ===== 相册：照片列表 =====
+app.get("/api/kids/:id/photos", auth, async (req, res) => {
+  try {
+    const kidRes = await db.query("SELECT id FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
+    if (!kidRes.rows[0]) return res.status(404).json({ error: "孩子不存在或无权访问" });
+
+    const r = await db.query(
+      "SELECT id, cos_key, type, theme, age, created_at FROM photos WHERE kid_id=$1 ORDER BY created_at DESC",
+      [req.params.id]
+    );
+    // 为每张生成签名URL
+    const photos = await Promise.all(r.rows.map(async (p) => ({
+      id: p.id,
+      url: await getCosSignedUrl(p.cos_key, 7200),
+      cos_key: p.cos_key,
+      type: p.type,
+      theme: p.theme,
+      age: p.age,
+      created_at: p.created_at
+    })));
+    res.json({ photos });
+  } catch (e) {
+    console.error('photos list error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ===== 设为头像 =====
+app.post("/api/kids/:id/set-avatar", auth, async (req, res) => {
+  try {
+    const { photo_id } = req.body;
+    const kidRes = await db.query("SELECT id FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
+    if (!kidRes.rows[0]) return res.status(404).json({ error: "孩子不存在或无权访问" });
+
+    if (photo_id === null || photo_id === 0) {
+      // 清除照片头像，回到emoji
+      await db.query("UPDATE kids SET avatar_photo_key=NULL WHERE id=$1", [req.params.id]);
+      return res.json({ ok: true, cleared: true });
+    }
+
+    const pRes = await db.query("SELECT cos_key FROM photos WHERE id=$1 AND kid_id=$2", [photo_id, req.params.id]);
+    const photo = pRes.rows[0];
+    if (!photo) return res.status(404).json({ error: "照片不存在" });
+
+    await db.query("UPDATE kids SET avatar_photo_key=$1 WHERE id=$2", [photo.cos_key, req.params.id]);
+    res.json({ ok: true, cos_key: photo.cos_key });
+  } catch (e) {
+    console.error('set avatar error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ===== 删除照片（含COS对象）=====
+app.delete("/api/photos/:id", auth, async (req, res) => {
+  try {
+    const r = await db.query(
+      "SELECT p.id, p.cos_key, p.kid_id FROM photos p JOIN kids k ON p.kid_id=k.id WHERE p.id=$1 AND k.user_id=$2",
+      [req.params.id, req.user.id]
+    );
+    const photo = r.rows[0];
+    if (!photo) return res.status(404).json({ error: "照片不存在或无权访问" });
+
+    // 若是当前头像，一并清除
+    await db.query("UPDATE kids SET avatar_photo_key=NULL WHERE id=$1 AND avatar_photo_key=$2", [photo.kid_id, photo.cos_key]);
+    // 删数据库记录
+    await db.query("DELETE FROM photos WHERE id=$1", [req.params.id]);
+    // 删COS对象
+    cosClient.deleteObject({
+      Bucket: process.env.COS_BUCKET,
+      Region: process.env.COS_REGION,
+      Key: photo.cos_key
+    }, (err) => { if (err) console.error('cos delete error:', err.message); });
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('delete photo error:', e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -1933,6 +2025,7 @@ db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_quota_used INTEGER DE
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_quota_month VARCHAR(7) DEFAULT NULL").catch(() => {});db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar_prompt_sent BOOLEAN DEFAULT false").catch(() => {});
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_quota_total INTEGER DEFAULT 1").catch(() => {});
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_quota_reset_at DATE DEFAULT NULL").catch(() => {});db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS gifts_received INTEGER DEFAULT 0").catch(() => {});
+db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar_photo_key VARCHAR(300) DEFAULT NULL").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS parent_interests TEXT").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar_prompt_date TIMESTAMP DEFAULT NULL").catch(() => {});
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS membership_type VARCHAR(10) DEFAULT 'free'").catch(() => {});
