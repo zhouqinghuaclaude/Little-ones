@@ -302,7 +302,10 @@ const isBirthday = kid.birthday &&
  kid.last_birthday_celebrated !== thisYear;
 
 
-
+let avatarPhotoUrl = null;
+if (kid.avatar_photo_key) {
+  try { avatarPhotoUrl = await getCosSignedUrl(kid.avatar_photo_key, 7200); } catch (e) { avatarPhotoUrl = null; }
+}
 return {
   ...kid,
   age_display: ageDisplay,
@@ -312,7 +315,9 @@ return {
   bond_score: kid.bond_score || 0,
   streak_days: kid.streak_days || 0,
   is_birthday: isBirthday,
+  avatar_photo_url: avatarPhotoUrl,
 };
+
 
   }));
   res.json(kids);
