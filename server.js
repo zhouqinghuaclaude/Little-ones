@@ -44,13 +44,26 @@ function getDoubao() {
   }
     return _doubao;
 }
+
 function cleanReply(text) {
   if (!text) return text;
   let t = text;
+  // 去 think 标签
   t = t.replace(/<think[^>]*>[\s\S]*?<\/think[^>]*>/gi, '');
   t = t.replace(/<\/?think[^>]*>/gi, '');
+  // 去内部控制标记 <[SILENT_xxx]> / <SILENT_xxx>
+  t = t.replace(/<\[?\s*SILENT[_A-Za-z0-9]*[^\]>]*\]?\s*>/gi, '');
+  // 去泄漏的 HTML 标签片段
+  t = t.replace(/<\/?(td|tr|table|div|span|p|br|li|ul|ol|a|img|h[1-6])[^>]*>/gi, '');
+  // 去残留的属性文本 class="xxx" 等
+  t = t.replace(/\b(class|style|id|href|src)\s*=\s*["'][^"']*["']/gi, '');
+  // 兜底：去掉剩余的短尖括号标记（限长度且不含中文，避免误删正常内容）
+  t = t.replace(/<[^<>\u4e00-\u9fa5]{0,60}>/g, '');
+  // 清理多余空白
+  t = t.replace(/\s{2,}/g, ' ');
   return t.trim();
 }
+
 async function callAI(messages, system, maxTokens) {
  if (getDoubao()) {
  const msgs = system ? [{ role: "system", content: system }, ...messages] : messages;
