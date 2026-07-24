@@ -50,6 +50,8 @@ function cleanReply(text) {
   let t = text;
   t = t.replace(/<think[^>]*>[\s\S]*?<\/think[^>]*>/gi, '');
   t = t.replace(/<\/?think[^>]*>/gi, '');
+  // 过滤模型内部保留token泄漏（如 <[SILENT_never_used_xxx]> / <SPEAK_never_used_xxx>）
+  t = t.replace(/<\[?[A-Z_]+_never_used_[a-f0-9]+\]?>/gi, '');
   return t.trim();
 }
 
