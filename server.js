@@ -1215,7 +1215,7 @@ if (message.includes('📖') && message.includes('讲故事')) {
 
   try {
    
-    const reply = await callAI(chatMessages, system, kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 100);
+    let reply = await callAI(chatMessages, system, kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 100);
     // 兜底：用户本轮没说英文时，过滤回复中泄漏的英文碎片
     if (!/[a-zA-Z]{2,}/.test(message)) {
       const _before = reply;
