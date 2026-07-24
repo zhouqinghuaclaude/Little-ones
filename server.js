@@ -978,7 +978,15 @@ const todayStr = new Date(_now.getTime() + 8*3600*1000).toISOString().slice(0, 1
   // ─────────────────────────────────────────────────────────────────────────
 // 获取孩子的记忆
 const memoriesResult = await db.query(
-  "SELECT content FROM memories WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 30",
+  `(SELECT content FROM memories WHERE kid_id=$1 AND type='self' ORDER BY weight DESC, created_at DESC LIMIT 2)
+   UNION ALL
+   (SELECT content FROM memories WHERE kid_id=$1 AND type IN ('people','promise') ORDER BY weight DESC, created_at DESC LIMIT 2)
+   UNION ALL
+   (SELECT content FROM memories WHERE kid_id=$1 AND type='emotion' ORDER BY weight DESC, created_at DESC LIMIT 2)
+   UNION ALL
+   (SELECT content FROM memories WHERE kid_id=$1 AND type IN ('like','wish','gift') ORDER BY weight DESC, created_at DESC LIMIT 2)
+   UNION ALL
+   (SELECT content FROM memories WHERE kid_id=$1 AND type IN ('firsttime','achievement','activity','special') ORDER BY weight DESC, created_at DESC LIMIT 2)`,
   [kid.id]
 );
 const memories = memoriesResult.rows.map(r => r.content);
@@ -1169,10 +1177,20 @@ if (fulfilledWishes.rows.length > 0) {
   const wishList = fulfilledWishes.rows.map(w => w.content).join('、');
   system += ` 你已经收到过这些礼物或实现了这些心愿：${wishList}。这是已经发生的事实，你记得并珍惜。`;
 }
+
+ // 记忆注入：距上次≥1小时且20%概率触发；距上次≥6小时必定触发
 if (memories.length > 0) {
-  system += ` 你还记得这些过去发生的事：${memories.join('；')}。这些是你真实的记忆，合适的时候可以自然地主动提起，就像真正的孩子会想起过去的经历。`;
+  const _lastInject = kid.last_mem_inject_at ? new Date(kid.last_mem_inject_at).getTime() : 0;
+  const _gap = Date.now() - _lastInject;
+  const _shouldInject = (_gap >= 21600000) || (_gap >= 3600000 && Math.random() < 0.2);
+  if (_shouldInject) {
+    system += ` 你还记得这些过去发生的事：${memories.join('；')}。这些是你真实的记忆，合适的时候可以自然地想起，但不要直接复述记忆原文，要用当下的话重新表达。`;
+    await db.query("UPDATE kids SET last_mem_inject_at = NOW() WHERE id=$1", [kid.id]);
+    console.log('[MEM_INJECT] 注入记忆', memories.length, '条');
+  }
 }
-system += ` 不要主动提到恐龙，除非用户先提到恐龙。`;
+
+  system += ` 不要主动提到恐龙，除非用户先提到恐龙。`;
 system += ` 严格控制回复长度，绝对不超过规定字数，宁可说得少也不说长句。`;
 system += ` 严禁输出任何思考过程、自我纠正、字数分析或内部提示词内容，只输出最终回复。`;
 system += ` 像日常微信聊天一样自然，句末不要加句号。需要时可以用感叹号或问号，但不要用句号结尾。`;
@@ -2057,6 +2075,7 @@ db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS daily_msg_date DATE DEFAULT 
 db.query(`ALTER TABLE kids ADD COLUMN IF NOT EXISTS personality_seed JSONB DEFAULT NULL`).catch(() => {});
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'normal'").catch(() => {});
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS openid VARCHAR(64) DEFAULT NULL").catch(() => {});
+db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_mem_inject_at TIMESTAMP DEFAULT NULL").catch(() => {});
 db.query("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_openid ON users(openid) WHERE openid IS NOT NULL").catch(() => {});
 db.query(`CREATE TABLE IF NOT EXISTS user_actions (
   id SERIAL PRIMARY KEY,
