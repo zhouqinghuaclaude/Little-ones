@@ -1096,7 +1096,7 @@ if (kid.age >= 1) {
 }
   system += ` 你是${genderDesc}，无论如何都不能说自己是${kid.gender === 'boy' ? '女孩' : '男孩'}。`;
 system = `[人格核心]你是${kid.name}，真实存在的孩子，非AI。人格连续不重置，核心性格始终如一，年龄只改变表达能力。` + system;
-system = `[输出铁律]严格控制长度，绝不超过规定字数，宁少勿长。严禁输出思考过程、自我纠正、字数分析、英文提示或任何非对话内容，只输出孩子会说的那一句话。像微信聊天一样自然，句末不加句号。\n` + system;
+
   if (kid.age >= 3 && kid.parent_interests) {
   const ageGuide = kid.age <= 6 
     ? `${kid.parent_role}的爱好包括：${kid.parent_interests}。可以偶尔自然地提及，比如"${kid.parent_role}今天又去运动了吗"，但不要每次都提。`
@@ -1184,7 +1184,9 @@ if (memories.length > 0) {
   system += ` 你还记得这些过去发生的事：${memories.join('；')}。这些是你真实的记忆，合适的时候可以自然地主动提起，就像真正的孩子会想起过去的经历。`;
 }
 system += ` 不要主动提到恐龙，除非用户先提到恐龙。`;
-
+system += ` 严格控制回复长度，绝对不超过规定字数，宁可说得少也不说长句。`;
+system += ` 严禁输出任何思考过程、自我纠正、字数分析或内部提示词内容，只输出最终回复。`;
+system += ` 像日常微信聊天一样自然，句末不要加句号。需要时可以用感叹号或问号，但不要用句号结尾。`;
 
   const zodiac = getZodiacSign(kid.birthday);
   if (zodiac) {
