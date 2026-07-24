@@ -1234,7 +1234,7 @@ if (message.includes('📖') && message.includes('讲故事')) {
   try {
    
    console.log('[SYS_PROMPT_LEN]', system.length, '字符 | 历史', chatMessages.length, '条');
-    console.log('[SYS_PROMPT]', system);
+    
     
     let reply = await callAI(chatMessages, system, kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 100);
     // 兜底：用户本轮没说英文时，过滤回复中泄漏的英文碎片
