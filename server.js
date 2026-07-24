@@ -65,6 +65,7 @@ async function callAI(messages, system, maxTokens) {
    thinking: { type: "disabled" },
  });
  let res = await _call();
+  console.log('[RAW_MSG]', JSON.stringify(res.choices[0]?.message)); 
  let _c = res.choices[0]?.message?.content;
   if (_c && _c.trim()) return cleanReply(_c);
  console.log('[EMPTY_REPLY] 第一次空, finish_reason:', res.choices[0]?.finish_reason, '| usage:', JSON.stringify(res.usage));
