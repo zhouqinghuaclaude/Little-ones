@@ -1238,9 +1238,16 @@ if (message.includes('📖') && message.includes('讲故事')) {
    
    console.log('[SYS_PROMPT_LEN]', system.length, '字符 | 历史', chatMessages.length, '条');
     
-   const reply = await callAI(chatMessages, system, kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 100); 
-    
-// 每日消息计数
+  const reply = await callAI(chatMessages, system, kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 100); 
+
+    await db.query("UPDATE kids SET pending_gift = NULL WHERE id = $1", [kid.id]);
+
+    const saved = await db.query(
+      "INSERT INTO messages (kid_id, user_id, role, content) VALUES ($1,$2,'assistant',$3) RETURNING id",
+      [kid.id, req.user.id, reply]
+    );
+
+// 每日消息计数 
 const _now = new Date();
 const todayStr = new Date(_now.getTime() + 8*3600*1000).toISOString().slice(0, 10);
 const kidMsgDate = kid.daily_msg_date ? new Date(kid.daily_msg_date).toISOString().slice(0, 10) : null;
