@@ -699,20 +699,52 @@ function calcAge(birthday) {
   }
   return age;
 }
-
 app.get("/api/kids/:id/soul-export", auth, async (req, res) => {
   try {
     const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
     const kid = kidResult.rows[0];
     if (!kid) return res.status(404).json({ error: "孩子不存在或无权访问" });
 
-    const memoriesResult = await db.query("SELECT content, emotion, weight, created_at FROM memories WHERE kid_id=$1 ORDER BY created_at ASC", [kid.id]);
-    const messagesResult = await db.query("SELECT role, content, emotion, created_at FROM messages WHERE kid_id=$1 ORDER BY created_at ASC", [kid.id]);
-    const wishesResult = await db.query("SELECT * FROM wishes WHERE kid_id=$1 ORDER BY created_at ASC", [kid.id]).catch(() => ({ rows: [] }));
-    const giftsResult = await db.query("SELECT gift_emoji, gift_name, gift_type, created_at FROM gifts WHERE kid_id=$1 ORDER BY created_at ASC", [kid.id]).catch(() => ({ rows: [] }));
+    const memoriesResult = await db.query(
+      "SELECT content, type, emotion, weight, people, source_period, created_at FROM memories WHERE kid_id=$1 ORDER BY created_at ASC",
+      [kid.id]
+    );
+    const messagesResult = await db.query(
+      "SELECT role, content, emotion, created_at FROM messages WHERE kid_id=$1 ORDER BY created_at ASC",
+      [kid.id]
+    );
+    const wishesResult = await db.query(
+      "SELECT * FROM wish_pool WHERE kid_id=$1 ORDER BY created_at ASC",
+      [kid.id]
+    ).catch(() => ({ rows: [] }));
+    const giftsResult = await db.query(
+      "SELECT gift_emoji, gift_name, gift_type, created_at FROM gifts WHERE kid_id=$1 ORDER BY created_at ASC",
+      [kid.id]
+    ).catch(() => ({ rows: [] }));
+    const achievementsResult = await db.query(
+      "SELECT * FROM achievements WHERE kid_id=$1 ORDER BY created_at ASC",
+      [kid.id]
+    ).catch(() => ({ rows: [] }));
+    const activitiesResult = await db.query(
+      "SELECT * FROM activities WHERE kid_id=$1 ORDER BY created_at ASC",
+      [kid.id]
+    ).catch(() => ({ rows: [] }));
+    const diaryResult = await db.query(
+      "SELECT * FROM diary WHERE kid_id=$1 ORDER BY created_at ASC",
+      [kid.id]
+    ).catch(() => ({ rows: [] }));
+    const photosResult = await db.query(
+      "SELECT id, cos_key, type, theme, age, style, created_at FROM photos WHERE kid_id=$1 ORDER BY created_at ASC",
+      [kid.id]
+    ).catch(() => ({ rows: [] }));
+
+    // 陪伴天数（实时计算，非存储字段）
+    const companionDays = kid.created_at
+      ? Math.floor((Date.now() - new Date(kid.created_at)) / 86400000)
+      : 0;
 
     const soulPackage = {
-      soul_version: "1.0",
+      soul_version: "1.1",
       exported_at: new Date().toISOString(),
       owner_id: req.user.id,
       kid: {
@@ -728,29 +760,40 @@ app.get("/api/kids/:id/soul-export", auth, async (req, res) => {
         personality_custom: kid.personality_custom,
         personality_seed: kid.personality_seed,
         parent_role: kid.parent_role,
+        parent_interests: kid.parent_interests,
+        avatar: kid.avatar,
+        avatar_photo_key: kid.avatar_photo_key,
         created_at: kid.created_at
       },
       growth: {
         bond_score: kid.bond_score,
         streak_days: kid.streak_days,
-        companion_days: kid.companion_days,
-        milestone: kid.milestone,
-        last_chat_at: kid.last_chat_at
+        companion_days: companionDays,
+        level: kid.gifts_received || 1,
+        last_chat_at: kid.last_chat_at,
+        last_levelup_date: kid.last_levelup_date
       },
       memories: memoriesResult.rows,
       conversations: messagesResult.rows,
       wishes: wishesResult.rows,
       gifts: giftsResult.rows,
+      achievements: achievementsResult.rows,
+      activities: activitiesResult.rows,
+      diary: diaryResult.rows,
+      photos: photosResult.rows,
       stats: {
         total_memories: memoriesResult.rows.length,
         total_messages: messagesResult.rows.length,
         total_wishes: wishesResult.rows.length,
-        total_gifts: giftsResult.rows.length
+        total_gifts: giftsResult.rows.length,
+        total_achievements: achievementsResult.rows.length,
+        total_photos: photosResult.rows.length
       }
     };
 
     res.json(soulPackage);
   } catch(e) {
+    console.error('soul-export error:', e);
     res.status(500).json({ error: e.message });
   }
 });
