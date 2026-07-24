@@ -389,6 +389,12 @@ if (birthday && !kid.birthday_locked) {
   const m = today.getMonth() - born.getMonth();
   if (m < 0 || (m === 0 && today.getDate() < born.getDate())) age--;
   await db.query("UPDATE kids SET birthday=$1, age=$2, birthday_locked=true WHERE id=$3", [birthday, age, kid.id]);
+  // 设定精确生日后，把之前积累的记忆的 source_period 统一追认为当前年龄
+  const _newAgeStr = age < 1
+    ? `${Math.floor((Date.now() - new Date(birthday)) / 86400000 / 30)}个月`
+    : `${age}岁`;
+  const _memUpd = await db.query("UPDATE memories SET source_period=$1 WHERE kid_id=$2", [_newAgeStr, kid.id]);
+  console.log('[MEM_AGE_SYNC] 追认记忆年龄', _newAgeStr, '共', _memUpd.rowCount, '条');
   // 如果年龄从0变成1岁以上，清除聊天历史避免感应卡风格污染
   if (kid.age < 1 && age >= 1) {
     await db.query("DELETE FROM messages WHERE kid_id=$1", [kid.id]);
