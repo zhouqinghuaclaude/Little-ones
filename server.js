@@ -1814,6 +1814,123 @@ app.post("/api/face/generate", auth, async (req, res) => {
   }
 });
 
+// ===== 入口1：生成基准候选（3选1）=====
+app.post("/api/face/generate-base", auth, async (req, res) => {
+  try {
+    const { image, kid_id, use_sprouts } = req.body;
+    if (!image) return res.status(400).json({ error: "缺少照片" });
+    if (!kid_id) return res.status(400).json({ error: "缺少孩子信息" });
+
+    const kidRes = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [kid_id, req.user.id]);
+    const kid = kidRes.rows[0];
+    if (!kid) return res.status(404).json({ error: "孩子不存在或无权访问" });
+    if (!kid.birthday) return res.status(400).json({ error: "需要精准生日", need_birthday: true });
+
+    const age = kid.age_mode === 'natural' ? calcAge(kid.birthday) : kid.age;
+    const gender = kid.gender;
+
+    // 查额度
+    const quota = await checkPhotoQuota(req.user.id);
+    const SPROUT_COST = 100;
+    let payMethod = null;
+    if (quota.remaining > 0) {
+      payMethod = 'quota';
+    } else {
+      if (!use_sprouts) {
+        return res.json({ need_confirm: true, quota_used_up: true, sprouts: quota.sprouts, cost: SPROUT_COST, can_use_sprouts: quota.sprouts >= SPROUT_COST });
+      }
+      if (quota.sprouts < SPROUT_COST) return res.status(400).json({ error: '芽豆不足', need_upgrade: true });
+      payMethod = 'sprouts';
+    }
+
+    // 会员及以上生成3张，免费1张
+    const isPaid = quota.membership_type && quota.membership_type !== 'free';
+    const n = isPaid ? 3 : 1;
+
+    const genderWord = gender === 'girl' ? '女孩' : '男孩';
+    const prompt = `参考图中人物，生成一个${age}岁的可爱${genderWord}，保留参考人物的面部特征基因（相似的脸型轮廓、眼睛形状、五官比例），转化为与${age}岁相符的真实儿童面孔，符合该年龄的发型、表情，写实摄影风格，真实的皮肤质感和光影，儿童写真照片，正脸，明亮天真的笑容，自然柔和的光线，高清细节`;
+    const negativePrompt = `卡通,动漫,插画,3D渲染,绘画风格,成年面孔,青少年,老态,皱纹,多张脸,重复面孔,变形,多余手指,模糊,低画质,过度曝光,恐怖谷效应,文字水印`;
+    const dataUrl = `data:image/jpeg;base64,${image}`;
+
+    const resp = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + process.env.DASHSCOPE_API_KEY },
+      body: JSON.stringify({
+        model: 'wan2.7-image-pro',
+        input: { messages: [{ role: 'user', content: [{ image: dataUrl }, { text: prompt }] }] },
+        parameters: { negative_prompt: negativePrompt, prompt_extend: true, watermark: true, n: n, size: '1024*1024' }
+      })
+    });
+    const data = await resp.json();
+
+    // 收集所有生成图URL
+    const candidates = [];
+    const choices = data.output?.choices;
+    if (choices) {
+      for (const ch of choices) {
+        if (ch.message?.content) {
+          for (const c of ch.message.content) {
+            if (c.image) candidates.push(c.image);
+          }
+        }
+      }
+    }
+    if (candidates.length === 0) {
+      console.error('generate-base no image:', JSON.stringify(data));
+      return res.status(400).json({ error: '生成失败', detail: data.message || data.code || JSON.stringify(data).slice(0, 200) });
+    }
+
+    // 扣费（生成即扣）
+    if (payMethod === 'quota') {
+      await db.query("UPDATE users SET photo_quota_used = photo_quota_used + 1 WHERE id=$1", [req.user.id]);
+    } else {
+      await db.query("UPDATE users SET sprouts_balance = sprouts_balance - $1 WHERE id=$2", [SPROUT_COST, req.user.id]);
+    }
+
+    // 返回临时URL（不存COS，等confirm选定）
+    res.json({ candidates, pay_method: payMethod });
+  } catch (e) {
+    console.error('generate-base error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ===== 入口1：确认基准（从候选中选定1张）=====
+app.post("/api/face/confirm-base", auth, async (req, res) => {
+  try {
+    const { image_url, kid_id, set_avatar } = req.body;
+    if (!image_url || !kid_id) return res.status(400).json({ error: "缺少参数" });
+
+    const kidRes = await db.query("SELECT id FROM kids WHERE id=$1 AND user_id=$2", [kid_id, req.user.id]);
+    if (!kidRes.rows[0]) return res.status(404).json({ error: "孩子不存在或无权访问" });
+
+    // 下载选中的临时图 → 存COS
+    const buffer = await downloadImage(image_url);
+    const cosKey = `photos/${kid_id}/base_${Date.now()}.png`;
+    await uploadToCos(cosKey, buffer);
+
+    // 写photos表（type=base）
+    const ins = await db.query(
+      "INSERT INTO photos (kid_id, user_id, cos_key, type, style) VALUES ($1,$2,$3,'base','realistic') RETURNING id",
+      [kid_id, req.user.id, cosKey]
+    );
+
+    // 设为基准
+    await db.query("UPDATE kids SET base_photo_key=$1, avatar_generated=true WHERE id=$2", [cosKey, kid_id]);
+
+    // 可选：同时设为头像
+    if (set_avatar) {
+      await db.query("UPDATE kids SET avatar_photo_key=$1 WHERE id=$2", [cosKey, kid_id]);
+    }
+
+    const signedUrl = await getCosSignedUrl(cosKey, 7200);
+    res.json({ ok: true, cos_key: cosKey, photo_id: ins.rows[0].id, url: signedUrl });
+  } catch (e) {
+    console.error('confirm-base error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ===== 相册：照片列表 =====
 app.get("/api/kids/:id/photos", auth, async (req, res) => {
   try {
