@@ -312,6 +312,11 @@ let avatarPhotoUrl = null;
 if (kid.avatar_photo_key) {
   try { avatarPhotoUrl = await getCosSignedUrl(kid.avatar_photo_key, 7200); } catch (e) { avatarPhotoUrl = null; }
 }
+let basePhotoUrl = null;
+if (kid.base_photo_key) {
+  try { basePhotoUrl = await getCosSignedUrl(kid.base_photo_key, 7200); } catch (e) { basePhotoUrl = null; }
+}
+    
 return {
   ...kid,
   age_display: ageDisplay,
@@ -322,6 +327,7 @@ return {
   streak_days: kid.streak_days || 0,
   is_birthday: isBirthday,
   avatar_photo_url: avatarPhotoUrl,
+  base_photo_url: basePhotoUrl,
 };
 
 
