@@ -1931,6 +1931,141 @@ app.post("/api/face/confirm-base", auth, async (req, res) => {
   }
 });
 
+// ===== 入口2：定制生成（单人 / 合影）=====
+const SCENE_MAP = {
+  home: '在温馨的家里', park: '在公园里', beach: '在海边沙滩',
+  playground: '在游乐场', school: '在学校', street: '在城市街道',
+  field: '在田野大自然中', snow: '在雪地里'
+};
+const EVENT_MAP = {
+  daily: '', birthday: '正在过生日，旁边有生日蛋糕和气球',
+  firstday: '第一天上学，背着小书包', bike: '正在学骑自行车',
+  football: '正在踢足球', painting: '正在画画', book: '正在读绘本',
+  kite: '正在放风筝'
+};
+const OUTFIT_MAP = {
+  casual: '穿着日常便服', uniform: '穿着校服', sport: '穿着运动服',
+  festive: '穿着节日盛装', hanfu: '穿着漂亮的汉服'
+};
+
+app.post("/api/face/generate-scene", auth, async (req, res) => {
+  try {
+    const { kid_id, scene, event, outfit, scene_other, event_other, outfit_other,
+            with_parent, parent_image, use_sprouts } = req.body;
+    if (!kid_id) return res.status(400).json({ error: "缺少孩子信息" });
+
+    const kidRes = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [kid_id, req.user.id]);
+    const kid = kidRes.rows[0];
+    if (!kid) return res.status(404).json({ error: "孩子不存在或无权访问" });
+    if (!kid.birthday) return res.status(400).json({ error: "需要精准生日", need_birthday: true });
+    if (!kid.base_photo_key) return res.status(400).json({ error: "请先生成基准形象", need_base: true });
+
+    // 合影必须上传爸妈照片
+    if (with_parent && !parent_image) return res.status(400).json({ error: "合影需要上传你的照片", need_parent_image: true });
+
+    // 内容安全：检查用户自定义文字
+    const _customText = [scene_other, event_other, outfit_other].filter(Boolean).join(' ');
+    if (_customText) {
+      const risk = checkContent(_customText);
+      if (risk) return res.status(400).json({ error: '填写的内容不合适，请修改', content_risk: true });
+    }
+
+    const age = kid.age_mode === 'natural' ? calcAge(kid.birthday) : kid.age;
+    const genderWord = kid.gender === 'girl' ? '女孩' : '男孩';
+
+    // 查额度
+    const quota = await checkPhotoQuota(req.user.id);
+    const SPROUT_COST = 100;
+    let payMethod = null;
+    if (quota.remaining > 0) {
+      payMethod = 'quota';
+    } else {
+      if (!use_sprouts) {
+        return res.json({ need_confirm: true, quota_used_up: true, sprouts: quota.sprouts, cost: SPROUT_COST, can_use_sprouts: quota.sprouts >= SPROUT_COST });
+      }
+      if (quota.sprouts < SPROUT_COST) return res.status(400).json({ error: '芽豆不足', need_upgrade: true });
+      payMethod = 'sprouts';
+    }
+
+    // 当前季节/节日情境
+    const _now = new Date();
+    const _bj = new Date(_now.getTime() + 8*3600000);
+    const _m = _bj.getMonth() + 1;
+    const seasonStr = _m <= 2 || _m === 12 ? '冬天' : _m <= 5 ? '春天' : _m <= 8 ? '夏天' : '秋天';
+
+    // 组装提示词
+    const sceneStr = scene === 'other' ? (scene_other || '') : (SCENE_MAP[scene] || '');
+    const eventStr = event === 'other' ? (event_other ? `正在${event_other}` : '') : (EVENT_MAP[event] || '');
+    const outfitStr = outfit === 'other' ? (outfit_other ? `穿着${outfit_other}` : '') : (outfit ? (OUTFIT_MAP[outfit] || '') : '');
+
+    let prompt, negativePrompt, contentArr;
+    negativePrompt = `成年人当主角,老态,皱纹,多张脸,重复面孔,变形,多余手指,模糊,低画质,过度曝光,恐怖谷效应,文字水印`;
+
+    // 从COS下载基准照转base64
+    const baseBuffer = await downloadImage(await getCosSignedUrl(kid.base_photo_key, 600));
+    const baseB64 = `data:image/png;base64,${baseBuffer.toString('base64')}`;
+
+    if (with_parent) {
+      const parentDataUrl = `data:image/jpeg;base64,${parent_image}`;
+      const parentWord = kid.parent_role === 'dad' || kid.parent_role === '爸爸' ? '成年男性' : '成年女性';
+      prompt = `参考图1中的孩子（${age}岁${genderWord}）和参考图2中的${parentWord}，一起${sceneStr}，${eventStr}，${outfitStr}，${seasonStr}，温馨的合影，保持参考图1孩子的面部特征一致，写实摄影风格，真实皮肤质感和光影，高清细节，自然温暖的氛围`.replace(/，，+/g, '，');
+      contentArr = [{ image: baseB64 }, { image: parentDataUrl }, { text: prompt }];
+    } else {
+      prompt = `参考图中的孩子，生成${age}岁的${genderWord}，保留其面部特征保持形象一致，${sceneStr}，${eventStr}，${outfitStr}，${seasonStr}，写实摄影风格，真实皮肤质感和光影，儿童写真照片，明亮天真的笑容，高清细节`.replace(/，，+/g, '，');
+      contentArr = [{ image: baseB64 }, { text: prompt }];
+    }
+
+    // 调万相
+    const resp = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + process.env.DASHSCOPE_API_KEY },
+      body: JSON.stringify({
+        model: 'wan2.7-image-pro',
+        input: { messages: [{ role: 'user', content: contentArr }] },
+        parameters: { negative_prompt: negativePrompt, prompt_extend: true, watermark: true, n: 1, size: '1024*1024' }
+      })
+    });
+    const data = await resp.json();
+
+    let imgUrl = null;
+    const choices = data.output?.choices;
+    if (choices && choices[0]?.message?.content) {
+      for (const c of choices[0].message.content) {
+        if (c.image) { imgUrl = c.image; break; }
+      }
+    }
+    if (!imgUrl) {
+      console.error('generate-scene no image:', JSON.stringify(data));
+      return res.status(400).json({ error: '生成失败', detail: data.message || data.code || JSON.stringify(data).slice(0, 200) });
+    }
+
+    // 下载存COS
+    const buffer = await downloadImage(imgUrl);
+    const cosKey = `photos/${kid_id}/scene_${Date.now()}.png`;
+    await uploadToCos(cosKey, buffer);
+
+    // 写库（type=scene）
+    const themeLabel = [sceneStr, eventStr].filter(Boolean).join(' ').slice(0, 90);
+    const ins = await db.query(
+      "INSERT INTO photos (kid_id, user_id, cos_key, type, theme, age, style) VALUES ($1,$2,$3,'scene',$4,$5,'realistic') RETURNING id",
+      [kid_id, req.user.id, cosKey, themeLabel, parseInt(age)]
+    );
+
+    // 扣费
+    if (payMethod === 'quota') {
+      await db.query("UPDATE users SET photo_quota_used = photo_quota_used + 1 WHERE id=$1", [req.user.id]);
+    } else {
+      await db.query("UPDATE users SET sprouts_balance = sprouts_balance - $1 WHERE id=$2", [SPROUT_COST, req.user.id]);
+    }
+
+    const signedUrl = await getCosSignedUrl(cosKey, 7200);
+    res.json({ image_url: signedUrl, cos_key: cosKey, photo_id: ins.rows[0].id, pay_method: payMethod });
+  } catch (e) {
+    console.error('generate-scene error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ===== 相册：照片列表 =====
 app.get("/api/kids/:id/photos", auth, async (req, res) => {
   try {
