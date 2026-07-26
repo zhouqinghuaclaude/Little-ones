@@ -2110,6 +2110,7 @@ db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_quota_month VARCHAR(7
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_quota_total INTEGER DEFAULT 1").catch(() => {});
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_quota_reset_at DATE DEFAULT NULL").catch(() => {});db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS gifts_received INTEGER DEFAULT 0").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar_photo_key VARCHAR(300) DEFAULT NULL").catch(() => {});
+db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS base_photo_key VARCHAR(300) DEFAULT NULL").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS parent_interests TEXT").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar_prompt_date TIMESTAMP DEFAULT NULL").catch(() => {});
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS membership_type VARCHAR(10) DEFAULT 'free'").catch(() => {});
