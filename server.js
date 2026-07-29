@@ -15,6 +15,11 @@ app.use(express.static("public"));
 
 const pgTypes = require('pg').types;
 pgTypes.setTypeParser(1082, (val) => val);
+// ===== 统一北京时间工具（服务器时区=UTC+8，一律用本地方法，禁止手动+8/getUTC）=====
+function bjDateStr(d = new Date()) {
+  const x = d instanceof Date ? d : new Date(d);
+  return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;
+}
 const db = new Pool({ connectionString: process.env.DATABASE_URL });
 const GIFT_PRICES = {
   "音乐盒":40,"画笔套装":60,"演唱课":150,"陶艺课":180,"舞蹈课":200,"表演课":200,"吉他课":220,"小提琴课":280,"钢琴课":300,
