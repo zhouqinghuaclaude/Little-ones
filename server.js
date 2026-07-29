@@ -1499,7 +1499,7 @@ app.post("/api/kids/:id/gifts", auth, async (req, res) => {
   }
 
   // Free gift logic
-  const today = new Date().toISOString().slice(0, 10);
+  const today = bjDateStr();
   const userResult = await db.query("SELECT is_premium FROM users WHERE id=$1", [req.user.id]);
   const isPremium = userResult.rows[0]?.is_premium || false;
   const dailyLimit = isPremium ? 3 : 1;
@@ -2460,7 +2460,7 @@ async function grantMembershipSprouts(userId, membershipType) {
   const sproutsMap = { vip: 2000, svip: 4000, dvip: 10000 };
   const amount = sproutsMap[membershipType];
   if (!amount) return;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = bjDateStr();
   await db.query(
     "UPDATE users SET sprouts_balance = sprouts_balance + $1, last_sprouts_grant = $2 WHERE id = $3",
     [amount, today, userId]
@@ -2483,7 +2483,7 @@ cron.schedule('0 3 * * *', async () => {
 cron.schedule('0 0 1 * *', async () => {
   console.log('Monthly sprouts grant starting...');
   try {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = bjDateStr();
     const users = await db.query(
       `SELECT id, membership_type, last_sprouts_grant FROM users 
       WHERE membership_type IN ('vip','svip','dvip')
