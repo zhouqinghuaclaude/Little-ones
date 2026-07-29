@@ -883,10 +883,11 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
   const _today = new Date(new Date().getTime() + 8*3600*1000);
   const isMissing = _lastChatDate && (_lastChatDate.getUTCFullYear() !== _today.getUTCFullYear() || _lastChatDate.getUTCMonth() !== _today.getUTCMonth() || _lastChatDate.getUTCDate() !== _today.getUTCDate());
   
-  const histResult = await db.query(
-    "SELECT role, content FROM messages WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 50",
-    [kid.id]
-  );
+ const histResult = await db.query(
+  "SELECT role, content, created_at FROM messages WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 50",
+  [kid.id]
+);
+
   const history = histResult.rows.reverse();
   const msgCountResult = await db.query("SELECT COUNT(*) FROM messages WHERE kid_id=$1 AND role='assistant'", [kid.id]);
 const msgCount = parseInt(msgCountResult.rows[0].count) || 0;
@@ -1217,8 +1218,9 @@ if (FESTIVALS[_key]) {
 }
 
 system += ` 现在是${periodStr}，季节是${seasonStr}。${festivalStr}请让你的话自然符合当前的时段、季节和节令，不要说不合时宜的话（比如深夜不提议出门、夏天不聊堆雪人）。`;
+system += ` 如果对话里出现"过了一夜"或"过了几个小时"的提示，说明之前的事情已经过去了，不要再停留在过去的情境里（比如昨天说要吃的午饭、昨天要做的事，今天不会还在等）。你的话要符合现在的时间。`;
 
-if (kid.personality_seed) {
+  if (kid.personality_seed) {
   const seed = typeof kid.personality_seed === 'string' ? JSON.parse(kid.personality_seed) : kid.personality_seed;
   const stickyDesc = seed.sticky > 70 ? '非常黏人，很怕被忽视' : seed.sticky > 40 ? '适度依赖，需要陪伴' : '比较独立，不太黏人';
   const sensitiveDesc = seed.sensitive > 70 ? '非常敏感，容易察觉情绪变化' : seed.sensitive > 40 ? '有一定敏感度' : '比较大条，不太在意';
@@ -1283,11 +1285,39 @@ if (message.includes('📖') && message.includes('讲故事')) {
   }
 
   // Build the messages array, prepending a missing-you note if applicable
-  const chatMessages = [
-    ...history.map(m => ({ role: m.role, content: m.content })),
-    { role: "user", content: message.trim() }
-  ];
-
+ // 构造历史消息，跨越时间断点时插入时间提示，让孩子有时间流逝感
+  const chatMessages = [];
+  let _prevTime = null;
+  for (const m of history) {
+    const _curTime = m.created_at ? new Date(m.created_at).getTime() : null;
+    if (_prevTime && _curTime) {
+      const _gapHours = (_curTime - _prevTime) / 3600000;
+      // 北京时间下的日期是否不同
+      const _prevDay = new Date(_prevTime + 8*3600000).toISOString().slice(0, 10);
+      const _curDay = new Date(_curTime + 8*3600000).toISOString().slice(0, 10);
+      let _sep = null;
+      if (_prevDay !== _curDay) {
+        _sep = '（这里过了一夜，到了新的一天，之前的事情已经过去了）';
+      } else if (_gapHours >= 3) {
+        _sep = `（这里过了${Math.floor(_gapHours)}个小时）`;
+      }
+      if (_sep) chatMessages.push({ role: 'user', content: _sep });
+    }
+    chatMessages.push({ role: m.role, content: m.content });
+    _prevTime = _curTime;
+  }
+  // 当前消息与上一条的时间断点
+  if (_prevTime) {
+    const _nowMs = Date.now();
+    const _prevDay = new Date(_prevTime + 8*3600000).toISOString().slice(0, 10);
+    const _curDay = new Date(_nowMs + 8*3600000).toISOString().slice(0, 10);
+    if (_prevDay !== _curDay) {
+      chatMessages.push({ role: 'user', content: '（这里过了一夜，到了新的一天，之前的事情已经过去了）' });
+    } else if ((_nowMs - _prevTime) / 3600000 >= 3) {
+      chatMessages.push({ role: 'user', content: `（这里过了${Math.floor((_nowMs - _prevTime) / 3600000)}个小时）` });
+    }
+  }
+  chatMessages.push({ role: "user", content: message.trim() });
 
 
   try {
