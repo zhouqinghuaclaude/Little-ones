@@ -1292,6 +1292,7 @@ if (message.includes('📖') && message.includes('讲故事')) {
   let _prevTime = null;
   for (const m of history) {
     const _curTime = m.created_at ? new Date(m.created_at).getTime() : null;
+    if (m.created_at) console.log('[SEP_RAW] created_at=', m.created_at, '| 解析后=', new Date(m.created_at).toString());
     if (_prevTime && _curTime) {
       const _gapHours = (_curTime - _prevTime) / 3600000;
       // 北京时间下的日期是否不同
@@ -1303,6 +1304,7 @@ if (message.includes('📖') && message.includes('讲故事')) {
       } else if (_gapHours >= 3) {
         _sep = `（这里过了${Math.floor(_gapHours)}个小时）`;
       }
+      if (_sep) console.log('[SEP_DEBUG] 插入:', _sep, '| prevDay=', _prevDay, 'curDay=', _curDay, '| prevRaw=', _prevTime, 'curRaw=', _curTime);
       if (_sep) chatMessages.push({ role: 'user', content: _sep });
     }
     chatMessages.push({ role: m.role, content: m.content });
