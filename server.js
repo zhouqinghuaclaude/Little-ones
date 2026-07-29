@@ -825,8 +825,8 @@ app.post("/api/kids/:id/missing", auth, async (req, res) => {
  const now = new Date();
  const lastChat = new Date(kid.last_chat_at);
  const hoursAway = Math.floor((now - lastChat) / 3600000);
- const todayDate = new Date(now.getTime() + 8*3600*1000);
- const dateDesc = `今天是${todayDate.getUTCMonth()+1}月${todayDate.getUTCDate()}日`;
+ 
+  const dateDesc = `今天是${now.getMonth()+1}月${now.getDate()}日`;
  let agePrompt = '';
  if (kid.birthday_locked && kid.birthday) {
  const ageInDays = Math.floor((Date.now() - new Date(kid.birthday)) / 86400000);
@@ -1178,8 +1178,9 @@ const now = new Date();
 const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
 const weekDays = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
 const weekStr = weekDays[now.getDay()];
-const chinaHours = (now.getUTCHours() + 8) % 24;
-const chinaMinutes = now.getUTCMinutes();
+const chinaHours = now.getHours();
+const chinaMinutes = now.getMinutes();
+  
 const timeStr = `${chinaHours}时${chinaMinutes < 10 ? "0" + chinaMinutes : chinaMinutes}分`;
 system += ` 今天是${dateStr},${weekStr},现在是${timeStr}。你知道今天的日期和当前时间。`;
   // 时段语义
