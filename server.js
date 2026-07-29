@@ -883,10 +883,7 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
   }
 
   // Check if the child has been missing the parent (last chat > 1 day ago)
-  const _lastChatDate = kid.last_chat_at ? new Date(new Date(kid.last_chat_at).getTime() + 8*3600*1000) : null;
-  const _today = new Date(new Date().getTime() + 8*3600*1000);
-  const isMissing = _lastChatDate && (_lastChatDate.getUTCFullYear() !== _today.getUTCFullYear() || _lastChatDate.getUTCMonth() !== _today.getUTCMonth() || _lastChatDate.getUTCDate() !== _today.getUTCDate());
-  
+ const isMissing = kid.last_chat_at && (bjDateStr(kid.last_chat_at) !== bjDateStr());
  const histResult = await db.query(
   "SELECT role, content, created_at FROM messages WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 50",
   [kid.id]
@@ -926,9 +923,8 @@ const msgCount = parseInt(msgCountResult.rows[0].count) || 0;
   }
 
   // ── Bond score calculation ────────────────────────────────────────────────
-  const _now = new Date();
-const todayStr = new Date(_now.getTime() + 8*3600*1000).toISOString().slice(0, 10);
-  const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+ const todayStr = bjDateStr();
+  const yesterdayStr = bjDateStr(new Date(Date.now() - 86400000));
   const lastChatDate = kid.last_chat_date ? String(kid.last_chat_date).slice(0, 10) : null;
 let bondDelta = 1; // base per message
   let newStreakDays = kid.streak_days || 0;
@@ -1012,9 +1008,9 @@ const newLevel = canTriggerNext ? nextLevel - 1 : oldLevel;
 // 延迟触发晋级：存入pending_level_up，不立刻触发
 let levelUp = null;
 if (newLevel > oldLevel) {
-  const _now = new Date();
-const todayStr = new Date(_now.getTime() + 8*3600*1000).toISOString().slice(0, 10);
-  const lastLevelupDate = kid.last_levelup_date ? String(kid.last_levelup_date).slice(0, 10) : null;
+
+ const todayStr = bjDateStr();
+  const lastLevelupDate = kid.last_levelup_date ? String(kid.last_levelup_date).slice(0, 10) : null; 
   if (lastLevelupDate !== todayStr) {
     await db.query("UPDATE kids SET pending_level_up=$1 WHERE id=$2", [newLevel + 1, kid.id]);
   }
@@ -1024,9 +1020,9 @@ const todayStr = new Date(_now.getTime() + 8*3600*1000).toISOString().slice(0, 1
 if (kid.pending_level_up && kid.last_chat_at) {
   const minutesSinceLastChat = (Date.now() - new Date(kid.last_chat_at)) / 60000;
   if (minutesSinceLastChat >= 10) {
-    const _now = new Date();
-const todayStr = new Date(_now.getTime() + 8*3600*1000).toISOString().slice(0, 10);
-    levelUp = {
+    
+   const todayStr = bjDateStr();
+    levelUp = { 
       level: kid.pending_level_up,
       name: LEVEL_NAMES[kid.pending_level_up - 1],
       gift: LEVEL_GIFTS[kid.pending_level_up - 1],
