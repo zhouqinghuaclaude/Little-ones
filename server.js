@@ -1326,7 +1326,8 @@ if (message.includes('📖') && message.includes('讲故事')) {
   try {
    
    console.log('[SYS_PROMPT_LEN]', system.length, '字符 | 历史', chatMessages.length, '条');
-    
+  console.log('[TIME_DEBUG2] system时间:', system.match(/今天是[^。]*/)?.[0]);
+console.log('[TIME_DEBUG2] 末尾消息:', JSON.stringify(chatMessages.slice(-4)));  
   const reply = await callAI(chatMessages, system, kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 100); 
 
     await db.query("UPDATE kids SET pending_gift = NULL WHERE id = $1", [kid.id]);
