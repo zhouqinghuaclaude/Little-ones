@@ -16,6 +16,11 @@ app.use(express.static("public"));
 
 const pgTypes = require('pg').types;
 pgTypes.setTypeParser(1082, (val) => val);
+// ===== 统一北京时间工具（服务器时区=UTC+8，一律用本地方法，禁止手动+8/getUTC）=====
+function bjDateStr(d = new Date()) {
+  const x = d instanceof Date ? d : new Date(d);
+  return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;
+}
 const db = new Pool({ connectionString: process.env.DATABASE_URL });
 const GIFT_PRICES = {
   "音乐盒":40,"画笔套装":60,"演唱课":150,"陶艺课":180,"舞蹈课":200,"表演课":200,"吉他课":220,"小提琴课":280,"钢琴课":300,
@@ -152,7 +157,7 @@ app.post("/api/login", async (req, res) => {
     }
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "30d" });
     // 每日登录+5芽豆(每天只加一次)
-    const today = new Date().toISOString().slice(0, 10);
+    const today = bjDateStr();
     const lastLogin = user.last_login_date ? String(user.last_login_date).slice(0, 10) : null;
     if (lastLogin !== today) {
       await db.query("UPDATE users SET sprouts_balance = sprouts_balance + 5, last_login_date = $1 WHERE id = $2", [today, user.id]);
@@ -196,7 +201,7 @@ app.post("/api/wx-login", async (req, res) => {
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "30d" });
 
     // 每日登录送芽豆（复用邮箱登录的逻辑）
-    const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+    const today = bjDateStr();
     const lastLogin = user.last_login_date ? String(user.last_login_date).slice(0, 10) : null;
     if (lastLogin !== today) {
       await db.query("UPDATE users SET sprouts_balance = sprouts_balance + 5, last_login_date = $1 WHERE id = $2", [today, user.id]);
@@ -821,8 +826,8 @@ app.post("/api/kids/:id/missing", auth, async (req, res) => {
  const now = new Date();
  const lastChat = new Date(kid.last_chat_at);
  const hoursAway = Math.floor((now - lastChat) / 3600000);
- const todayDate = new Date(now.getTime() + 8*3600*1000);
- const dateDesc = `今天是${todayDate.getUTCMonth()+1}月${todayDate.getUTCDate()}日`;
+ 
+  const dateDesc = `今天是${now.getMonth()+1}月${now.getDate()}日`;
  let agePrompt = '';
  if (kid.birthday_locked && kid.birthday) {
  const ageInDays = Math.floor((Date.now() - new Date(kid.birthday)) / 86400000);
@@ -879,10 +884,7 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
   }
 
   // Check if the child has been missing the parent (last chat > 1 day ago)
-  const _lastChatDate = kid.last_chat_at ? new Date(new Date(kid.last_chat_at).getTime() + 8*3600*1000) : null;
-  const _today = new Date(new Date().getTime() + 8*3600*1000);
-  const isMissing = _lastChatDate && (_lastChatDate.getUTCFullYear() !== _today.getUTCFullYear() || _lastChatDate.getUTCMonth() !== _today.getUTCMonth() || _lastChatDate.getUTCDate() !== _today.getUTCDate());
-  
+ const isMissing = kid.last_chat_at && (bjDateStr(kid.last_chat_at) !== bjDateStr());
  const histResult = await db.query(
   "SELECT role, content, created_at FROM messages WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 50",
   [kid.id]
@@ -922,9 +924,8 @@ const msgCount = parseInt(msgCountResult.rows[0].count) || 0;
   }
 
   // ── Bond score calculation ────────────────────────────────────────────────
-  const _now = new Date();
-const todayStr = new Date(_now.getTime() + 8*3600*1000).toISOString().slice(0, 10);
-  const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+ const todayStr = bjDateStr();
+  const yesterdayStr = bjDateStr(new Date(Date.now() - 86400000));
   const lastChatDate = kid.last_chat_date ? String(kid.last_chat_date).slice(0, 10) : null;
 let bondDelta = 1; // base per message
   let newStreakDays = kid.streak_days || 0;
@@ -978,8 +979,8 @@ const LEVEL_EMOJIS = ['🌱', '🌿', '✨', '💫', '🌟', '💎'];
 
 
 const LEVEL_DAY_REQUIREMENTS = [0, 1, 7, 14, 30, 60];
-const createdDate = new Date(kid.created_at).toISOString().slice(0, 10);
-const todayDate = new Date().toISOString().slice(0, 10);
+const createdDate = bjDateStr(kid.created_at);
+const todayDate = bjDateStr();
 const companionDays = Math.floor((new Date(todayDate) - new Date(createdDate)) / 86400000);
 
 // 用gifts_received判断已触发的等级（稳定的真相来源）
@@ -1008,9 +1009,9 @@ const newLevel = canTriggerNext ? nextLevel - 1 : oldLevel;
 // 延迟触发晋级：存入pending_level_up，不立刻触发
 let levelUp = null;
 if (newLevel > oldLevel) {
-  const _now = new Date();
-const todayStr = new Date(_now.getTime() + 8*3600*1000).toISOString().slice(0, 10);
-  const lastLevelupDate = kid.last_levelup_date ? String(kid.last_levelup_date).slice(0, 10) : null;
+
+ const todayStr = bjDateStr();
+  const lastLevelupDate = kid.last_levelup_date ? String(kid.last_levelup_date).slice(0, 10) : null; 
   if (lastLevelupDate !== todayStr) {
     await db.query("UPDATE kids SET pending_level_up=$1 WHERE id=$2", [newLevel + 1, kid.id]);
   }
@@ -1020,9 +1021,9 @@ const todayStr = new Date(_now.getTime() + 8*3600*1000).toISOString().slice(0, 1
 if (kid.pending_level_up && kid.last_chat_at) {
   const minutesSinceLastChat = (Date.now() - new Date(kid.last_chat_at)) / 60000;
   if (minutesSinceLastChat >= 10) {
-    const _now = new Date();
-const todayStr = new Date(_now.getTime() + 8*3600*1000).toISOString().slice(0, 10);
-    levelUp = {
+    
+   const todayStr = bjDateStr();
+    levelUp = { 
       level: kid.pending_level_up,
       name: LEVEL_NAMES[kid.pending_level_up - 1],
       gift: LEVEL_GIFTS[kid.pending_level_up - 1],
@@ -1174,8 +1175,9 @@ const now = new Date();
 const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
 const weekDays = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
 const weekStr = weekDays[now.getDay()];
-const chinaHours = (now.getUTCHours() + 8) % 24;
-const chinaMinutes = now.getUTCMinutes();
+const chinaHours = now.getHours();
+const chinaMinutes = now.getMinutes();
+  
 const timeStr = `${chinaHours}时${chinaMinutes < 10 ? "0" + chinaMinutes : chinaMinutes}分`;
 system += ` 今天是${dateStr},${weekStr},现在是${timeStr}。你知道今天的日期和当前时间。`;
   // 时段语义
@@ -1293,8 +1295,8 @@ if (message.includes('📖') && message.includes('讲故事')) {
     if (_prevTime && _curTime) {
       const _gapHours = (_curTime - _prevTime) / 3600000;
       // 北京时间下的日期是否不同
-      const _prevDay = new Date(_prevTime + 8*3600000).toISOString().slice(0, 10);
-      const _curDay = new Date(_curTime + 8*3600000).toISOString().slice(0, 10);
+     const _prevDay = bjDateStr(_prevTime);
+      const _curDay = bjDateStr(_curTime);
       let _sep = null;
       if (_prevDay !== _curDay) {
         _sep = '（这里过了一夜，到了新的一天，之前的事情已经过去了）';
@@ -1309,8 +1311,8 @@ if (message.includes('📖') && message.includes('讲故事')) {
   // 当前消息与上一条的时间断点
   if (_prevTime) {
     const _nowMs = Date.now();
-    const _prevDay = new Date(_prevTime + 8*3600000).toISOString().slice(0, 10);
-    const _curDay = new Date(_nowMs + 8*3600000).toISOString().slice(0, 10);
+    const _prevDay = bjDateStr(_prevTime);
+    const _curDay = bjDateStr(_nowMs);
     if (_prevDay !== _curDay) {
       chatMessages.push({ role: 'user', content: '（这里过了一夜，到了新的一天，之前的事情已经过去了）' });
     } else if ((_nowMs - _prevTime) / 3600000 >= 3) {
@@ -1334,9 +1336,8 @@ if (message.includes('📖') && message.includes('讲故事')) {
     );
 
 // 每日消息计数 
-const _now = new Date();
-const todayStr = new Date(_now.getTime() + 8*3600*1000).toISOString().slice(0, 10);
-const kidMsgDate = kid.daily_msg_date ? new Date(kid.daily_msg_date).toISOString().slice(0, 10) : null;
+const todayStr = bjDateStr();
+const kidMsgDate = kid.daily_msg_date ? bjDateStr(kid.daily_msg_date) : null;
 if (kidMsgDate !== todayStr) {
   await db.query("UPDATE kids SET daily_msg_count=0, daily_msg_date=$1 WHERE id=$2", [todayStr, kid.id]);
   kid.daily_msg_count = 0;
@@ -2024,9 +2025,7 @@ app.post("/api/face/generate-scene", auth, async (req, res) => {
     }
 
     // 当前季节/节日情境
-    const _now = new Date();
-    const _bj = new Date(_now.getTime() + 8*3600000);
-    const _m = _bj.getMonth() + 1;
+    const _m = new Date().getMonth() + 1;
     const seasonStr = _m <= 2 || _m === 12 ? '冬天' : _m <= 5 ? '春天' : _m <= 8 ? '夏天' : '秋天';
 
     // 组装提示词
