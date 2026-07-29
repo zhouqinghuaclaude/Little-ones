@@ -1179,6 +1179,7 @@ const chinaHours = now.getHours();
 const chinaMinutes = now.getMinutes();
   
 const timeStr = `${chinaHours}时${chinaMinutes < 10 ? "0" + chinaMinutes : chinaMinutes}分`;
+ console.log('[TIME_DEBUG]', 'timeStr=', timeStr, '| getHours=', now.getHours(), '| TZ偏移=', now.getTimezoneOffset(), '| 完整=', now.toString()); 
 system += ` 今天是${dateStr},${weekStr},现在是${timeStr}。你知道今天的日期和当前时间。`;
   // 时段语义
 let periodStr;
