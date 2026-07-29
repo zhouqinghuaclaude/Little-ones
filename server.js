@@ -1289,41 +1289,23 @@ if (message.includes('📖') && message.includes('讲故事')) {
 
   // Build the messages array, prepending a missing-you note if applicable
  // 构造历史消息，跨越时间断点时插入时间提示，让孩子有时间流逝感
-  const chatMessages = [];
-  let _prevTime = null;
-  for (const m of history) {
-    const _curTime = m.created_at ? new Date(m.created_at).getTime() : null;
-    if (m.created_at) console.log('[SEP_RAW] created_at=', m.created_at, '| 解析后=', new Date(m.created_at).toString());
-    if (_prevTime && _curTime) {
-      const _gapHours = (_curTime - _prevTime) / 3600000;
-      // 北京时间下的日期是否不同
-     const _prevDay = bjDateStr(_prevTime);
-      const _curDay = bjDateStr(_curTime);
-      let _sep = null;
-      if (_prevDay !== _curDay) {
-        _sep = '（这里过了一夜，到了新的一天，之前的事情已经过去了）';
+  // 构造历史消息（纯拼接）
+  const chatMessages = history.map(m => ({ role: m.role, content: m.content }));
+  // 只在"最后一条历史"与"当前"之间判断时间断点
+  if (history.length > 0) {
+    const _lastMsg = history[history.length - 1];
+    if (_lastMsg.created_at) {
+      const _lastTime = new Date(_lastMsg.created_at).getTime();
+      const _nowMs = Date.now();
+      const _gapHours = (_nowMs - _lastTime) / 3600000;
+      if (bjDateStr(_lastTime) !== bjDateStr(_nowMs)) {
+        chatMessages.push({ role: 'user', content: '（距离上次聊天已经过了一天或更久，之前聊的事情已经过去了）' });
       } else if (_gapHours >= 3) {
-        _sep = `（这里过了${Math.floor(_gapHours)}个小时）`;
+        chatMessages.push({ role: 'user', content: `（距离上次聊天过了${Math.floor(_gapHours)}个小时）` });
       }
-      if (_sep) console.log('[SEP_DEBUG] 插入:', _sep, '| prevDay=', _prevDay, 'curDay=', _curDay, '| prevRaw=', _prevTime, 'curRaw=', _curTime);
-      if (_sep) chatMessages.push({ role: 'user', content: _sep });
-    }
-    chatMessages.push({ role: m.role, content: m.content });
-    _prevTime = _curTime;
-  }
-  // 当前消息与上一条的时间断点
-  if (_prevTime) {
-    const _nowMs = Date.now();
-    const _prevDay = bjDateStr(_prevTime);
-    const _curDay = bjDateStr(_nowMs);
-    if (_prevDay !== _curDay) {
-      chatMessages.push({ role: 'user', content: '（这里过了一夜，到了新的一天，之前的事情已经过去了）' });
-    } else if ((_nowMs - _prevTime) / 3600000 >= 3) {
-      chatMessages.push({ role: 'user', content: `（这里过了${Math.floor((_nowMs - _prevTime) / 3600000)}个小时）` });
     }
   }
   chatMessages.push({ role: "user", content: message.trim() });
-
 
   try {
    
