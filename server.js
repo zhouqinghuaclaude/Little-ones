@@ -70,7 +70,7 @@ async function callAI(messages, system, maxTokens) {
    thinking: { type: "disabled" },
  });
  let res = await _call();
-  console.log('[RAW_MSG]', JSON.stringify(res.choices[0]?.message)); 
+  
  let _c = res.choices[0]?.message?.content;
   if (_c && _c.trim()) return cleanReply(_c);
  console.log('[EMPTY_REPLY] 第一次空, finish_reason:', res.choices[0]?.finish_reason, '| usage:', JSON.stringify(res.usage));
@@ -1249,7 +1249,7 @@ if (memories.length > 0) {
   if (_shouldInject) {
     system += ` 你还记得这些过去发生的事：${memories.join('；')}。这些是你真实的记忆，合适的时候可以自然地想起，但不要直接复述记忆原文，要用当下的话重新表达。`;
     await db.query("UPDATE kids SET last_mem_inject_at = NOW() WHERE id=$1", [kid.id]);
-    console.log('[MEM_INJECT] 注入记忆', memories.length, '条');
+    
   }
 }
 
@@ -1308,7 +1308,7 @@ if (message.includes('📖') && message.includes('讲故事')) {
 
   try {
    
-   console.log('[SYS_PROMPT_LEN]', system.length, '字符 | 历史', chatMessages.length, '条');
+   
   
   const reply = await callAI(chatMessages, system, kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 100); 
 
