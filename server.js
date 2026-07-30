@@ -1178,7 +1178,7 @@ const chinaHours = now.getHours();
 const chinaMinutes = now.getMinutes();
   
 const timeStr = `${chinaHours}时${chinaMinutes < 10 ? "0" + chinaMinutes : chinaMinutes}分`;
- console.log('[TIME_DEBUG]', 'timeStr=', timeStr, '| getHours=', now.getHours(), '| TZ偏移=', now.getTimezoneOffset(), '| 完整=', now.toString()); 
+ 
 system += ` 今天是${dateStr}，${weekStr}，现在是${timeStr}。这是唯一准确的当前时间，回答任何关于时间、日期、几点、几号的问题，都必须以这里的"${dateStr} ${timeStr}"为准。之前对话里提到过的任何时间或日期都是过去说的，不代表现在，绝对不要用它们来回答现在的时间或日期，也不要基于它们推算。`;
   // 时段语义
 let periodStr;
@@ -1309,8 +1309,7 @@ if (message.includes('📖') && message.includes('讲故事')) {
   try {
    
    console.log('[SYS_PROMPT_LEN]', system.length, '字符 | 历史', chatMessages.length, '条');
-  console.log('[FULL_DEBUG] system=', system);
-console.log('[FULL_DEBUG] msgs=', JSON.stringify(chatMessages));
+  
   const reply = await callAI(chatMessages, system, kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 100); 
 
     await db.query("UPDATE kids SET pending_gift = NULL WHERE id = $1", [kid.id]);
