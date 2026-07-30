@@ -1358,16 +1358,17 @@ const songPrompt = kid.age <= 3 && (reply.includes('歌') || reply.includes('唱
 // 用AI判断是否应该触发活动卡（仅1岁以上）
 
 const activitySuggestion = null;
-// 检测「我想长得更像你」触发条件
-let avatarPrompt = null;
-if (newBondScore >= 230 && kid.age >= 1 && !kid.avatar_prompt_sent && !kid.avatar_customized_at) {
 
-  const oldScore = kid.bond_score || 0;
-  if (oldScore < 230) {
-    await db.query("UPDATE kids SET avatar_prompt_sent=true WHERE id=$1", [kid.id]);
+// 检测「我想长得更像你」触发条件：注册次日 + 无基准 + 冷却3天
+let avatarPrompt = null;
+if (!kid.base_photo_key && bjDateStr(kid.created_at) !== bjDateStr()) {
+  const _lastPrompt = kid.avatar_prompt_date;
+  const _canPrompt = !_lastPrompt || (Date.now() - new Date(_lastPrompt).getTime()) >= 3 * 86400000;
+  if (_canPrompt && !isMissing) {
     avatarPrompt = true;
+    await db.query("UPDATE kids SET avatar_prompt_date=NOW() WHERE id=$1", [kid.id]);
   }
-}
+}    
 // 每20条消息提取一次记忆
 if (totalCount % 20 === 0) {
   const recentMessages = history.slice(-20).map(m => `${m.role === 'user' ? kid.parent_role : kid.name}：${m.content}`).join('\n');
@@ -1424,7 +1425,7 @@ if (totalCount % 20 === 0) {
 
 // 检测头像提示（6个月触发）
 let avatarUpdatePrompt = null;
-if (kid.age >= 1 && totalCount === 1) { // 第一条消息时检测
+if (kid.base_photo_key && kid.age >= 1 && totalCount === 1) { // 第一条消息时检测
   const baseDate = kid.avatar_customized_at || kid.avatar_prompt_date || kid.created_at;
   const monthsSince = (Date.now() - new Date(baseDate)) / (1000 * 60 * 60 * 24 * 30);
   if (monthsSince >= 6) {
