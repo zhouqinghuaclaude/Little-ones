@@ -2409,6 +2409,7 @@ db.query(`ALTER TABLE kids ADD COLUMN IF NOT EXISTS personality_seed JSONB DEFAU
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'normal'").catch(() => {});
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS openid VARCHAR(64) DEFAULT NULL").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_mem_inject_at TIMESTAMP DEFAULT NULL").catch(() => {});
+db.query("ALTER TABLE achievements ADD COLUMN IF NOT EXISTS activity_type VARCHAR(50)").catch(() => {});
 db.query("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_openid ON users(openid) WHERE openid IS NOT NULL").catch(() => {});
 db.query(`CREATE TABLE IF NOT EXISTS user_actions (
   id SERIAL PRIMARY KEY,
