@@ -1856,7 +1856,15 @@ app.post("/api/face/generate-base", auth, async (req, res) => {
     const quota = await checkPhotoQuota(req.user.id);
     const SPROUT_COST = 100;
     let payMethod = null;
-    if (quota.remaining > 0) {
+
+    // 生日照会员免费：VIP及以上，每年生日单人照免费1张
+    const _thisYear = new Date().getFullYear();
+    const _isPaidMember = quota.membership_type && quota.membership_type !== 'free';
+    const _birthdayFree = birthday_gift && !with_parent && _isPaidMember && kid.birthday_photo_year !== _thisYear;
+
+    if (_birthdayFree) {
+      payMethod = 'birthday_gift';
+    } else if (quota.remaining > 0) {
       payMethod = 'quota';
     } else {
       if (!use_sprouts) {
@@ -1865,7 +1873,6 @@ app.post("/api/face/generate-base", auth, async (req, res) => {
       if (quota.sprouts < SPROUT_COST) return res.status(400).json({ error: '芽豆不足', need_upgrade: true });
       payMethod = 'sprouts';
     }
-
     // 会员及以上生成3张，免费1张
     const isPaid = quota.membership_type && quota.membership_type !== 'free';
     const n = isPaid ? 3 : 1;
@@ -1974,7 +1981,7 @@ const OUTFIT_MAP = {
 app.post("/api/face/generate-scene", auth, async (req, res) => {
   try {
     const { kid_id, scene, event, outfit, scene_other, event_other, outfit_other,
-            with_parent, parent_image, use_sprouts } = req.body;
+            with_parent, parent_image, use_sprouts, birthday_gift } = req.body;
     if (!kid_id) return res.status(400).json({ error: "缺少孩子信息" });
 
     const kidRes = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [kid_id, req.user.id]);
@@ -2073,7 +2080,9 @@ app.post("/api/face/generate-scene", auth, async (req, res) => {
     );
 
     // 扣费
-    if (payMethod === 'quota') {
+    if (payMethod === 'birthday_gift') {
+      await db.query("UPDATE kids SET birthday_photo_year=$1 WHERE id=$2", [_thisYear, kid_id]);
+    } else if (payMethod === 'quota') {
       await db.query("UPDATE users SET photo_quota_used = photo_quota_used + 1 WHERE id=$1", [req.user.id]);
     } else {
       await db.query("UPDATE users SET sprouts_balance = sprouts_balance - $1 WHERE id=$2", [SPROUT_COST, req.user.id]);
@@ -2384,6 +2393,7 @@ db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_quota_total INTEGER D
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_quota_reset_at DATE DEFAULT NULL").catch(() => {});db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS gifts_received INTEGER DEFAULT 0").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar_photo_key VARCHAR(300) DEFAULT NULL").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS base_photo_key VARCHAR(300) DEFAULT NULL").catch(() => {});
+db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS birthday_photo_year INTEGER DEFAULT NULL").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS parent_interests TEXT").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS avatar_prompt_date TIMESTAMP DEFAULT NULL").catch(() => {});
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS membership_type VARCHAR(10) DEFAULT 'free'").catch(() => {});
