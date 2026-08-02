@@ -1851,19 +1851,11 @@ app.post("/api/face/generate-base", auth, async (req, res) => {
     const age = kid.age_mode === 'natural' ? calcAge(kid.birthday) : kid.age;
     const gender = kid.gender;
 
-    // 查额度
+   // 查额度
     const quota = await checkPhotoQuota(req.user.id);
     const SPROUT_COST = 100;
     let payMethod = null;
-
-    // 生日照会员免费：VIP及以上，每年生日单人照免费1张
-    const _thisYear = new Date().getFullYear();
-    const _isPaidMember = quota.membership_type && quota.membership_type !== 'free';
-    const _birthdayFree = birthday_gift && !with_parent && _isPaidMember && kid.birthday_photo_year !== _thisYear;
-
-    if (_birthdayFree) {
-      payMethod = 'birthday_gift';
-    } else if (quota.remaining > 0) {
+    if (quota.remaining > 0) {
       payMethod = 'quota';
     } else {
       if (!use_sprouts) {
@@ -2006,7 +1998,13 @@ app.post("/api/face/generate-scene", auth, async (req, res) => {
     const quota = await checkPhotoQuota(req.user.id);
     const SPROUT_COST = 100;
     let payMethod = null;
-    if (quota.remaining > 0) {
+    // 生日照会员免费：VIP及以上，每年生日单人照免费1张
+    const _thisYear = new Date().getFullYear();
+    const _isPaidMember = quota.membership_type && quota.membership_type !== 'free';
+    const _birthdayFree = birthday_gift && !with_parent && _isPaidMember && kid.birthday_photo_year !== _thisYear;
+    if (_birthdayFree) {
+      payMethod = 'birthday_gift';
+    } else if (quota.remaining > 0) {
       payMethod = 'quota';
     } else {
       if (!use_sprouts) {
