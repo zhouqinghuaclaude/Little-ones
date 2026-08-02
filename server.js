@@ -508,27 +508,31 @@ app.post("/api/kids/:id/activities", auth, async (req, res) => {
   const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
   if (!kidResult.rows[0]) return res.status(404).json({ error: "Child not found" });
 
+  const milestone = ACTIVITY_MILESTONES[activity_type];
   await db.query(
-    "INSERT INTO activities (kid_id, activity_type) VALUES ($1, $2)",
-    [req.params.id, activity_type]
+    "INSERT INTO activities (kid_id, activity_type, activity_name) VALUES ($1, $2, $3)",
+    [req.params.id, activity_type, milestone.name]
   );
   await db.query("UPDATE users SET sprouts_balance = sprouts_balance + 10 WHERE id = $1", [req.user.id]);
-
   const countResult = await db.query(
     "SELECT COUNT(*) FROM activities WHERE kid_id=$1 AND activity_type=$2",
     [req.params.id, activity_type]
   );
   const count = parseInt(countResult.rows[0].count);
-
-  const milestone = ACTIVITY_MILESTONES[activity_type];
+  
   let newAchievement = null;
-
-  if (count === milestone.count) {
-    const achievementResult = await db.query(
-      "INSERT INTO achievements (kid_id, achievement_name, activity_type) VALUES ($1, $2, $3) RETURNING *",
-      [req.params.id, milestone.name, activity_type]
+  if (count >= milestone.count) {
+    const _exist = await db.query(
+      "SELECT id FROM achievements WHERE kid_id=$1 AND activity_type=$2",
+      [req.params.id, activity_type]
     );
-    newAchievement = achievementResult.rows[0];
+    if (_exist.rows.length === 0) {
+      const achievementResult = await db.query(
+        "INSERT INTO achievements (kid_id, achievement_name, activity_type) VALUES ($1, $2, $3) RETURNING *",
+        [req.params.id, milestone.name, activity_type]
+      );
+      newAchievement = achievementResult.rows[0];
+    }
   }
 
   const remaining = count < milestone.count ? milestone.count - count : 0;
