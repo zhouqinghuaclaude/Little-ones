@@ -315,11 +315,11 @@ const isBirthday = kid.birthday &&
 
 let avatarPhotoUrl = null;
 if (kid.avatar_photo_key) {
-  try { avatarPhotoUrl = await getCosSignedUrl(kid.avatar_photo_key, 7200); } catch (e) { avatarPhotoUrl = null; }
+  try { avatarPhotoUrl = await getCosSignedUrl(kid.avatar_photo_key, 604800); } catch (e) { avatarPhotoUrl = null; }
 }
 let basePhotoUrl = null;
 if (kid.base_photo_key) {
-  try { basePhotoUrl = await getCosSignedUrl(kid.base_photo_key, 7200); } catch (e) { basePhotoUrl = null; }
+  try { basePhotoUrl = await getCosSignedUrl(kid.base_photo_key, 604800); } catch (e) { basePhotoUrl = null; }
 }
     
 return {
@@ -345,7 +345,22 @@ app.post("/api/kids", auth, async (req, res) => {
   const { name, gender, age, parent_role, birthday, personality, avatar, age_mode } = req.body;
   if (!name) return res.status(400).json({ error: "Please fill in child name" });
   const count = await db.query("SELECT COUNT(*) FROM kids WHERE user_id = $1", [req.user.id]);
-  if (parseInt(count.rows[0].count) >= 1) return res.status(400).json({ error: "每位用户默认只能创建1个孩子" });
+  const kidCount = parseInt(count.rows[0].count);
+
+  // 会员可拥有 2 个孩子，免费用户 1 个
+  const u = await db.query("SELECT * FROM users WHERE id = $1", [req.user.id]);
+  const urow = u.rows[0] || {};
+  const rawLevel = urow.membership_type || urow.membership || urow.vip_level || urow.member_level || 'free';
+  const level = String(rawLevel).toLowerCase();
+  const isMember = level !== 'free' && level !== '0' && level !== 'none' && level !== '';
+  const maxKids = isMember ? 2 : 1;
+
+  if (kidCount >= maxKids) {
+    return res.status(400).json({
+      error: maxKids === 1 ? "开通会员后可以拥有第二个孩子" : "最多可以有两个孩子",
+      upgrade: maxKids === 1
+    });
+  }
 
   let finalAge = age ? parseInt(age) : 0;
   if (birthday) {
@@ -1722,7 +1737,7 @@ function uploadToCos(key, buffer) {
 }
 
 // 生成COS对象的签名访问URL（私有桶，临时链接）
-function getCosSignedUrl(key, expires = 3600) {
+function getCosSignedUrl(key, expires = 604800) {
   return new Promise((resolve, reject) => {
     cosClient.getObjectUrl({
       Bucket: process.env.COS_BUCKET,
@@ -1814,7 +1829,7 @@ app.post("/api/face/generate", auth, async (req, res) => {
     
     const cosKey = `photos/${kid_id}/avatar_${Date.now()}.png`;
     await uploadToCos(cosKey, buffer);
-    const signedUrl = await getCosSignedUrl(cosKey, 3600);
+    const signedUrl = await getCosSignedUrl(cosKey, 604800);
 
     // 4. 写photos表
     await db.query(
@@ -1949,7 +1964,7 @@ app.post("/api/face/confirm-base", auth, async (req, res) => {
       await db.query("UPDATE kids SET avatar_photo_key=$1 WHERE id=$2", [cosKey, kid_id]);
     }
 
-    const signedUrl = await getCosSignedUrl(cosKey, 7200);
+    const signedUrl = await getCosSignedUrl(cosKey, 604800);
     res.json({ ok: true, cos_key: cosKey, photo_id: ins.rows[0].id, url: signedUrl });
   } catch (e) {
     console.error('confirm-base error:', e);
@@ -2090,7 +2105,7 @@ app.post("/api/face/generate-scene", auth, async (req, res) => {
       await db.query("UPDATE users SET sprouts_balance = sprouts_balance - $1 WHERE id=$2", [SPROUT_COST, req.user.id]);
     }
 
-    const signedUrl = await getCosSignedUrl(cosKey, 7200);
+    const signedUrl = await getCosSignedUrl(cosKey, 604800);
     res.json({ image_url: signedUrl, cos_key: cosKey, photo_id: ins.rows[0].id, pay_method: payMethod });
   } catch (e) {
     console.error('generate-scene error:', e);
@@ -2111,7 +2126,7 @@ app.get("/api/kids/:id/photos", auth, async (req, res) => {
     // 为每张生成签名URL
     const photos = await Promise.all(r.rows.map(async (p) => ({
       id: p.id,
-      url: await getCosSignedUrl(p.cos_key, 7200),
+      url: await getCosSignedUrl(p.cos_key, 604800),
       cos_key: p.cos_key,
       type: p.type,
       theme: p.theme,
