@@ -1605,6 +1605,10 @@ ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_missing_date DATE;
     );
     CREATE INDEX IF NOT EXISTS idx_diary_kid ON diary(kid_id, created_at);
     ALTER TABLE users ADD COLUMN IF NOT EXISTS is_premium BOOLEAN DEFAULT false;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS unionid VARCHAR(64);
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20);
+    ALTER TABLE users ALTER COLUMN email DROP NOT NULL;
+    ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS pending_gift VARCHAR(100);
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS bond_score INTEGER DEFAULT 0;
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS streak_days INTEGER DEFAULT 0;
@@ -1637,6 +1641,7 @@ ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_missing_date DATE;
     `);
   db.query("ALTER TABLE activities ADD COLUMN IF NOT EXISTS activity_name VARCHAR(100)").catch(() => {});
   db.query("ALTER TABLE activities ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()").catch(() => {});
+  db.query("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_unionid ON users(unionid) WHERE unionid IS NOT NULL").catch(() => {});
   await db.query(`
     CREATE TABLE IF NOT EXISTS achievements (
       id SERIAL PRIMARY KEY,
