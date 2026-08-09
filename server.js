@@ -179,19 +179,29 @@ app.post("/api/wx-login", async (req, res) => {
     if (!wxData.openid) {
       return res.status(400).json({ error: "微信登录失败", detail: wxData.errmsg || "" });
     }
+   
     const openid = wxData.openid;
+    const unionid = wxData.unionid || null;   // 未绑开放平台时为 null，不影响运行
 
-    // 查找或创建用户
-    let userResult = await db.query("SELECT * FROM users WHERE openid=$1", [openid]);
-    let user = userResult.rows[0];
-
+    // 查找用户：优先 unionid（跨端统一），其次 openid
+    let user = null;
+    if (unionid) {
+      const r1 = await db.query("SELECT * FROM users WHERE unionid=$1", [unionid]);
+      user = r1.rows[0];
+    }
     if (!user) {
-      // 新用户：openid对应，email/password填占位值（满足NOT NULL约束）
-      const placeholderEmail = `wx_${openid}@wechat.local`;
-      const placeholderHash = await bcrypt.hash(openid + Date.now(), 10);
+      const r2 = await db.query("SELECT * FROM users WHERE openid=$1", [openid]);
+      user = r2.rows[0];
+      // 老用户补录 unionid
+      if (user && unionid && !user.unionid) {
+        await db.query("UPDATE users SET unionid=$1 WHERE id=$2", [unionid, user.id]);
+        user.unionid = unionid;
+      }
+    }
+    if (!user) {
       const created = await db.query(
-        "INSERT INTO users (email, password_hash, name, openid) VALUES ($1, $2, $3, $4) RETURNING *",
-        [placeholderEmail, placeholderHash, "家长", openid]
+        "INSERT INTO users (name, openid, unionid) VALUES ($1, $2, $3) RETURNING *",
+        ["家长", openid, unionid]
       );
       user = created.rows[0];
     }
