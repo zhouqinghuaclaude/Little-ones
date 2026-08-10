@@ -278,12 +278,14 @@ app.get("/api/profile", auth, async (req, res) => {
       "SELECT parent_interests FROM kids WHERE user_id=$1 AND parent_interests IS NOT NULL AND parent_interests <> '' LIMIT 1",
       [req.user.id]
     );
+    
     res.json({
       name: u.name || "",
       gender: u.gender || "",
       city: u.city || "",
       phone: u.phone ? maskPhone(u.phone) : "",
-      phone_bound: !!u.phone
+      phone_bound: !!u.phone,
+      parent_interests: (ir.rows[0] && ir.rows[0].parent_interests) || ""
     });
   } catch (e) {
     console.error("get profile error:", e);
