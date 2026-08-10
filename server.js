@@ -223,6 +223,93 @@ app.post("/api/wx-login", async (req, res) => {
     res.status(500).json({ error: "微信登录出错" });
   }
 });
+
+// ===== 微信 access_token 缓存（有效期2小时，提前5分钟刷新）=====
+let _wxToken = { value: null, expireAt: 0 };
+async function getWxAccessToken() {
+  if (_wxToken.value && Date.now() < _wxToken.expireAt) return _wxToken.value;
+  const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${process.env.WX_APPID}&secret=${process.env.WX_SECRET}`;
+  const r = await fetch(url);
+  const d = await r.json();
+  if (!d.access_token) throw new Error(d.errmsg || "get access_token failed");
+  _wxToken = { value: d.access_token, expireAt: Date.now() + (d.expires_in - 300) * 1000 };
+  return _wxToken.value;
+}
+
+function maskPhone(p) {
+  if (!p || p.length < 7) return p || "";
+  return p.slice(0, 3) + "****" + p.slice(-4);
+}
+
+// 绑定手机号（微信手机号快速验证组件）
+app.post("/api/bind-phone", auth, async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ error: "缺少code" });
+    const accessToken = await getWxAccessToken();
+    const r = await fetch(`https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=${accessToken}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code })
+    });
+    const d = await r.json();
+    if (d.errcode !== 0 || !d.phone_info) {
+      console.error("bind-phone wx error:", d);
+      return res.status(400).json({ error: "获取手机号失败", detail: d.errmsg || "" });
+    }
+    const phone = d.phone_info.purePhoneNumber || d.phone_info.phoneNumber;
+    // 同一手机号不允许绑定到多个账号
+    const dup = await db.query("SELECT id FROM users WHERE phone=$1 AND id<>$2", [phone, req.user.id]);
+    if (dup.rows.length > 0) return res.status(400).json({ error: "该手机号已绑定其他账号" });
+    await db.query("UPDATE users SET phone=$1 WHERE id=$2", [phone, req.user.id]);
+    res.json({ ok: true, phone: maskPhone(phone) });
+  } catch (e) {
+    console.error("bind-phone error:", e);
+    res.status(500).json({ error: "绑定失败，请重试" });
+  }
+});
+
+// 个人资料
+app.get("/api/profile", auth, async (req, res) => {
+  try {
+    const r = await db.query("SELECT name, gender, city, phone FROM users WHERE id=$1", [req.user.id]);
+    const u = r.rows[0] || {};
+    res.json({
+      name: u.name || "",
+      gender: u.gender || "",
+      city: u.city || "",
+      phone: u.phone ? maskPhone(u.phone) : "",
+      phone_bound: !!u.phone
+    });
+  } catch (e) {
+    console.error("get profile error:", e);
+    res.status(500).json({ error: "获取失败" });
+  }
+});
+
+app.put("/api/profile", auth, async (req, res) => {
+  try {
+    const { name, gender, city } = req.body;
+    if (name !== undefined && (!name.trim() || name.trim().length > 20)) {
+      return res.status(400).json({ error: "昵称需在1-20个字之间" });
+    }
+    if (gender !== undefined && !["male", "female", ""].includes(gender)) {
+      return res.status(400).json({ error: "性别参数有误" });
+    }
+    if (city !== undefined && city.length > 30) {
+      return res.status(400).json({ error: "城市名称过长" });
+    }
+    await db.query(
+      "UPDATE users SET name=COALESCE($1,name), gender=COALESCE($2,gender), city=COALESCE($3,city) WHERE id=$4",
+      [name !== undefined ? name.trim() : null, gender !== undefined ? gender : null, city !== undefined ? city.trim() : null, req.user.id]
+    );
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("update profile error:", e);
+    res.status(500).json({ error: "保存失败" });
+  }
+});
+
 function getZodiacSign(birthday) {
   if (!birthday) return null;
   const d = new Date(birthday);
@@ -1618,6 +1705,8 @@ ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_missing_date DATE;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS is_premium BOOLEAN DEFAULT false;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS unionid VARCHAR(64);
     ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20);
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS gender VARCHAR(10);
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS city VARCHAR(50);
     ALTER TABLE users ALTER COLUMN email DROP NOT NULL;
     ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS pending_gift VARCHAR(100);
