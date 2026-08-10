@@ -273,6 +273,10 @@ app.get("/api/profile", auth, async (req, res) => {
   try {
     const r = await db.query("SELECT name, gender, city, phone FROM users WHERE id=$1", [req.user.id]);
     const u = r.rows[0] || {};
+    const ir = await db.query(
+      "SELECT parent_interests FROM kids WHERE user_id=$1 AND parent_interests IS NOT NULL AND parent_interests <> '' LIMIT 1",
+      [req.user.id]
+    );
     res.json({
       name: u.name || "",
       gender: u.gender || "",
@@ -286,26 +290,30 @@ app.get("/api/profile", auth, async (req, res) => {
   }
 });
 
-app.put("/api/profile", auth, async (req, res) => {
-  try {
-    const { name, gender, city } = req.body;
-    if (name !== undefined && (!name.trim() || name.trim().length > 20)) {
-      return res.status(400).json({ error: "昵称需在1-20个字之间" });
-    }
-    if (gender !== undefined && !["male", "female", ""].includes(gender)) {
-      return res.status(400).json({ error: "性别参数有误" });
-    }
-    if (city !== undefined && city.length > 30) {
-      return res.status(400).json({ error: "城市名称过长" });
-    }
-    await db.query(
-      "UPDATE users SET name=COALESCE($1,name), gender=COALESCE($2,gender), city=COALESCE($3,city) WHERE id=$4",
-      [name !== undefined ? name.trim() : null, gender !== undefined ? gender : null, city !== undefined ? city.trim() : null, req.user.id]
+app.put("/api/profile", auth, async (req, res) => {  
+  try {    
+    const { name, gender, city } = req.body;    
+    if (name !== undefined && (!name.trim() || name.trim().length > 20)) {      
+      return res.status(400).json({ error: "昵称需在1-20个字之间" });    
+    }    
+    if (gender !== undefined && !["male", "female", ""].includes(gender)) {      
+      return res.status(400).json({ error: "性别参数有误" });    
+    }    
+    if (city !== undefined && city.length > 30) {      
+      return res.status(400).json({ error: "城市名称过长" });    
+    }    
+    await db.query(      
+      "UPDATE users SET name=COALESCE($1,name), gender=COALESCE($2,gender), city=COALESCE($3,city) WHERE id=$4",      
+      [name !== undefined ? name.trim() : null, gender !== undefined ? gender : null, city !== undefined ? city.trim() : null, req.user.id]    
     );
-    res.json({ ok: true });
-  } catch (e) {
-    console.error("update profile error:", e);
-    res.status(500).json({ error: "保存失败" });
+    // 兴趣爱好是账号级信息，写入该用户名下所有孩子
+    if (req.body.parent_interests !== undefined) {
+      await db.query("UPDATE kids SET parent_interests=$1 WHERE user_id=$2", [req.body.parent_interests, req.user.id]);
+    }
+    res.json({ ok: true });  
+  } catch (e) {    
+    console.error("update profile error:", e);    
+    res.status(500).json({ error: "保存失败" });  
   }
 });
 
