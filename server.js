@@ -2476,8 +2476,31 @@ app.get("/api/admin/actions", adminAuth, async (req, res) => {
   const r = await db.query("SELECT a.*, u.email FROM user_actions a LEFT JOIN users u ON a.user_id=u.id ORDER BY a.created_at DESC LIMIT 200");
   res.json(r.rows);
 });
+
 app.post("/api/account/delete", auth, async (req, res) => {
   const uid = req.user.id;
+
+  // 1. 先删除 COS 上的图片文件（数据库级联删不掉存储桶里的实际文件）
+  try {
+    const _photos = await db.query("SELECT cos_key FROM photos WHERE user_id=$1", [uid]);
+    for (const p of _photos.rows) {
+      if (!p.cos_key) continue;
+      await new Promise((resolve) => {
+        cosClient.deleteObject({
+          Bucket: process.env.COS_BUCKET,
+          Region: process.env.COS_REGION,
+          Key: p.cos_key
+        }, (err) => {
+          if (err) console.error('删除COS对象失败:', p.cos_key, err.message);
+          resolve();
+        });
+      });
+    }
+  } catch (e) {
+    console.error('清理COS图片失败:', e.message);
+  }
+
+  // 2. 删除数据库记录（kids 级联删除会带走 photos/memories/messages 等）
   const client = await db.connect();
   try {
     await client.query("BEGIN");
@@ -2489,11 +2512,13 @@ app.post("/api/account/delete", auth, async (req, res) => {
     res.json({ ok: true });
   } catch (e) {
     await client.query("ROLLBACK");
+    console.error('账号注销失败:', e.message);
     res.status(500).json({ error: "注销失败，请稍后重试" });
   } finally {
     client.release();
   }
 });
+
 app.get("/api/admin/fix-gifts", async (req, res) => {
   if (req.query.key !== process.env.ADMIN_KEY) return res.status(403).json({ error: "forbidden" });
   const r = await db.query("UPDATE kids SET gifts_received = 6 WHERE gifts_received > 6 RETURNING id, name, gifts_received");
