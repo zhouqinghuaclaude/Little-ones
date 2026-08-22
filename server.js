@@ -218,6 +218,10 @@ app.post("/api/wx-login", async (req, res) => {
       user = created.rows[0];
     }
 
+        // 记录用户成年声明（合规佐证）
+    if (req.body.adult_confirm && !user.adult_confirmed_at) {
+      await db.query("UPDATE users SET adult_confirmed_at = NOW() WHERE id = $1", [user.id]);
+    }
     // 发JWT（复用现有逻辑）
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "30d" });
 
@@ -283,20 +287,24 @@ app.post("/api/bind-phone", auth, async (req, res) => {
 // 个人资料
 app.get("/api/profile", auth, async (req, res) => {
   try {
-    const r = await db.query("SELECT name, gender, city, phone FROM users WHERE id=$1", [req.user.id]);
+   
+    const r = await db.query("SELECT name, gender, city, phone, age_group, emergency_name, emergency_phone FROM users WHERE id=$1", [req.user.id]);
     const u = r.rows[0] || {};
     const ir = await db.query(
       "SELECT parent_interests FROM kids WHERE user_id=$1 AND parent_interests IS NOT NULL AND parent_interests <> '' LIMIT 1",
       [req.user.id]
     );
     
-    res.json({
+        res.json({
       name: u.name || "",
       gender: u.gender || "",
       city: u.city || "",
       phone: u.phone ? maskPhone(u.phone) : "",
       phone_bound: !!u.phone,
-      parent_interests: (ir.rows[0] && ir.rows[0].parent_interests) || ""
+      parent_interests: (ir.rows[0] && ir.rows[0].parent_interests) || "",
+      age_group: u.age_group || "",
+      emergency_name: u.emergency_name || "",
+      emergency_phone: u.emergency_phone || ""
     });
   } catch (e) {
     console.error("get profile error:", e);
@@ -315,11 +323,33 @@ app.put("/api/profile", auth, async (req, res) => {
     }    
     if (city !== undefined && city.length > 30) {      
       return res.status(400).json({ error: "城市名称过长" });    
-    }    
+    }
+    const AGE_GROUPS = ['18-35', '36-60', '60以上'];
+    if (req.body.age_group !== undefined && req.body.age_group !== '' && !AGE_GROUPS.includes(req.body.age_group)) {
+      return res.status(400).json({ error: "年龄段参数有误" });
+    }
+    if (req.body.emergency_name !== undefined && String(req.body.emergency_name).trim().length > 20) {
+      return res.status(400).json({ error: "紧急联系人姓名过长" });
+    }
+    if (req.body.emergency_phone !== undefined && String(req.body.emergency_phone).trim() !== '' && !/^[0-9+\-\s]{6,20}$/.test(String(req.body.emergency_phone).trim())) {
+      return res.status(400).json({ error: "紧急联系人电话格式有误" });
+    }
     await db.query(      
       "UPDATE users SET name=COALESCE($1,name), gender=COALESCE($2,gender), city=COALESCE($3,city) WHERE id=$4",      
       [name !== undefined ? name.trim() : null, gender !== undefined ? gender : null, city !== undefined ? city.trim() : null, req.user.id]    
     );
+    // 年龄段与紧急联系人（均为选填）
+    if (req.body.age_group !== undefined || req.body.emergency_name !== undefined || req.body.emergency_phone !== undefined) {
+      await db.query(
+        "UPDATE users SET age_group=COALESCE($1,age_group), emergency_name=COALESCE($2,emergency_name), emergency_phone=COALESCE($3,emergency_phone) WHERE id=$4",
+        [
+          req.body.age_group !== undefined ? req.body.age_group : null,
+          req.body.emergency_name !== undefined ? String(req.body.emergency_name).trim() : null,
+          req.body.emergency_phone !== undefined ? String(req.body.emergency_phone).trim() : null,
+          req.user.id
+        ]
+      );
+    }
     // 兴趣爱好是账号级信息，写入该用户名下所有孩子
     if (req.body.parent_interests !== undefined) {
       await db.query("UPDATE kids SET parent_interests=$1 WHERE user_id=$2", [req.body.parent_interests, req.user.id]);
@@ -1748,6 +1778,10 @@ ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_missing_date DATE;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20);
     ALTER TABLE users ADD COLUMN IF NOT EXISTS gender VARCHAR(10);
     ALTER TABLE users ADD COLUMN IF NOT EXISTS city VARCHAR(50);
+       ALTER TABLE users ADD COLUMN IF NOT EXISTS age_group VARCHAR(20);
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS emergency_name VARCHAR(50);
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS emergency_phone VARCHAR(20);
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS adult_confirmed_at TIMESTAMP;
     ALTER TABLE users ALTER COLUMN email DROP NOT NULL;
     ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS pending_gift VARCHAR(100);
