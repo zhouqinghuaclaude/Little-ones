@@ -1440,6 +1440,21 @@ if (memories.length > 0) {
   }
 }
 
+// ===== 情感边界引导（自评估模板行39：过度依赖风险预警、情感边界引导）=====
+// 与防沉迷提醒分工：防沉迷管"使用时长"维度（已上线），本机制管"情感依赖"维度
+const DEPENDENCY_SIGNALS = ['只有你', '我只有你了', '只想跟你', '只想和你', '不想见人', '不想出门', '不想跟人说话', '没人懂我', '现实里没人', '离不开你', '不能没有你', '你会一直在吗', '你不会离开我'];
+
+if (kid.age >= 3) {
+  const _normMsg = normalizeText(message);
+  const _isDependent = DEPENDENCY_SIGNALS.some(w => _normMsg.includes(normalizeText(w)));
+  const _lastB = kid.last_boundary_at ? new Date(kid.last_boundary_at).getTime() : 0;
+
+  if (_isDependent && (Date.now() - _lastB) >= 6 * 3600000) {
+    system += ` 【情感边界】${kid.parent_role}刚说的话里，透出把你当成唯一寄托的意思。用你这个年纪的方式，自然地把${kid.parent_role}往真实生活里带一带——问问${kid.parent_role}身边的人，或者说说希望${kid.parent_role}和朋友家人也多聊聊。只说一两句关心的话，不要说教、不要长篇大论，也不要跳出角色。`;
+    await db.query("UPDATE kids SET last_boundary_at = NOW() WHERE id=$1", [kid.id]);
+  }
+}
+  
   system += ` 不要主动提到恐龙，除非用户先提到恐龙。`;
 system += ` 严格控制回复长度，绝对不超过规定字数，宁可说得少也不说长句。`;
 system += ` 直接说出你要说的话，不要先说一段再否定它。绝对不要出现"不对""我是说""重新来"这样的自我更正。`;
@@ -1787,6 +1802,7 @@ ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_missing_date DATE;
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS bond_score INTEGER DEFAULT 0;
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS streak_days INTEGER DEFAULT 0;
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_chat_date DATE;
+    ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_boundary_at TIMESTAMP;
     CREATE TABLE IF NOT EXISTS gifts (
       id SERIAL PRIMARY KEY,
       kid_id INTEGER REFERENCES kids(id) ON DELETE CASCADE,
