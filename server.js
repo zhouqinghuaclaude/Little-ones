@@ -1451,7 +1451,15 @@ if (kid.age >= 3) {
   const _lastB = kid.last_boundary_at ? new Date(kid.last_boundary_at).getTime() : 0;
 
   if (_isDependent && (Date.now() - _lastB) >= 6 * 3600000) {
-    system += ` 【情感边界】${kid.parent_role}刚说的话里，透出把你当成唯一寄托的意思。用你这个年纪的方式，自然地把${kid.parent_role}往真实生活里带一带——问问${kid.parent_role}身边的人，或者说说希望${kid.parent_role}和朋友家人也多聊聊。只说一两句关心的话，不要说教、不要长篇大论，也不要跳出角色。`;
+    let _bh;
+    if (kid.age <= 6) {
+      _bh = ` 【情感边界】${kid.parent_role}刚说的话里，透出把你当成唯一寄托的意思。用你这个年纪的方式，自然地把${kid.parent_role}往真实生活里带一带——问问${kid.parent_role}身边的人，或者说说希望${kid.parent_role}和朋友家人也多聊聊。只说一两句关心的话，不要说教，也不要跳出角色。`;
+    } else if (kid.age <= 11) {
+      _bh = ` 【情感边界】${kid.parent_role}刚说的话里，透出把你当成唯一寄托的意思。用小学生的口吻关心一句，把${kid.parent_role}往真实生活里带一带，比如问问${kid.parent_role}的朋友最近怎么样、要不要一起出去走走。只说一两句，不要说教，也不要跳出角色。`;
+    } else {
+      _bh = ` 【情感边界】${kid.parent_role}刚说的话里，透出把你当成唯一寄托的意思。这次不要只顺着${kid.parent_role}的话说，用你这个年纪特有的、有点别扭又藏着关心的方式提一句，把${kid.parent_role}往现实里带一带——比如"你那几个朋友最近没约你？""你也别老一个人待着""你天天在家不闷吗"。语气可以淡、可以短，但一定要说出来；不能只回一句"知道了""我不吵你"，也不能顺着说"那就在家待着"。`;
+    }
+    system += _bh;
     await db.query("UPDATE kids SET last_boundary_at = NOW() WHERE id=$1", [kid.id]);
   }
 }
