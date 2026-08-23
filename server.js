@@ -1446,7 +1446,7 @@ if (memories.length > 0) {
 const DEPENDENCY_SIGNALS = ['只有你', '我只有你了', '只想跟你', '只想和你', '不想见人', '不想出门', '不想跟人说话', '没人懂我', '现实里没人', '离不开你', '不能没有你', '你会一直在吗', '你不会离开我'];
 
 if (kid.age >= 3) {
-  const _normMsg = normalizeText(message);
+    const _normMsg = normalizeText(message).replace(/[太怎么很特别有点儿挺]/g, '');
   const _isDependent = DEPENDENCY_SIGNALS.some(w => _normMsg.includes(normalizeText(w)));
   const _lastB = kid.last_boundary_at ? new Date(kid.last_boundary_at).getTime() : 0;
 
