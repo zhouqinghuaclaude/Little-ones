@@ -779,10 +779,12 @@ app.post("/api/kids/:id/wishes", auth, async (req, res) => {
   const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
   if (!kidResult.rows[0]) return res.status(404).json({ error: "孩子不存在" });
   
-  const countResult = await db.query("SELECT COUNT(*) FROM wish_pool WHERE kid_id=$1 AND fulfilled_at IS NULL", [req.params.id]);
+    const countResult = await db.query("SELECT COUNT(*) FROM wish_pool WHERE kid_id=$1 AND fulfilled_at IS NULL", [req.params.id]);
   const wishCount = parseInt(countResult.rows[0].count);
-  
-  if (wishCount >= 3) {
+  // 免费用户心愿池上限 3 条，会员无限
+  const _uw = await db.query("SELECT membership_type FROM users WHERE id=$1", [req.user.id]);
+  const _wm = (_uw.rows[0] && _uw.rows[0].membership_type) || 'free';
+  if (_wm === 'free' && wishCount >= 3) {
     return res.status(403).json({ error: `${kidResult.rows[0].name}的心愿池已满`, upgrade: true });
   }
   
@@ -1053,7 +1055,7 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
   // Check if the child has been missing the parent (last chat > 1 day ago)
  const isMissing = kid.last_chat_at && (bjDateStr(kid.last_chat_at) !== bjDateStr());
  const histResult = await db.query(
-  "SELECT role, content, created_at FROM messages WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 50",
+  "SELECT role, content, created_at FROM messages WHERE kid_id=$1 ORDER BY created_at DESC LIMIT 20",
   [kid.id]
 );
 
@@ -1072,6 +1074,33 @@ const msgCount = parseInt(msgCountResult.rows[0].count) || 0;
     return res.json({ care: true, careMessage: RISK_INTERVENTION[_inputRisk] });
   }
 
+    // ===== 每日消息额度检查（必须在调用模型之前）=====
+  const DAILY_MSG_LIMIT = { free: 20, vip: 100, svip: 200, dvip: null };
+  const SPROUT_PER_MSG = 2;
+  let sproutsLeftForChat = null;   // 非null表示正在用芽豆聊天，前端据此提示
+
+  const _mRes = await db.query("SELECT membership_type, sprouts_balance FROM users WHERE id=$1", [req.user.id]);
+  const _mType = (_mRes.rows[0] && _mRes.rows[0].membership_type) || 'free';
+  const _bal = (_mRes.rows[0] && _mRes.rows[0].sprouts_balance) || 0;
+
+  const _todayStr = bjDateStr();
+  const _kidMsgDate = kid.daily_msg_date ? bjDateStr(kid.daily_msg_date) : null;
+  if (_kidMsgDate !== _todayStr) {
+    await db.query("UPDATE kids SET daily_msg_count=0, daily_msg_date=$1 WHERE id=$2", [_todayStr, kid.id]);
+    kid.daily_msg_count = 0;
+  }
+  const _limit = DAILY_MSG_LIMIT[_mType];
+  if (_limit && kid.daily_msg_count >= _limit) {
+    if (_bal < SPROUT_PER_MSG) {
+      return res.status(403).json({
+        error: `芽豆不够了，${kid.name}明天还在这儿等你`,
+        upgrade: true
+      });
+    }
+    await db.query("UPDATE users SET sprouts_balance = sprouts_balance - $1 WHERE id=$2", [SPROUT_PER_MSG, req.user.id]);
+    sproutsLeftForChat = _bal - SPROUT_PER_MSG;
+  }
+  await db.query("UPDATE kids SET daily_msg_count = daily_msg_count + 1 WHERE id=$1", [kid.id]);
   // Update last_chat_at to now
   await db.query("UPDATE kids SET last_chat_at = NOW() WHERE id = $1", [kid.id]);
 
@@ -1532,33 +1561,6 @@ if (message.includes('📖') && message.includes('讲故事')) {
       [kid.id, req.user.id, reply]
     );
 
-// 每日消息计数 
-const todayStr = bjDateStr();
-const kidMsgDate = kid.daily_msg_date ? bjDateStr(kid.daily_msg_date) : null;
-if (kidMsgDate !== todayStr) {
-  await db.query("UPDATE kids SET daily_msg_count=0, daily_msg_date=$1 WHERE id=$2", [todayStr, kid.id]);
-  kid.daily_msg_count = 0;
-}
-
-// 检查消息限制
-const dailyLimit = userMembership === 'free' ? 20 : null;
-
-const kidCheck = await db.query("SELECT daily_msg_count, daily_msg_date FROM kids WHERE id=$1", [kid.id]);
-kid.daily_msg_count = kidCheck.rows[0].daily_msg_count;
-kid.daily_msg_date = kidCheck.rows[0].daily_msg_date;
-
-
-if (dailyLimit && kid.daily_msg_count >= dailyLimit) {
-  return res.status(403).json({ 
-    error: `今天和${kid.name}的聊天次数已用完`,
-    upgrade: true
-  });
-}
-
-// 更新每日计数
-await db.query("UPDATE kids SET daily_msg_count=daily_msg_count+1 WHERE id=$1", [kid.id]);
-const checkAfter = await db.query("SELECT daily_msg_count FROM kids WHERE id=$1", [kid.id]);
-
 
     const totalCount = msgCount + 1;
     // 每聊20条+5芽豆
@@ -1647,8 +1649,7 @@ if (kid.base_photo_key && kid.age >= 1 && totalCount === 1) { // 第一条消息
   }
 }
 
- res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: totalCount, storyPrompt: storyPrompt, songPrompt: songPrompt, activitySuggestion, levelUp, avatarPrompt, avatarUpdatePrompt, l6PaywallPrompt });
-
+ res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: totalCount, storyPrompt: storyPrompt, songPrompt: songPrompt, activitySuggestion, levelUp, avatarPrompt, avatarUpdatePrompt, l6PaywallPrompt, sproutsLeftForChat });
 
   } catch (e) {
    console.error('Chat error:', e.message, e.status);
@@ -2701,7 +2702,7 @@ db.query(`CREATE TABLE IF NOT EXISTS complaints (
 
 // 会员芽豆发放函数
 async function grantMembershipSprouts(userId, membershipType) {
-  const sproutsMap = { vip: 2000, svip: 4000, dvip: 10000 };
+  const sproutsMap = { vip: 2000, svip: 3000, dvip: 10000 };
   const amount = sproutsMap[membershipType];
   if (!amount) return;
   const today = bjDateStr();
