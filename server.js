@@ -1087,8 +1087,7 @@ const msgCount = parseInt(msgCountResult.rows[0].count) || 0;
     const _mRes = await db.query("SELECT membership_type, membership_expiry, sprouts_balance FROM users WHERE id=$1", [req.user.id]);
   const _mType = effectiveTier(_mRes.rows[0]);
   const _bal = (_mRes.rows[0] && _mRes.rows[0].sprouts_balance) || 0;
-  const _mType = effectiveTier(_mRes.rows[0]);
-  const _bal = (_mRes.rows[0] && _mRes.rows[0].sprouts_balance) || 0;
+  
 
   // 会员到期后，超出免费额度的孩子进入封存状态（可查看，不可对话）
   if (_mType === 'free') {
