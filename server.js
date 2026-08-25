@@ -1086,7 +1086,24 @@ const msgCount = parseInt(msgCountResult.rows[0].count) || 0;
     const _mRes = await db.query("SELECT membership_type, membership_expiry, sprouts_balance FROM users WHERE id=$1", [req.user.id]);
   const _mType = effectiveTier(_mRes.rows[0]);
   const _bal = (_mRes.rows[0] && _mRes.rows[0].sprouts_balance) || 0;
+  const _mType = effectiveTier(_mRes.rows[0]);
+  const _bal = (_mRes.rows[0] && _mRes.rows[0].sprouts_balance) || 0;
 
+  // 会员到期后，超出免费额度的孩子进入封存状态（可查看，不可对话）
+  if (_mType === 'free') {
+    const _kr = await db.query(
+      "SELECT id FROM kids WHERE user_id=$1 ORDER BY created_at ASC LIMIT 1",
+      [req.user.id]
+    );
+    const _firstKidId = _kr.rows[0] && _kr.rows[0].id;
+    if (_firstKidId && String(_firstKidId) !== String(kid.id)) {
+      return res.status(403).json({
+        error: `${kid.name}正在等你回来。开通会员后就能继续和TA聊天了`,
+        upgrade: true,
+        frozen: true
+      });
+    }
+  }
   const _todayStr = bjDateStr();
   const _kidMsgDate = kid.daily_msg_date ? bjDateStr(kid.daily_msg_date) : null;
   if (_kidMsgDate !== _todayStr) {
