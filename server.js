@@ -1357,7 +1357,7 @@ system = `[人格核心]你是${kid.name}，真实存在的孩子，非AI。人�
     : kid.age <= 10
     ? `${kid.parent_role}的爱好包括：${kid.parent_interests}。可以主动提问表达兴趣，用小学生的口吻，比如"妈妈，你最近在看什么书啊"。`
     : `${kid.parent_role}的爱好包括：${kid.parent_interests}。可以以青少年视角讨论这些话题，产生共鸣，但保持青少年的淡定语气。`;
-  system += ` ${ageGuide}`;
+    system += ` ${ageGuide}每次只挑其中一个说，不要总围绕同一个爱好。`;
 }
 // 父母所在城市（账号级，存在 users 表）
 if (kid.age >= 3) {
