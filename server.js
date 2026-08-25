@@ -21,6 +21,13 @@ function bjDateStr(d = new Date()) {
   const x = d instanceof Date ? d : new Date(d);
   return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;
 }
+// 返回有效的会员等级：未设到期时间或已过期，一律视为 free
+function effectiveTier(u) {
+  if (!u || !u.membership_type || u.membership_type === 'free') return 'free';
+  if (!u.membership_expiry) return 'free';
+  return new Date(u.membership_expiry) > new Date() ? u.membership_type : 'free';
+}
+
 const db = new Pool({ connectionString: process.env.DATABASE_URL });
 const GIFT_PRICES = {
   "音乐盒":40,"画笔套装":60,"演唱课":150,"陶艺课":180,"舞蹈课":200,"表演课":200,"吉他课":220,"小提琴课":280,"钢琴课":300,
@@ -496,12 +503,8 @@ app.post("/api/kids", auth, async (req, res) => {
   const kidCount = parseInt(count.rows[0].count);
 
   // 会员可拥有 2 个孩子，免费用户 1 个
-  const u = await db.query("SELECT * FROM users WHERE id = $1", [req.user.id]);
-  const urow = u.rows[0] || {};
-  const rawLevel = urow.membership_type || urow.membership || urow.vip_level || urow.member_level || 'free';
-  const level = String(rawLevel).toLowerCase();
-  const isMember = level !== 'free' && level !== '0' && level !== 'none' && level !== '';
-  const maxKids = isMember ? 2 : 1;
+    const u = await db.query("SELECT membership_type, membership_expiry FROM users WHERE id = $1", [req.user.id]);
+  const maxKids = effectiveTier(u.rows[0]) === 'free' ? 1 : 2;
 
   if (kidCount >= maxKids) {
     return res.status(400).json({
@@ -782,8 +785,9 @@ app.post("/api/kids/:id/wishes", auth, async (req, res) => {
     const countResult = await db.query("SELECT COUNT(*) FROM wish_pool WHERE kid_id=$1 AND fulfilled_at IS NULL", [req.params.id]);
   const wishCount = parseInt(countResult.rows[0].count);
   // 免费用户心愿池上限 3 条，会员无限
-  const _uw = await db.query("SELECT membership_type FROM users WHERE id=$1", [req.user.id]);
-  const _wm = (_uw.rows[0] && _uw.rows[0].membership_type) || 'free';
+  
+    const _uw = await db.query("SELECT membership_type, membership_expiry FROM users WHERE id=$1", [req.user.id]);
+  const _wm = effectiveTier(_uw.rows[0]);
   if (_wm === 'free' && wishCount >= 3) {
     return res.status(403).json({ error: `${kidResult.rows[0].name}的心愿池已满`, upgrade: true });
   }
@@ -850,7 +854,8 @@ app.get("/api/sprouts", auth, async (req, res) => {
   const u = result.rows[0] || {};
   res.json({
     balance: u.sprouts_balance || 0,
-    membership_type: u.membership_type || 'free',
+    
+        membership_type: effectiveTier(u),
     membership_expiry: u.membership_expiry || null
   });
 });
@@ -1079,8 +1084,8 @@ const msgCount = parseInt(msgCountResult.rows[0].count) || 0;
   const SPROUT_PER_MSG = 2;
   let sproutsLeftForChat = null;   // 非null表示正在用芽豆聊天，前端据此提示
 
-  const _mRes = await db.query("SELECT membership_type, sprouts_balance FROM users WHERE id=$1", [req.user.id]);
-  const _mType = (_mRes.rows[0] && _mRes.rows[0].membership_type) || 'free';
+    const _mRes = await db.query("SELECT membership_type, membership_expiry, sprouts_balance FROM users WHERE id=$1", [req.user.id]);
+  const _mType = effectiveTier(_mRes.rows[0]);
   const _bal = (_mRes.rows[0] && _mRes.rows[0].sprouts_balance) || 0;
 
   const _todayStr = bjDateStr();
@@ -1167,8 +1172,9 @@ let bondDelta = 1; // base per message
   );
   // 检测是否晋级
   // 查询会员状态（供L6门槛判断 + 消息限制复用）
-  const _uRes = await db.query("SELECT membership_type FROM users WHERE id=$1", [req.user.id]);
-  const userMembership = _uRes.rows[0]?.membership_type || 'free';
+    const _uRes = await db.query("SELECT membership_type, membership_expiry FROM users WHERE id=$1", [req.user.id]);
+  const userMembership = effectiveTier(_uRes.rows[0]);
+  
 const LEVEL_THRESHOLDS = [0, 51, 151, 301, 501, 1001];
 const LEVEL_NAMES = ['初遇萌芽', '沁润青芽', '爱启灵芽', '心芽同频', '心芽共生', '心芽永恒'];
 const LEVEL_GIFTS = ['晨曦之光', '晶凝露华', '青蓝灵犀', '灵绪之契', '星璇之曜', '永恒之诺'];
