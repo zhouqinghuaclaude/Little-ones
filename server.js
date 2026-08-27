@@ -8,7 +8,8 @@ const Anthropic = require("@anthropic-ai/sdk");
 const OpenAI = require("openai");
 const path = require("path");
 const cron = require('node-cron');
-
+const WxPay = require('wechatpay-node-v3');
+const fs = require('fs');
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '20mb' }));
@@ -2499,6 +2500,157 @@ app.post("/api/dev/activate", auth, async (req, res) => {
   } catch (e) {
     console.error('dev activate error:', e);
     res.status(500).json({ error: e.message });
+  }
+});
+
+// ===== 微信支付 =====
+// 价目表：金额单位为「分」，切勿写成元
+const PRICE_TABLE = {
+  vip:  { month: 2999,  year: 29999 },
+  svip: { month: 3999,  year: 39999 },
+  dvip: { month: 9999,  year: 99999 }
+};
+const TIER_LABEL = { vip: 'VIP', svip: 'SVIP', dvip: 'DVIP' };
+const PLAN_LABEL = { month: '月卡', year: '年卡' };
+
+let wxpay = null;
+try {
+  wxpay = new WxPay({
+    appid: process.env.WX_APPID,
+    mchid: process.env.WX_MCHID,
+    publicKey: fs.readFileSync(process.env.WX_PUB_KEY_PATH),
+    privateKey: fs.readFileSync(process.env.WX_PRIVATE_KEY_PATH),
+    serial_no: process.env.WX_CERT_SERIAL,
+    key: process.env.WX_API_V3_KEY,
+  });
+  console.log('微信支付已初始化');
+} catch (e) {
+  console.error('微信支付初始化失败:', e.message);
+}
+
+// 创建支付订单
+app.post("/api/pay/create", auth, async (req, res) => {
+  try {
+    if (!wxpay) return res.status(500).json({ error: '支付服务暂不可用' });
+    const { tier, plan } = req.body;
+    if (!PRICE_TABLE[tier] || !PRICE_TABLE[tier][plan]) {
+      return res.status(400).json({ error: '套餐参数有误' });
+    }
+    const amount = PRICE_TABLE[tier][plan];
+
+    // 取 openid（小程序支付必需）
+    const ur = await db.query("SELECT openid FROM users WHERE id=$1", [req.user.id]);
+    const openid = ur.rows[0] && ur.rows[0].openid;
+    if (!openid) return res.status(400).json({ error: '请先用微信登录后再购买' });
+
+    // 商户订单号：时间戳 + 用户ID + 随机数，保证唯一
+    const outTradeNo = `BP${Date.now()}${req.user.id}${Math.floor(Math.random() * 1000)}`;
+
+    await db.query(
+      "INSERT INTO orders (out_trade_no, user_id, tier, plan, amount) VALUES ($1,$2,$3,$4,$5)",
+      [outTradeNo, req.user.id, tier, plan, amount]
+    );
+
+    const params = await wxpay.transactions_jsapi({
+      appid: process.env.WX_APPID,
+      mchid: process.env.WX_MCHID,
+      description: `小陪芽 ${TIER_LABEL[tier]}${PLAN_LABEL[plan]}`,
+      out_trade_no: outTradeNo,
+      notify_url: 'https://www.budpei.com/api/pay/notify',
+      amount: { total: amount, currency: 'CNY' },
+      payer: { openid: openid }
+    });
+
+    if (!params || !params.paySign) {
+      console.error('下单失败:', JSON.stringify(params));
+      await db.query("UPDATE orders SET status='failed' WHERE out_trade_no=$1", [outTradeNo]);
+      return res.status(400).json({ error: '下单失败，请稍后重试' });
+    }
+    res.json({ ok: true, out_trade_no: outTradeNo, pay: params });
+  } catch (e) {
+    console.error('pay create error:', e);
+    res.status(500).json({ error: '下单失败，请稍后重试' });
+  }
+});
+
+// 微信支付回调（公网可访问，必须验签 + 幂等）
+app.post("/api/pay/notify", async (req, res) => {
+  try {
+    if (!wxpay) return res.status(500).json({ code: 'FAIL', message: '服务不可用' });
+
+    // ① 验签：确认请求真的来自微信
+    const signature = req.headers['wechatpay-signature'];
+    const timestamp = req.headers['wechatpay-timestamp'];
+    const nonce = req.headers['wechatpay-nonce'];
+    const serial = req.headers['wechatpay-serial'];
+    const body = req.body;
+
+    const ok = wxpay.verifySign({
+      timestamp, nonce, serial,
+      body: JSON.stringify(body),
+      signature,
+      apiSecret: process.env.WX_API_V3_KEY
+    });
+    if (!ok) {
+      console.error('支付回调验签失败, serial:', serial);
+      return res.status(401).json({ code: 'FAIL', message: '验签失败' });
+    }
+
+    // ② 解密回调内容
+    const { ciphertext, associated_data, nonce: rNonce } = body.resource;
+    const data = JSON.parse(wxpay.decipher_gcm(ciphertext, associated_data, rNonce, process.env.WX_API_V3_KEY));
+
+    if (data.trade_state !== 'SUCCESS') {
+      console.log('回调非成功态:', data.trade_state, data.out_trade_no);
+      return res.json({ code: 'SUCCESS', message: '成功' });
+    }
+
+    const outTradeNo = data.out_trade_no;
+    const transactionId = data.transaction_id;
+    const paidAmount = data.amount && data.amount.total;
+
+    // ③ 幂等：只有 pending 状态的订单才处理，重复通知直接返回成功
+    const upd = await db.query(
+      "UPDATE orders SET status='paid', transaction_id=$1, paid_at=NOW() WHERE out_trade_no=$2 AND status='pending' RETURNING user_id, tier, plan, amount",
+      [transactionId, outTradeNo]
+    );
+    if (upd.rowCount === 0) {
+      console.log('订单已处理过或不存在:', outTradeNo);
+      return res.json({ code: 'SUCCESS', message: '成功' });
+    }
+
+    const order = upd.rows[0];
+
+    // ④ 金额核对：防止金额被篡改
+    if (paidAmount !== order.amount) {
+      console.error('金额不符!', outTradeNo, '应付', order.amount, '实付', paidAmount);
+      await db.query("UPDATE orders SET status='amount_mismatch' WHERE out_trade_no=$1", [outTradeNo]);
+      return res.json({ code: 'SUCCESS', message: '成功' });
+    }
+
+    // ⑤ 开通会员
+    await activateMembership(order.user_id, order.tier, order.plan);
+    console.log('支付成功已开通:', outTradeNo, order.tier, order.plan, 'user', order.user_id);
+
+    res.json({ code: 'SUCCESS', message: '成功' });
+  } catch (e) {
+    console.error('pay notify error:', e);
+    // 返回非成功，微信会重试
+    res.status(500).json({ code: 'FAIL', message: '处理失败' });
+  }
+});
+
+// 主动查单：回调延迟或丢失时，前端可主动确认
+app.get("/api/pay/query/:orderNo", auth, async (req, res) => {
+  try {
+    const r = await db.query(
+      "SELECT status, tier, plan FROM orders WHERE out_trade_no=$1 AND user_id=$2",
+      [req.params.orderNo, req.user.id]
+    );
+    if (!r.rows[0]) return res.status(404).json({ error: '订单不存在' });
+    res.json({ status: r.rows[0].status, tier: r.rows[0].tier, plan: r.rows[0].plan });
+  } catch (e) {
+    res.status(500).json({ error: '查询失败' });
   }
 });
 
