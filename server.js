@@ -2596,12 +2596,13 @@ app.post("/api/pay/notify", async (req, res) => {
     const serial = req.headers['wechatpay-serial'];
     const body = req.body;
 
-    const ok = wxpay.verifySign({
-      timestamp, nonce, serial,
-           body: req.rawBody,
-       signature,
-      apiSecret: process.env.WX_API_V3_KEY
-    });
+        // 公钥模式：用微信支付公钥手动验签（SDK 的 verifySign 会去拉平台证书，不适用）
+    const crypto = require('crypto');
+    const message = `${timestamp}\n${nonce}\n${req.rawBody}\n`;
+    const verifier = crypto.createVerify('RSA-SHA256');
+    verifier.update(message);
+    const pubKey = fs.readFileSync(process.env.WX_PUB_KEY_PATH);
+    const ok = verifier.verify(pubKey, signature, 'base64');
     if (!ok) {
       console.error('支付回调验签失败, serial:', serial);
       return res.status(401).json({ code: 'FAIL', message: '验签失败' });
@@ -2609,7 +2610,8 @@ app.post("/api/pay/notify", async (req, res) => {
 
     // ② 解密回调内容
     const { ciphertext, associated_data, nonce: rNonce } = body.resource;
-    const data = JSON.parse(wxpay.decipher_gcm(ciphertext, associated_data, rNonce, process.env.WX_API_V3_KEY));
+        const _dec = wxpay.decipher_gcm(ciphertext, associated_data, rNonce, process.env.WX_API_V3_KEY);
+    const data = typeof _dec === 'string' ? JSON.parse(_dec) : _dec;
 
     if (data.trade_state !== 'SUCCESS') {
       console.log('回调非成功态:', data.trade_state, data.out_trade_no);
