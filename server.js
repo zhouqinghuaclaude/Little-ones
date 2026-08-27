@@ -11,7 +11,16 @@ const WxPay = require('wechatpay-node-v3');
 const fs = require('fs');
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '20mb' }));
+app.use(express.json({
+  limit: '20mb',
+  verify: (req, res, buf) => {
+    // 支付回调验签需要原始报文，这里存一份
+    if (req.originalUrl === '/api/pay/notify') {
+      req.rawBody = buf.toString('utf8');
+    }
+  }
+}));
+
 app.use(express.static("public"));
 
 const pgTypes = require('pg').types;
@@ -2586,8 +2595,8 @@ app.post("/api/pay/notify", async (req, res) => {
 
     const ok = wxpay.verifySign({
       timestamp, nonce, serial,
-      body: JSON.stringify(body),
-      signature,
+           body: req.rawBody,
+       signature,
       apiSecret: process.env.WX_API_V3_KEY
     });
     if (!ok) {
