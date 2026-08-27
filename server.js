@@ -1804,6 +1804,19 @@ async function initDB() {
       content TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT NOW()
     );
+CREATE TABLE IF NOT EXISTS orders (
+  id SERIAL PRIMARY KEY,
+  out_trade_no VARCHAR(64) UNIQUE NOT NULL,
+  user_id INTEGER NOT NULL,
+  tier VARCHAR(20) NOT NULL,
+  plan VARCHAR(10) NOT NULL,
+  amount INTEGER NOT NULL,
+  status VARCHAR(20) DEFAULT 'pending',
+  transaction_id VARCHAR(64),
+  paid_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+    
     CREATE INDEX IF NOT EXISTS idx_messages_kid ON messages(kid_id, created_at);
     ALTER TABLE messages ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id);
     CREATE INDEX IF NOT EXISTS idx_messages_user ON messages(user_id, created_at);
@@ -2425,23 +2438,50 @@ app.delete("/api/photos/:id", auth, async (req, res) => {
 const PHOTO_QUOTA_BY_TIER = { free: 1, vip: 5, svip: 10, dvip: 20 };
 
 // 开通/更新会员 + 设定照片额度
+// 各档位日价（元），用于跨档升级时的公平折算
+const TIER_DAILY_PRICE = { vip: 29.99 / 30, svip: 39.99 / 30, dvip: 99.99 / 30 };
+
 async function activateMembership(userId, tier, planType) {
   // tier: 'vip'|'svip'|'dvip'  planType: 'month'|'year'
   const now = new Date();
   const days = planType === 'year' ? 365 : 30;
-  const expiry = new Date(now.getTime() + days * 86400000);
+
+  const cur = await db.query("SELECT membership_type, membership_expiry FROM users WHERE id=$1", [userId]);
+  const u = cur.rows[0] || {};
+  const oldTier = u.membership_type;
+  const oldExpiry = u.membership_expiry ? new Date(u.membership_expiry) : null;
+  const stillValid = oldTier && oldTier !== 'free' && oldExpiry && oldExpiry > now;
+
+  let base = now;      // 新周期的起算点
+  let carryDays = 0;   // 跨档折算带过来的天数
+
+  if (stillValid) {
+    if (oldTier === tier) {
+      // 同档续费：直接从原到期日往后叠加，一天不损失
+      base = oldExpiry;
+    } else {
+      // 跨档：把旧档剩余价值按新档日价折算成天数
+      const leftDays = (oldExpiry - now) / 86400000;
+      const oldDaily = TIER_DAILY_PRICE[oldTier] || 0;
+      const newDaily = TIER_DAILY_PRICE[tier] || 1;
+      carryDays = Math.floor((leftDays * oldDaily) / newDaily);
+    }
+  }
+
+  const expiry = new Date(base.getTime() + (days + carryDays) * 86400000);
 
   const monthlyQuota = PHOTO_QUOTA_BY_TIER[tier] || 1;
   // 月卡=月额度；年卡=月额度×12，一次性给
   const total = planType === 'year' ? monthlyQuota * 12 : monthlyQuota;
-
   await db.query(
     `UPDATE users SET membership_type=$1, membership_expiry=$2,
      photo_quota_total=$3, photo_quota_used=0, photo_quota_reset_at=$4
      WHERE id=$5`,
     [tier, expiry, total, expiry, userId]
   );
-  return { tier, expiry, total };
+  // 开通/续费即发放当期芽豆（否则用户要等到下月1号cron才有）
+  await grantMembershipSprouts(userId, tier);
+  return { tier, expiry, total, carryDays };
 }
 
 // 临时开通接口（测试用，上线前删除或加严格权限）
