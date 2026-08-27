@@ -2569,12 +2569,14 @@ app.post("/api/pay/create", auth, async (req, res) => {
       payer: { openid: openid }
     });
 
-    if (!params || !params.paySign) {
+       // SDK 把支付参数包在 data 里返回
+    const payParams = (params && params.data) ? params.data : params;
+    if (!payParams || !payParams.paySign) {
       console.error('下单失败:', JSON.stringify(params));
       await db.query("UPDATE orders SET status='failed' WHERE out_trade_no=$1", [outTradeNo]);
       return res.status(400).json({ error: '下单失败，请稍后重试' });
     }
-    res.json({ ok: true, out_trade_no: outTradeNo, pay: params });
+    res.json({ ok: true, out_trade_no: outTradeNo, pay: payParams });
   } catch (e) {
     console.error('pay create error:', e);
     res.status(500).json({ error: '下单失败，请稍后重试' });
