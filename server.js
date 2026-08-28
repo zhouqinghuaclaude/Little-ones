@@ -2515,7 +2515,7 @@ app.post("/api/dev/activate", auth, async (req, res) => {
 // ===== 微信支付 =====
 // 价目表：金额单位为「分」，切勿写成元
 const PRICE_TABLE = {
-  vip:  { month: 1,  year: 29999 },
+  vip:  { month: 2999,  year: 29999 },
   svip: { month: 3999,  year: 39999 },
   dvip: { month: 9999,  year: 99999 }
 };
