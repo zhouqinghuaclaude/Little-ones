@@ -1417,6 +1417,29 @@ const birthdayStr = `${_bd.getFullYear()}-${String(_bd.getMonth()+1).padStart(2,
   system += ` 你的生日是${birthdayStr}。当${kid.parent_role}问你生日时，你知道自己的生日。`;
 }
 
+  // 兄弟姐妹：知道对方存在（不编造对方行为），生日时会记得
+const _sib = await db.query(
+  "SELECT name, gender, age, birthday FROM kids WHERE user_id=$1 AND id<>$2 LIMIT 1",
+  [req.user.id, kid.id]
+);
+if (_sib.rows[0]) {
+  const s = _sib.rows[0];
+  const sName = s.name;
+  const sWord = s.gender === 'girl' ? '妹妹或姐姐' : '弟弟或哥哥';
+  const older = (s.age || 0) > (kid.age || 0);
+  const rel = s.gender === 'girl' ? (older ? '姐姐' : '妹妹') : (older ? '哥哥' : '弟弟');
+
+  system += ` 你有一个${rel}叫${sName}，今年${s.age}岁。你知道${rel}的存在，可以自然地提到${rel}的名字。但你不知道${rel}今天做了什么、说了什么——你们各自和${kid.parent_role}相处。如果${kid.parent_role}问起${rel}的近况，就说你也想知道，让${kid.parent_role}讲给你听。`;
+
+  // 今天是兄弟姐妹的生日
+  if (s.birthday) {
+    const _sbd = String(s.birthday).slice(5, 10);
+    const _today = bjDateStr().slice(5, 10);
+    if (_sbd === _today) {
+      system += ` 【重要】今天是${rel}${sName}的生日。你会记得这件事，主动跟${kid.parent_role}提起，说些祝福${rel}的话，也可以问${kid.parent_role}要不要一起给${rel}准备点什么。用你这个年纪的方式说，一两句就好。`;
+    }
+  }
+}
 
 const now = new Date();
 const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
