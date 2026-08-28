@@ -2253,7 +2253,7 @@ const SCENE_MAP = {
 };
 const EVENT_MAP = {
   daily: '', birthday: '正在过生日，旁边有生日蛋糕和气球',
-  firstday: '第一天上学，背着小书包', bike: '正在学骑自行车',
+   bike: '正在学骑自行车',
   football: '正在踢足球', painting: '正在画画', book: '正在读绘本',
   kite: '正在放风筝'
 };
@@ -2265,7 +2265,7 @@ const OUTFIT_MAP = {
 app.post("/api/face/generate-scene", auth, async (req, res) => {
   try {
     const { kid_id, scene, event, outfit, scene_other, event_other, outfit_other,
-            with_parent, parent_image, use_sprouts, birthday_gift } = req.body;
+                        with_parent, parent_image, use_sprouts, birthday_gift, with_sibling } = req.body;
     if (!kid_id) return res.status(400).json({ error: "缺少孩子信息" });
 
     const kidRes = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [kid_id, req.user.id]);
@@ -2276,7 +2276,18 @@ app.post("/api/face/generate-scene", auth, async (req, res) => {
 
     // 合影必须上传爸妈照片
     if (with_parent && !parent_image) return res.status(400).json({ error: "合影需要上传你的照片", need_parent_image: true });
-
+    if (with_parent && !parent_image) return res.status(400).json({ error: "合影需要上传你的照片", need_parent_image: true });
+    // 兄弟姐妹合影：取另一个孩子的基准照
+    let _sibKid = null;
+    if (with_sibling) {
+      const _sr = await db.query(
+        "SELECT name, gender, age, base_photo_key FROM kids WHERE user_id=$1 AND id<>$2 AND base_photo_key IS NOT NULL LIMIT 1",
+        [req.user.id, kid_id]
+      );
+      _sibKid = _sr.rows[0];
+      if (!_sibKid) return res.status(400).json({ error: "需要先给另一个孩子生成形象哦" });
+    }
+    
     // 内容安全：检查用户自定义文字
     const _customText = [scene_other, event_other, outfit_other].filter(Boolean).join(' ');
     if (_customText) {
@@ -2294,7 +2305,8 @@ app.post("/api/face/generate-scene", auth, async (req, res) => {
     // 生日照会员免费：VIP及以上，每年生日单人照免费1张
     const _thisYear = new Date().getFullYear();
     const _isPaidMember = quota.membership_type && quota.membership_type !== 'free';
-    const _birthdayFree = birthday_gift && !with_parent && _isPaidMember && kid.birthday_photo_year !== _thisYear;
+    
+        const _birthdayFree = birthday_gift && !with_parent && !with_sibling && _isPaidMember && kid.birthday_photo_year !== _thisYear;
     if (_birthdayFree) {
       payMethod = 'birthday_gift';
     } else if (quota.remaining > 0) {
@@ -2323,7 +2335,23 @@ app.post("/api/face/generate-scene", auth, async (req, res) => {
     const baseBuffer = await downloadImage(await getCosSignedUrl(kid.base_photo_key, 600));
     const baseB64 = `data:image/png;base64,${baseBuffer.toString('base64')}`;
 
-    if (with_parent) {
+        if (with_sibling && with_parent) {
+      // 全家福：孩子 + 兄弟姐妹 + 父母
+      const parentDataUrl = `data:image/jpeg;base64,${parent_image}`;
+      const parentWord = kid.parent_role === 'dad' || kid.parent_role === '爸爸' ? '成年男性' : '成年女性';
+      const sibBuf = await downloadImage(await getCosSignedUrl(_sibKid.base_photo_key, 600));
+      const sibB64 = `data:image/png;base64,${sibBuf.toString('base64')}`;
+      const sibWord = _sibKid.gender === 'girl' ? '女孩' : '男孩';
+      prompt = `生成一张全家福照片。参考图1中的${age}岁${genderWord}、参考图2中的${_sibKid.age}岁${sibWord}是一对兄弟姐妹，参考图3中的${parentWord}是他们的家长，三人一起${sceneStr}，${eventStr}，${outfitStr}，${seasonStr}，温馨的全家合影，严格保留参考图1和参考图2两个孩子各自的面部特征，两人面容必须与各自参考图一致、不可混淆，写实摄影风格，真实皮肤质感和光影，高清细节，自然温暖的氛围`.replace(/，，+/g, '，');
+      contentArr = [{ image: baseB64 }, { image: sibB64 }, { image: parentDataUrl }, { text: prompt }];
+    } else if (with_sibling) {
+      // 兄弟姐妹合影
+      const sibBuf = await downloadImage(await getCosSignedUrl(_sibKid.base_photo_key, 600));
+      const sibB64 = `data:image/png;base64,${sibBuf.toString('base64')}`;
+      const sibWord = _sibKid.gender === 'girl' ? '女孩' : '男孩';
+      prompt = `参考图1中的孩子（${age}岁${genderWord}）和参考图2中的孩子（${_sibKid.age}岁${sibWord}），是一对兄弟姐妹，一起${sceneStr}，${eventStr}，${outfitStr}，${seasonStr}，温馨的合影，严格保留参考图1和参考图2各自的面部特征，两人面容必须与各自参考图一致、不可混淆或互换，写实摄影风格，真实皮肤质感和光影，儿童写真照片，高清细节，自然温暖的氛围`.replace(/，，+/g, '，');
+      contentArr = [{ image: baseB64 }, { image: sibB64 }, { text: prompt }];
+    } else if (with_parent) {
       const parentDataUrl = `data:image/jpeg;base64,${parent_image}`;
       const parentWord = kid.parent_role === 'dad' || kid.parent_role === '爸爸' ? '成年男性' : '成年女性';
       prompt = `参考图1中的孩子（${age}岁${genderWord}）和参考图2中的${parentWord}，一起${sceneStr}，${eventStr}，${outfitStr}，${seasonStr}，温馨的合影，保持参考图1孩子的面部特征一致，写实摄影风格，真实皮肤质感和光影，高清细节，自然温暖的氛围`.replace(/，，+/g, '，');
