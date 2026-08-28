@@ -2329,23 +2329,24 @@ app.post("/api/face/generate-scene", auth, async (req, res) => {
     const outfitStr = outfit === 'other' ? (outfit_other ? `穿着${outfit_other}` : '') : (outfit ? (OUTFIT_MAP[outfit] || '') : '');
 
     let prompt, negativePrompt, contentArr;
-    negativePrompt = `成年人当主角,老态,皱纹,多张脸,重复面孔,变形,多余手指,模糊,低画质,过度曝光,恐怖谷效应,文字水印`;
+       negativePrompt = `成年人当主角,老态,皱纹,多张脸,重复面孔,变形,多余手指,多余人物,四个人,模糊,低画质,过度曝光,恐怖谷效应,文字水印`;
 
     // 从COS下载基准照转base64
     const baseBuffer = await downloadImage(await getCosSignedUrl(kid.base_photo_key, 600));
     const baseB64 = `data:image/png;base64,${baseBuffer.toString('base64')}`;
 
-        if (with_sibling && with_parent) {
+         if (with_sibling && with_parent) {
       // 全家福：孩子 + 兄弟姐妹 + 父母
       const parentDataUrl = `data:image/jpeg;base64,${parent_image}`;
       const parentWord = kid.parent_role === 'dad' || kid.parent_role === '爸爸' ? '成年男性' : '成年女性';
       const sibBuf = await downloadImage(await getCosSignedUrl(_sibKid.base_photo_key, 600));
       const sibB64 = `data:image/png;base64,${sibBuf.toString('base64')}`;
       const sibWord = _sibKid.gender === 'girl' ? '女孩' : '男孩';
-      prompt = `生成一张全家福照片。参考图1中的${age}岁${genderWord}、参考图2中的${_sibKid.age}岁${sibWord}是一对兄弟姐妹，参考图3中的${parentWord}是他们的家长，三人一起${sceneStr}，${eventStr}，${outfitStr}，${seasonStr}，温馨的全家合影，严格保留参考图1和参考图2两个孩子各自的面部特征，两人面容必须与各自参考图一致、不可混淆，写实摄影风格，真实皮肤质感和光影，高清细节，自然温暖的氛围`.replace(/，，+/g, '，');
+      prompt = `参考图1中的孩子（${age}岁${genderWord}）、参考图2中的孩子（${_sibKid.age}岁${sibWord}）和参考图3中的${parentWord}，三人一起${sceneStr}，${eventStr}，${outfitStr}，${seasonStr}，温馨的全家合影。画面中只有这三个人，不要出现其他人。参考图3的人物在画面中呈现为${parentWord}。严格保留参考图1和参考图2两个孩子各自的面部特征，两人面容必须与各自参考图一致、不可混淆。写实摄影风格，真实皮肤质感和光影，高清细节，自然温暖的氛围`.replace(/，，+/g, '，');
       contentArr = [{ image: baseB64 }, { image: sibB64 }, { image: parentDataUrl }, { text: prompt }];
-    } else if (with_sibling) {
-      // 兄弟姐妹合影
+    } else if (with_sibling) {  
+     
+          // 兄弟姐妹合影
       const sibBuf = await downloadImage(await getCosSignedUrl(_sibKid.base_photo_key, 600));
       const sibB64 = `data:image/png;base64,${sibBuf.toString('base64')}`;
       const sibWord = _sibKid.gender === 'girl' ? '女孩' : '男孩';
