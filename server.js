@@ -436,7 +436,10 @@ const ZODIAC_TRAITS = {
 };
 
 app.get("/api/kids", auth, async (req, res) => {
+  const _t0 = Date.now();
   const r = await db.query("SELECT * FROM kids WHERE user_id = $1 ORDER BY created_at", [req.user.id]);
+  const _t1 = Date.now();
+ 
   const today = new Date();
   const kids = await Promise.all(r.rows.map(async kid => {
     const createdAt = new Date(kid.created_at);
@@ -501,7 +504,8 @@ return {
 };
 
 
-  }));
+    }));
+  console.log('[KIDS] SQL', _t1 - _t0, 'ms, 处理', Date.now() - _t1, 'ms, 孩子数', kids.length);
   res.json(kids);
 });
 
