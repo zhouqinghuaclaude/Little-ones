@@ -3027,4 +3027,4 @@ cron.schedule('0 0 1 * *', async () => {
 });
 
 const PORT = process.env.PORT || 3000;
-initDB().then(() => app.listen(PORT, () => console.log("Server running on port " + PORT)));
+initDB().then(() => app.listen(PORT, '127.0.0.1', () => console.log("Server running on port " + PORT)));
