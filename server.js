@@ -483,11 +483,11 @@ const isBirthday = kid.birthday &&
 
 let avatarPhotoUrl = null;
 if (kid.avatar_photo_key) {
-  try { avatarPhotoUrl = await getCosSignedUrl(kid.avatar_photo_key, 604800); } catch (e) { avatarPhotoUrl = null; }
+   try { avatarPhotoUrl = await getCosSignedUrl(kid.avatar_photo_key, 604800, 200); } catch (e) { avatarPhotoUrl = null; }
 }
 let basePhotoUrl = null;
 if (kid.base_photo_key) {
-  try { basePhotoUrl = await getCosSignedUrl(kid.base_photo_key, 604800); } catch (e) { basePhotoUrl = null; }
+   try { basePhotoUrl = await getCosSignedUrl(kid.base_photo_key, 604800, 400); } catch (e) { basePhotoUrl = null; }
 }
     
 return {
@@ -2431,7 +2431,9 @@ app.get("/api/kids/:id/photos", auth, async (req, res) => {
     // 为每张生成签名URL
     const photos = await Promise.all(r.rows.map(async (p) => ({
       id: p.id,
-      url: await getCosSignedUrl(p.cos_key, 604800),
+           url: await getCosSignedUrl(p.cos_key, 604800, 400),
+      url_full: await getCosSignedUrl(p.cos_key, 604800),
+      
       cos_key: p.cos_key,
       type: p.type,
       theme: p.theme,
