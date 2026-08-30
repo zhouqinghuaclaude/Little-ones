@@ -2013,21 +2013,24 @@ function uploadToCos(key, buffer) {
 }
 
 // 生成COS对象的签名访问URL（私有桶，临时链接）
-function getCosSignedUrl(key, expires = 604800) {
+
+function getCosSignedUrl(key, expires = 604800, thumb = null) {
   return new Promise((resolve, reject) => {
-    cosClient.getObjectUrl({
+    const opts = {
       Bucket: process.env.COS_BUCKET,
       Region: process.env.COS_REGION,
       Key: key,
       Sign: true,
       Expires: expires,
-    }, (err, data) => {
+    };
+    // 缩略图：CI 参数必须参与签名，不能事后拼接
+    if (thumb) opts.Query = { ['imageMogr2/thumbnail/' + thumb + 'x']: '' };
+    cosClient.getObjectUrl(opts, (err, data) => {
       if (err) reject(err);
       else resolve(data.Url);
     });
   });
 }
-
 app.post("/api/face/generate", auth, async (req, res) => {
   try {
    
