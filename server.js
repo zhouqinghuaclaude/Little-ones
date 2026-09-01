@@ -880,6 +880,20 @@ app.post("/api/complaints", auth, async (req, res) => {
   res.json({ ok: true });
 });
 
+// 用户查看自己的投诉记录与处理结论
+app.get("/api/complaints/mine", auth, async (req, res) => {
+  try {
+    const r = await db.query(
+      "SELECT id, category, content, status, process_note, created_at, processed_at FROM complaints WHERE user_id=$1 ORDER BY created_at DESC LIMIT 50",
+      [req.user.id]
+    );
+    res.json(r.rows);
+  } catch (e) {
+    console.error('my complaints error:', e);
+    res.status(500).json({ error: "查询失败" });
+  }
+});
+
 app.delete("/api/kids/:id", auth, async (req, res) => {
   await db.query("DELETE FROM kids WHERE id = $1 AND user_id = $2", [req.params.id, req.user.id]);
   res.json({ ok: true });
