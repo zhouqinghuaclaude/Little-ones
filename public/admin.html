@@ -74,7 +74,7 @@
       } catch(e) { content.innerHTML = e.message; }
     }
  async function processComplaint(id) {
- const note = prompt('处理备注(可选):') || '';
+       const note = prompt('处理结论（将展示给用户，请用对外口径填写）:') || '';
  try {
  await fetch('/api/admin/complaints/' + id + '/process', { method: 'POST', headers: { 'x-admin-key': ADMIN_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ note }) });
  loadCurrent();
@@ -91,7 +91,7 @@
       const choice = prompt('对用户#' + userId + ' 执行处置:\n1=警示\n2=限制功能\n3=暂停账号\n4=恢复正常\n请输入数字:');
       const action = map[choice];
       if (!action) return;
-            const note = prompt('处理结论（将展示给用户，请用对外口径填写）:') || '';
+             const reason = prompt('处置原因(可选):') || '';     
       try {
         await fetch('/api/admin/users/' + userId + '/action', { method: 'POST', headers: { 'x-admin-key': ADMIN_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ action, reason }) });
       } catch(e) { alert('处置失败'); return; }
