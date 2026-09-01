@@ -2829,11 +2829,13 @@ app.post("/api/admin/complaints/:id/process", adminAuth, async (req, res) => {
   res.json({ ok: true });
 });
 app.post("/api/admin/users/:id/action", adminAuth, async (req, res) => {
+  const uid = parseInt(req.params.id);
+  if (!uid) return res.status(400).json({ error: "用户ID无效" });
   const { action, reason } = req.body;
   const valid = ['normal', 'warned', 'limited', 'suspended'];
   if (!valid.includes(action)) return res.status(400).json({ error: "invalid action" });
-  await db.query("UPDATE users SET status=$1 WHERE id=$2", [action, req.params.id]);
-  await db.query("INSERT INTO user_actions (user_id, action, reason) VALUES ($1, $2, $3)", [req.params.id, action, reason || '']);
+  await db.query("UPDATE users SET status=$1 WHERE id=$2", [action, uid]);
+  await db.query("INSERT INTO user_actions (user_id, action, reason) VALUES ($1, $2, $3)", [uid, action, reason || '']);
   res.json({ ok: true });
 });
 app.get("/api/admin/actions", adminAuth, async (req, res) => {
