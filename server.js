@@ -181,7 +181,7 @@ app.post("/api/login", async (req, res) => {
       return res.status(401).json({ error: "Incorrect email or password" });
     }
     if (user.status === 'suspended') {
-      return res.status(403).json({ error: "账号已被暂停，如有疑问请联系客服" });
+            return res.status(403).json({ error: "账号已被暂停。如有异议，可通过 info@budpei.com 提出申诉" });
     }
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "30d" });
     // 每日登录+5芽豆(每天只加一次)
@@ -1056,7 +1056,7 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
 
   const uStatus = await db.query("SELECT status FROM users WHERE id=$1", [req.user.id]);
   if (uStatus.rows[0] && uStatus.rows[0].status === 'limited') {
-    return res.status(403).json({ error: "账号功能已被限制，暂时无法发送消息，如有疑问请联系客服" });
+        return res.status(403).json({ error: "账号功能已被限制，暂时无法发送消息。如有异议，可在「我的-投诉与举报」中提出申诉" });
   }
   const kidResult = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
   const kid = kidResult.rows[0];
@@ -2843,6 +2843,28 @@ app.get("/api/admin/actions", adminAuth, async (req, res) => {
   res.json(r.rows);
 });
 
+// 账号处置状态查询：供前端展示处置通知与申诉入口
+app.get("/api/account/status", auth, async (req, res) => {
+  try {
+    const u = await db.query("SELECT status FROM users WHERE id=$1", [req.user.id]);
+    const status = (u.rows[0] && u.rows[0].status) || 'normal';
+    if (status === 'normal') return res.json({ status: 'normal' });
+    const a = await db.query(
+      "SELECT id, action, reason, created_at FROM user_actions WHERE user_id=$1 ORDER BY created_at DESC LIMIT 1",
+      [req.user.id]
+    );
+    const act = a.rows[0] || {};
+    res.json({
+      status: status,
+      action_id: act.id || null,
+      reason: act.reason || '',
+      created_at: act.created_at || null
+    });
+  } catch (e) {
+    console.error('account status error:', e);
+    res.json({ status: 'normal' });
+  }
+});
 app.post("/api/account/delete", auth, async (req, res) => {
   const uid = req.user.id;
 
