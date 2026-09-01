@@ -64,7 +64,7 @@
  content.innerHTML = rows.map(c => `<div class="item"><div class="meta">#${c.id} · ${c.email||'用户'+c.user_id} · ${new Date(c.created_at).toLocaleString()} · ${c.status==='processed'?'已处理':'待处理'}</div><div><b>${esc(c.category)}</b>:${esc(c.content)}</div>${c.process_note?`<div class="meta">处理备注:${esc(c.process_note)}</div>`:''}${c.status!=='processed'?`<button onclick="processComplaint(${c.id})">标记已处理</button>`:''}</div>`).join('') || '暂无投诉举报';
  } else {
  const rows = await api('/api/admin/' + currentTab);
- content.innerHTML = rows.map(m => `<div class="item"><div class="meta">${m.email||'用户'+m.user_id} · 孩子#${m.kid_id} · ${new Date(m.created_at).toLocaleString()} ${m.risk_flag?`<span class="flag">${m.risk_flag}</span>`:''}</div><div>${m.role==='user'?'家长':'孩子'}:${esc(m.content)}</div><button onclick="handleAction(${m.user_id})">处置用户</button></div>`).join('') || '暂无数据';
+        content.innerHTML = rows.map(m => `<div class="item" style="${m.reviewed_at?'opacity:0.45':''}"><div class="meta">${m.email||'用户'+m.user_id} · 孩子#${m.kid_id} · ${new Date(m.created_at).toLocaleString()} ${m.risk_flag?`<span class="flag">${m.risk_flag}</span>`:''}${m.reviewed_at?' · ✓已复核':''}</div><div>${m.role==='user'?'家长':'孩子'}:${esc(m.content)}</div>${m.reviewed_at?'':`<button onclick="reviewMsg(${m.id})">标记已复核</button> <button onclick="handleAction(${m.user_id})">处置用户</button>`}</div>`).join('') || '暂无数据';
  }
  } catch(e) { content.innerHTML = e.message; }
  }
@@ -75,6 +75,12 @@
  loadCurrent();
  } catch(e) { alert('处理失败'); }
  }
+     async function reviewMsg(id) {
+      try {
+        await fetch('/api/admin/messages/' + id + '/review', { method: 'POST', headers: { 'x-admin-key': ADMIN_KEY } });
+        loadCurrent();
+      } catch(e) { alert('操作失败'); }
+    }
  async function handleAction(userId) {
  const map = { '1':'warned', '2':'limited', '3':'suspended', '4':'normal' };
  const choice = prompt('对用户#' + userId + ' 执行处置:\n1=警示\n2=限制功能\n3=暂停账号\n4=恢复正常\n请输入数字:');
