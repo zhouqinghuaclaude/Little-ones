@@ -1857,6 +1857,7 @@ CREATE TABLE IF NOT EXISTS orders (
     ALTER TABLE messages ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id);
     CREATE INDEX IF NOT EXISTS idx_messages_user ON messages(user_id, created_at);
     ALTER TABLE messages ADD COLUMN IF NOT EXISTS risk_flag VARCHAR(20) DEFAULT NULL;
+   ALTER TABLE messages ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMP DEFAULT NULL;
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS birthday DATE;
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS personality VARCHAR(20) DEFAULT 'lively';
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_chat_at TIMESTAMP;
@@ -2810,15 +2811,18 @@ app.get("/api/admin/flagged", adminAuth, async (req, res) => {
 });
 
 app.get("/api/admin/sample", adminAuth, async (req, res) => {
-  const r = await db.query("SELECT m.id, m.user_id, m.kid_id, m.role, m.content, m.risk_flag, m.created_at, u.email FROM messages m LEFT JOIN users u ON m.user_id=u.id ORDER BY RANDOM() LIMIT 50");
+  // 每日随机抽取20条人工复核；未复核的排在前面
+  const r = await db.query("SELECT m.id, m.user_id, m.kid_id, m.role, m.content, m.risk_flag, m.reviewed_at, m.created_at, u.email FROM messages m LEFT JOIN users u ON m.user_id=u.id ORDER BY (m.reviewed_at IS NOT NULL), RANDOM() LIMIT 20");
   res.json(r.rows);
 });
-
+app.post("/api/admin/messages/:id/review", adminAuth, async (req, res) => {
+  await db.query("UPDATE messages SET reviewed_at=NOW() WHERE id=$1", [req.params.id]);
+  res.json({ ok: true });
+});
 app.get("/api/admin/complaints", adminAuth, async (req, res) => {
   const r = await db.query("SELECT c.*, u.email FROM complaints c LEFT JOIN users u ON c.user_id=u.id ORDER BY c.created_at DESC LIMIT 200");
   res.json(r.rows);
 });
-
 app.post("/api/admin/complaints/:id/process", adminAuth, async (req, res) => {
   const { note } = req.body;
   await db.query("UPDATE complaints SET status='processed', processed_at=NOW(), process_note=$1 WHERE id=$2", [note || '', req.params.id]);
