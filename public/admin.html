@@ -86,7 +86,7 @@
         loadCurrent();
       } catch(e) { alert('操作失败'); }
     }
-    async function handleAction(userId, msgId) {
+        async function handleAction(userId, msgId) {
       const map = { '1':'warned', '2':'limited', '3':'suspended', '4':'normal' };
       const choice = prompt('对用户#' + userId + ' 执行处置:\n1=警示\n2=限制功能\n3=暂停账号\n4=恢复正常\n请输入数字:');
       const action = map[choice];
@@ -94,13 +94,15 @@
       const reason = prompt('处置原因(可选):') || '';
       try {
         await fetch('/api/admin/users/' + userId + '/action', { method: 'POST', headers: { 'x-admin-key': ADMIN_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ action, reason }) });
-        // 来自抽样页时，一并标记该条消息已复核
-        if (msgId) {
+      } catch(e) { alert('处置失败'); return; }
+      // 标记已复核失败不影响处置结果
+      if (msgId) {
+        try {
           await fetch('/api/admin/messages/' + msgId + '/review', { method: 'POST', headers: { 'x-admin-key': ADMIN_KEY } });
-        }
-        alert('处置成功');
-        loadCurrent();
-      } catch(e) { alert('处置失败'); }
+        } catch(e) {}
+      }
+      alert('处置成功');
+      loadCurrent();
     }
 </script>
 </body>
