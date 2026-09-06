@@ -1595,7 +1595,7 @@ if (kid.age >= 3) {
   const _isDependent = DEPENDENCY_SIGNALS.some(w => _normMsg.includes(normalizeText(w)));
   const _lastB = kid.last_boundary_at ? new Date(kid.last_boundary_at).getTime() : 0;
 
-  if (_isDependent && (Date.now() - _lastB) >= 6 * 3600000) {
+    if (_isDependent) {
     let _bh;
    
         if (kid.age <= 6) {
