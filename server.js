@@ -2953,6 +2953,7 @@ app.post("/api/account/delete", auth, async (req, res) => {
     await client.query("BEGIN");
     await client.query("UPDATE complaints SET user_id=NULL WHERE user_id=$1", [uid]);
     await client.query("UPDATE user_actions SET user_id=NULL WHERE user_id=$1", [uid]);
+    await client.query("DELETE FROM photos WHERE user_id=$1", [uid]);
     await client.query("DELETE FROM messages WHERE user_id=$1", [uid]);
     await client.query("DELETE FROM users WHERE id=$1", [uid]);
     await client.query("COMMIT");
