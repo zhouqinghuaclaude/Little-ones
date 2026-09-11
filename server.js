@@ -295,7 +295,8 @@ app.post("/api/wx-login", async (req, res) => {
       await db.query("UPDATE users SET sprouts_balance = sprouts_balance + 5, last_login_date = $1 WHERE id = $2", [today, user.id]);
     }
 
-    res.json({ token, user: { id: user.id, name: user.name, openid: user.openid } });
+       res.json({ token, user: { id: user.id, name: user.name, openid: user.openid, phone: user.phone } });
+
   } catch (e) {
     console.error("wx-login error:", e);
     res.status(500).json({ error: "微信登录出错" });
