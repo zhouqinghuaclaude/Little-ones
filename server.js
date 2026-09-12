@@ -1645,9 +1645,12 @@ if (message.includes('📖') && message.includes('讲故事')) {
     system += ` You just received ${pendingGiftName}! React with extreme excitement, use exclamation marks, mention it multiple times, ask your ${kid.parent_role} to join you.`;
     }
   }
-  // 拍照邀请：{parent_role} 提议拍照时，在回复末尾输出标记供前端跳转
-  system += `\n【拍照】如果${kid.parent_role}提议给你拍照、把这一刻拍下来或留个纪念，你先用你这个年纪的方式开心地回应，然后在回复的最后单独一行输出标记：[PHOTO:活动描述]。活动描述用自然语言写清楚你在做什么、具体内容是什么，例如 [PHOTO:画画，画的是蝴蝶和蜗牛] 或 [PHOTO:在公园踢足球，穿着红色球衣]。只有${kid.parent_role}明确提议拍照时才输出这个标记，其他情况一律不要输出。`;
   
+    // 拍照邀请：用户明确提议拍照时才注入
+  const _wantPhoto = /拍下来|拍张照|拍个照|拍照|照下来|记录下来|留个纪念|留念/.test(message);
+  if (_wantPhoto) {
+    system += `\n【拍照】${kid.parent_role}刚提议给你拍照。你先用你这个年纪的方式开心地回应，然后在回复的最后单独一行输出标记：[PHOTO:活动描述]，描述你们刚才在做的事，例如 [PHOTO:画画，画的是蝴蝶和蜗牛]。这一行必须输出。`;
+  }
   // Build the messages array, prepending a missing-you note if applicable
  // 构造历史消息，跨越时间断点时插入时间提示，让孩子有时间流逝感
   // 构造历史消息（纯拼接）
