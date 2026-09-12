@@ -1641,10 +1641,13 @@ if (message.includes('📖') && message.includes('讲故事')) {
     } else if (pendingGiftLevel === "medium") {
       system += ` You just received ${pendingGiftName} as a present! React with great excitement, mention wanting to use it together with your ${kid.parent_role}.`;
     } else if (pendingGiftLevel === "premium") {
-      system += ` You just received ${pendingGiftName}! React with extreme excitement, use exclamation marks, mention it multiple times, ask your ${kid.parent_role} to join you.`;
+     
+    system += ` You just received ${pendingGiftName}! React with extreme excitement, use exclamation marks, mention it multiple times, ask your ${kid.parent_role} to join you.`;
     }
   }
-
+  // 拍照邀请：{parent_role} 提议拍照时，在回复末尾输出标记供前端跳转
+  system += `\n【拍照】如果${kid.parent_role}提议给你拍照、把这一刻拍下来或留个纪念，你先用你这个年纪的方式开心地回应，然后在回复的最后单独一行输出标记：[PHOTO:活动描述]。活动描述用自然语言写清楚你在做什么、具体内容是什么，例如 [PHOTO:画画，画的是蝴蝶和蜗牛] 或 [PHOTO:在公园踢足球，穿着红色球衣]。只有${kid.parent_role}明确提议拍照时才输出这个标记，其他情况一律不要输出。`;
+  
   // Build the messages array, prepending a missing-you note if applicable
  // 构造历史消息，跨越时间断点时插入时间提示，让孩子有时间流逝感
   // 构造历史消息（纯拼接）
@@ -1669,7 +1672,16 @@ if (message.includes('📖') && message.includes('讲故事')) {
    
    
   
-  const reply = await callAI(chatMessages, system, kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 100); 
+   const _rawReply = await callAI(chatMessages, system, kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 100);
+  // 解析拍照标记，剥离后不入库、不展示
+  let photoInvite = null;
+  const _pm = _rawReply.match(/\[PHOTO:([^\]]+)\]/);
+  if (_pm) {
+    const _desc = _pm[1].trim().slice(0, 60);
+    // 模型生成的描述同样要过内容安全
+    if (_desc && !checkContent(_desc)) photoInvite = _desc;
+  }
+  const reply = _rawReply.replace(/\s*\[PHOTO:[^\]]+\]\s*/g, '').trim();
 
     await db.query("UPDATE kids SET pending_gift = NULL WHERE id = $1", [kid.id]);
 
@@ -1766,8 +1778,7 @@ if (kid.base_photo_key && kid.age >= 1 && totalCount === 1) { // 第一条消息
   }
 }
 
- res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: totalCount, storyPrompt: storyPrompt, songPrompt: songPrompt, activitySuggestion, levelUp, avatarPrompt, avatarUpdatePrompt, l6PaywallPrompt, sproutsLeftForChat });
-
+     res.json({ reply, id: saved.rows[0].id, bond_score: newBondScore, streak_days: newStreakDays, msgCount: totalCount, storyPrompt: storyPrompt, songPrompt: songPrompt, activitySuggestion, levelUp, avatarPrompt, avatarUpdatePrompt, l6PaywallPrompt, sproutsLeftForChat, photoInvite });
   } catch (e) {
    console.error('Chat error:', e.message, e.status);
  
