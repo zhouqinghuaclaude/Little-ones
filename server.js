@@ -1671,7 +1671,7 @@ if (message.includes('📖') && message.includes('讲故事')) {
   try {
    
    
-  
+    console.log('[PHOTO-DEBUG] system 末尾:', system.slice(-200));
    const _rawReply = await callAI(chatMessages, system, kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 100);
   // 解析拍照标记，剥离后不入库、不展示
   let photoInvite = null;
