@@ -1677,6 +1677,7 @@ if (message.includes('📖') && message.includes('讲故事')) {
   let photoInvite = null;
   const _pm = _rawReply.match(/\[PHOTO:([^\]]+)\]/);
   if (_pm) {
+       console.log('[PHOTO] 标记内容:', _pm[1]);
     const _desc = _pm[1].trim().slice(0, 60);
     // 模型生成的描述同样要过内容安全
     if (_desc && !checkContent(_desc)) photoInvite = _desc;
