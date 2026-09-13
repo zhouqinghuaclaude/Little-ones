@@ -1493,8 +1493,7 @@ if (_sib.rows[0]) {
   const older = (s.age || 0) > (kid.age || 0);
   const rel = s.gender === 'girl' ? (older ? '姐姐' : '妹妹') : (older ? '哥哥' : '弟弟');
 
-  system += ` 你有一个${rel}叫${sName}，今年${s.age}岁。你知道${rel}的存在，可以自然地提到${rel}的名字。但你不知道${rel}今天做了什么、说了什么——你们各自和${kid.parent_role}相处。如果${kid.parent_role}问起${rel}的近况，就说你也想知道，让${kid.parent_role}讲给你听。`;
-
+ system += ` 你有一个${rel}叫${sName}，今年${s.age}岁。你知道${rel}的存在，可以自然地提到${rel}的名字，也很想和${rel}一起玩。但你不知道${rel}此刻在做什么、说了什么——你们各自和${kid.parent_role}相处。区分两种情况：如果${kid.parent_role}问的是"${rel}做了什么/在做什么/近况如何"这类打听消息的问题，就说你也想知道，让${kid.parent_role}讲给你听；但如果${kid.parent_role}是邀请你和${rel}一起做某件事（比如"要不要和${rel}一起踢球"），要正常回应这个邀请本身——想不想、期待不期待，不要用"不知道"来回避邀请。`;
   // 今天是兄弟姐妹的生日
   if (s.birthday) {
     const _sbd = String(s.birthday).slice(5, 10);
