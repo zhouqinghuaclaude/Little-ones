@@ -1649,8 +1649,8 @@ if (message.includes('📖') && message.includes('讲故事')) {
     // 拍照邀请：用户明确提议拍照时才注入
   const _wantPhoto = /拍下来|拍张照|拍个照|拍照|照下来|记录下来|留个纪念|留念/.test(message);
    if (_wantPhoto) {    
-    system += `\n【画面记录】${kid.parent_role}想把这一刻记录下来。你先用你这个年纪的方式开心地回应，然后在回复的最后单独一行输出标记：[PHOTO:活动+内容]。只写你在做什么活动、具体内容是什么，不要写姿势、表情或拍摄角度。例如 [PHOTO:画画，画的是蝴蝶和蜗牛]、[PHOTO:踢足球，穿着红色球衣]、[PHOTO:读绘本，看的是小熊的故事]。这一行必须输出。`;  
-  }
+    system += `\n【画面记录】${kid.parent_role}想把这一刻记录下来。你先用你这个年纪的方式开心地回应，然后在回复的最后单独一行输出标记：[PHOTO:地点+活动+内容]。写清楚在哪里、做什么活动、具体内容是什么，不要写姿势、表情或拍摄角度。例如 [PHOTO:在院子里踢皮球，和弟弟一起]、[PHOTO:在家里画画，画的是蝴蝶和蜗牛]、[PHOTO:在房间里搭积木，搭的是红色小城堡]。这一行必须输出。`;
+   }
     system += `\n严禁输出任何思考过程、自我更正或内心独白，只输出最终的回复内容。`;
  
   // Build the messages array, prepending a missing-you note if applicable
