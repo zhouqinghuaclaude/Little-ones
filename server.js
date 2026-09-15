@@ -831,9 +831,12 @@ app.post("/api/kids/:id/context-check", auth, async (req, res) => {
  
  const result = JSON.parse(check.content[0].text.trim());
  res.json(result);
+ 
  } catch(e) {
- res.json({ type: 'none' });
- }
+    console.error('[context-check] error:', e.message);
+    res.json({ type: 'none' });
+}
+
 });
 
 app.post("/api/kids/:id/wishes", auth, async (req, res) => {
