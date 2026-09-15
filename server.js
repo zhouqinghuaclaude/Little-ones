@@ -829,8 +829,11 @@ app.post("/api/kids/:id/context-check", auth, async (req, res) => {
  messages: [{ role: "user", content: `孩子说:${reply}\n用户说:${message}` }]
  });
  
- const result = JSON.parse(check.content[0].text.trim());
- res.json(result);
+ const textBlock = (check.content || []).find(b => b.type === 'text');
+if (!textBlock || !textBlock.text) return res.json({ type: 'none' });
+const result = JSON.parse(textBlock.text.trim());
+ 
+   res.json(result);
  
  } catch(e) {
     console.error('[context-check] error:', e.message);
