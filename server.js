@@ -1674,12 +1674,29 @@ if (message.includes('📖') && message.includes('讲故事')) {
 
   try {
    
-   
+   // ===== 孩子主动提议拍照：三个硬门槛都过了才给这次机会，最终拍不拍由模型自己判断当下话题合不合适 =====
+const _todayStrPS = bjDateStr();
+const _psDate = kid.photo_suggest_date ? bjDateStr(kid.photo_suggest_date) : null;
+const _psCount = _psDate === _todayStrPS ? (kid.photo_suggest_count || 0) : 0;
+const _lastPS = kid.last_photo_suggest_at ? new Date(kid.last_photo_suggest_at).getTime() : 0;
+const _psCooldownOk = !_lastPS || (Date.now() - _lastPS) >= 2 * 60 * 60 * 1000;
+let _photoSuggestOffered = false;
+if (_psCount < 2 && _psCooldownOk && _bal >= 100) {
+  system += `\n这一次，如果当下的话题让你自然地想到，你可以主动提议拍张照片记录这一刻——用分享喜悦的语气（比如"妈妈快看我画的……"），不是伸手要。如果你决定这么做，用你这个年纪的方式开心地说，然后在回复最后单独一行输出标记：[PHOTO:地点+活动+内容]。如果这轮话题不合适，就不用管这条，正常聊天就好。`;
+  _photoSuggestOffered = true;
+}
    
    const _rawReply = await callAI(chatMessages, system, kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 100);
   // 解析拍照标记，剥离后不入库、不展示
   let photoInvite = null;
   const _pm = _rawReply.match(/\[PHOTO:([^\]]+)\]/);
+if (_pm && _photoSuggestOffered) {
+  await db.query(
+    "UPDATE kids SET last_photo_suggest_at = NOW(), photo_suggest_count = $2, photo_suggest_date = $3 WHERE id=$1",
+    [kid.id, _psCount + 1, _todayStrPS]
+  );
+}
+    
   if (_pm) {
        
     const _desc = _pm[1].trim().slice(0, 60);
@@ -1962,6 +1979,9 @@ ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_missing_date DATE;
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS streak_days INTEGER DEFAULT 0;
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_chat_date DATE;
     ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_boundary_at TIMESTAMP;
+    ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_photo_suggest_at TIMESTAMP;
+ALTER TABLE kids ADD COLUMN IF NOT EXISTS photo_suggest_count INT DEFAULT 0;
+ALTER TABLE kids ADD COLUMN IF NOT EXISTS photo_suggest_date DATE;
     CREATE TABLE IF NOT EXISTS gifts (
       id SERIAL PRIMARY KEY,
       kid_id INTEGER REFERENCES kids(id) ON DELETE CASCADE,
