@@ -778,8 +778,8 @@ app.post("/api/kids/:id/wish-products", auth, async (req, res) => {
  const result = await getClaudeAI().messages.create({
  model: process.env.DOUBAO_MODEL || "claude-sonnet-4-20250514",
  max_tokens: 300,
- system: `你是一个虚拟儿童礼品商城的商品生成助手。根据孩子的心愿,生成6个相关的虚拟商品,按价值从低到高排列。每个商品包含:name(商品名,10字以内)、emoji(最合适的emoji)、price(芽豆价格,30-200之间)、desc(简短描述,15字以内)。只输出JSON数组,格式:[{"name":"...","emoji":"...","price":100,"desc":"..."}]不要其他内容。`,
- messages: [{ role: "user", content: `孩子的心愿是:${wishContent}` }]
+  system: `你是一个虚拟儿童礼品商城的商品生成助手。根据孩子的心愿,生成6个相关的虚拟商品,按价值从低到高排列。每个商品包含:name(商品名,10字以内)、emoji(最合适的emoji)、price(芽豆价格,30-200之间)、desc(简短描述,15字以内)。严禁输出任何思考过程或解释,直接输出结果。只输出JSON数组,格式:[{"name":"...","emoji":"...","price":100,"desc":"..."}]不要其他任何内容。`,
+   messages: [{ role: "user", content: `孩子的心愿是:${wishContent}` }]
  });
  const textBlock = (result.content || []).find(b => b.type === 'text');
  if (!textBlock || !textBlock.text) throw new Error('AI未返回文本内容');
@@ -1846,7 +1846,7 @@ app.post("/api/kids/:id/gifts", auth, async (req, res) => {
    
         await db.query("UPDATE users SET sprouts_balance = sprouts_balance - $1 WHERE id=$2", [price, req.user.id]);
     const pkid = kidResult.rows[0];
-    const giftSystem = `You are ${pkid.name}, a ${pkid.age}-year-old ${pkid.gender === "boy" ? "boy" : "girl"}. You just received a gift: ${gift_name}. React with genuine excitement and gratitude in Chinese. Be age-appropriate, warm and enthusiastic. Keep it to 2-3 sentences.`;
+        const giftSystem = `You are ${pkid.name}, a ${pkid.age}-year-old ${pkid.gender === "boy" ? "boy" : "girl"}. You just received a gift: ${gift_name}. React with genuine excitement and gratitude in Chinese. Be age-appropriate, warm and enthusiastic. Keep it to 2-3 short sentences. 严禁输出任何思考过程、自我更正或内心独白，直接给出最终的中文回复。`;
     let thankMsg;
     try {
       const giftResp = await getClaudeAI().messages.create({
