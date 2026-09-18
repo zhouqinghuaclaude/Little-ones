@@ -765,6 +765,7 @@ app.post("/api/kids/:id/activities", auth, async (req, res) => {
 
   res.json({ count, newAchievement, remaining });
 });
+
 app.post("/api/kids/:id/wish-products", auth, async (req, res) => {
  const { wishContent, wishEmoji } = req.body;
  if (!wishContent) return res.json({ products: [], maxItems: 1 });
@@ -780,14 +781,18 @@ app.post("/api/kids/:id/wish-products", auth, async (req, res) => {
  system: `你是一个虚拟儿童礼品商城的商品生成助手。根据孩子的心愿,生成6个相关的虚拟商品,按价值从低到高排列。每个商品包含:name(商品名,10字以内)、emoji(最合适的emoji)、price(芽豆价格,30-200之间)、desc(简短描述,15字以内)。只输出JSON数组,格式:[{"name":"...","emoji":"...","price":100,"desc":"..."}]不要其他内容。`,
  messages: [{ role: "user", content: `孩子的心愿是:${wishContent}` }]
  });
- const rawText = result.content[0].text.trim();
+ const textBlock = (result.content || []).find(b => b.type === 'text');
+ if (!textBlock || !textBlock.text) throw new Error('AI未返回文本内容');
+ const rawText = textBlock.text.trim();
  console.log('wish-products raw:', rawText);
  const products = JSON.parse(rawText.replace(/```json|```/g, '').trim());
  res.json({ products, maxItems });
  } catch(e) {
+ console.error('wish-products error:', e.message);
  res.json({ products: [], maxItems });
  }
 });
+
 app.post("/api/kids/:id/context-check", auth, async (req, res) => {
  const { message, reply, age, existingWishes } = req.body;
  if (!message || !reply || age < 1) return res.json({ type: 'none' });
@@ -1838,19 +1843,28 @@ app.post("/api/kids/:id/gifts", auth, async (req, res) => {
     if (balance < price) {
       return res.json({ status: "insufficient", message: "芽豆不足", balance, price });
     }
-    await db.query("UPDATE users SET sprouts_balance = sprouts_balance - $1 WHERE id=$2", [price, req.user.id]);
+   
+        await db.query("UPDATE users SET sprouts_balance = sprouts_balance - $1 WHERE id=$2", [price, req.user.id]);
     const pkid = kidResult.rows[0];
     const giftSystem = `You are ${pkid.name}, a ${pkid.age}-year-old ${pkid.gender === "boy" ? "boy" : "girl"}. You just received a gift: ${gift_name}. React with genuine excitement and gratitude in Chinese. Be age-appropriate, warm and enthusiastic. Keep it to 2-3 sentences.`;
-    const giftResp = await getClaudeAI().messages.create({
-      model: process.env.DOUBAO_MODEL || "claude-sonnet-4-20250514",
-      max_tokens: pkid.age <= 1 ? 30 : pkid.age <= 6 ? 60 : 150,
-      system: giftSystem,
-      messages: [{ role: "user", content: `${pkid.parent_role}送给你${gift_name}！` }]
-    });
-    const thankMsg = giftResp.content[0].text.trim();
+    let thankMsg;
+    try {
+      const giftResp = await getClaudeAI().messages.create({
+        model: process.env.DOUBAO_MODEL || "claude-sonnet-4-20250514",
+        max_tokens: pkid.age <= 1 ? 30 : pkid.age <= 6 ? 60 : 150,
+        system: giftSystem,
+        messages: [{ role: "user", content: `${pkid.parent_role}送给你${gift_name}！` }]
+      });
+      const textBlock = (giftResp.content || []).find(b => b.type === 'text');
+      thankMsg = (textBlock && textBlock.text) ? textBlock.text.trim() : `谢谢你的${gift_name}！我好喜欢！`;
+    } catch (e) {
+      console.error('Gift thank-you generation error:', e.message);
+      thankMsg = `谢谢你的${gift_name}！我好喜欢！`;
+    }
     await db.query("INSERT INTO gifts (kid_id, gift_emoji, gift_name, gift_type) VALUES ($1,$2,$3,'paid')", [req.params.id, gift_emoji, gift_name]);
     await db.query("INSERT INTO messages (kid_id, user_id, role, content) VALUES ($1,$2,'assistant',$3)", [req.params.id, req.user.id, thankMsg]);
     return res.json({ status: "ok", thankMsg, balance: balance - price, price });
+    
   }
 
   // Free gift logic
