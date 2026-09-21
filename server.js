@@ -303,6 +303,38 @@ app.post("/api/wx-login", async (req, res) => {
   }
 });
 
+app.post("/api/h5-test-login", async (req, res) => {
+  try {
+    const { t, adult_confirm } = req.body;
+    if (!t || t !== process.env.H5_TEST_TOKEN) {
+      return res.status(403).json({ error: "测试链接无效" });
+    }
+
+    const TEST_OPENID = "h5_test_account";
+    let user = null;
+    const r1 = await db.query("SELECT * FROM users WHERE openid=$1", [TEST_OPENID]);
+    user = r1.rows[0];
+    if (!user) {
+      const created = await db.query(
+        "INSERT INTO users (name, openid, phone) VALUES ($1, $2, $3) RETURNING *",
+        ["网信办测试账号", TEST_OPENID, "13800000000"]
+      );
+      user = created.rows[0];
+    }
+
+    if (adult_confirm && !user.adult_confirmed_at) {
+      await db.query("UPDATE users SET adult_confirmed_at = NOW() WHERE id = $1", [user.id]);
+    }
+
+    const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "30d" });
+
+    res.json({ token, user: { id: user.id, name: user.name, openid: user.openid, phone: user.phone } });
+
+  } catch (e) {
+    console.error("h5-test-login error:", e);
+    res.status(500).json({ error: "测试登录出错" });
+  }
+});
 // ===== 微信 access_token 缓存（有效期2小时，提前5分钟刷新）=====
 let _wxToken = { value: null, expireAt: 0 };
 async function getWxAccessToken() {
