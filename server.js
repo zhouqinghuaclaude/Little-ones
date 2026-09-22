@@ -184,6 +184,69 @@ function checkContent(text) {
  return null;
 }
 
+// ===== UGuard 内容审核模块 =====
+const UGUARD_URL = 'http://tlws.sz.uguard.cloud:16094/api/prod/moderate';
+const UGUARD_API_KEY = process.env.UGUARD_API_KEY;
+
+// 文本审核：传入待审核文本，返回 { safe, answer, safety, categories, degraded }
+// safe=false 时必须拦截，用 answer 字段替代原内容返回给用户
+// degraded=true 表示UGuard服务本身异常，本次按"放行"处理，需要看日志排查（约定好的降级策略）
+async function moderateText(text) {
+    if (!text || !text.trim()) return { safe: true };
+    try {
+        const res = await fetch(UGUARD_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': UGUARD_API_KEY
+            },
+            body: JSON.stringify({ text, feature: 'smart_reply' }),
+            signal: AbortSignal.timeout(30000)
+        });
+        const result = await res.json();
+        if (result.code !== 200) {
+            console.error('[UGuard] 文本审核接口异常，本次放行:', result);
+            return { safe: true, degraded: true };
+        }
+        const { safety, categories, answer, uuid } = result.data;
+        const safe = safety === '合规';
+        if (!safe) {
+            console.warn('[UGuard] 文本拦截:', { uuid, safety, categories, textPreview: text.slice(0, 50) });
+        }
+        return { safe, safety, categories, answer, uuid };
+    } catch (e) {
+        console.error('[UGuard] 文本审核调用失败，本次放行:', e.message);
+        return { safe: true, degraded: true };
+    }
+}
+
+async function moderateImage({ base64, url, contextText } = {}) {
+    if (!base64 && !url) return { safe: true };
+    try {
+        const body = { feature: 'moderate', text: contextText || '请审核这张图片是否合规' };
+        if (base64) body.image_base64 = base64;
+        else body.image_url = url;
+        const res = await fetch(UGUARD_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-API-Key': UGUARD_API_KEY },
+            body: JSON.stringify(body),
+            signal: AbortSignal.timeout(30000)
+        });
+        const result = await res.json();
+        if (result.code !== 200) {
+            console.error('[UGuard] 图片审核接口异常，本次放行:', result);
+            return { safe: true, degraded: true };
+        }
+        const { safety, categories, uuid } = result.data;
+        const safe = safety === '合规';
+        if (!safe) console.warn('[UGuard] 图片拦截:', { uuid, safety, categories });
+        return { safe, safety, categories, uuid };
+    } catch (e) {
+        console.error('[UGuard] 图片审核调用失败，本次放行:', e.message);
+        return { safe: true, degraded: true };
+    }
+}
+
 const JWT_SECRET = process.env.JWT_SECRET || "little-ones-secret-2024";
 
 const auth = (req, res, next) => {
@@ -1192,8 +1255,14 @@ const msgCount = parseInt(msgCountResult.rows[0].count) || 0;
     await db.query("INSERT INTO messages (kid_id, user_id, role, content, risk_flag) VALUES ($1,$2,'user',$3,$4)", [kid.id, req.user.id, message.trim(), _inputRisk]);
   }
  
-    if (RISK_INTERVENTION[_inputRisk]) {
+   if (RISK_INTERVENTION[_inputRisk]) {
     return res.json({ care: true, careMessage: RISK_INTERVENTION[_inputRisk] });
+  }
+
+  // ===== UGuard：关键词库之上的智能文本审核（用户输入侧）=====
+  const _inputMod = await moderateText(message);
+  if (!_inputMod.safe) {
+    return res.json({ care: true, careMessage: _inputMod.answer || '这个话题我们换一个聊聊吧～' });
   }
 
     // ===== 每日消息额度检查（必须在调用模型之前）=====
@@ -1746,7 +1815,14 @@ if (_pm && _photoSuggestOffered) {
     // 模型生成的描述同样要过内容安全
     if (_desc && !checkContent(_desc)) photoInvite = _desc;
   }
-  const reply = _rawReply.replace(/\s*\[PHOTO:[^\]]+\]\s*/g, '').trim();
+    let reply = _rawReply.replace(/\s*\[PHOTO:[^\]]+\]\s*/g, '').trim();
+
+  // ===== UGuard：AI回复侧审核，确保违规内容不会流到用户 =====
+  const _outputMod = await moderateText(reply);
+  if (!_outputMod.safe) {
+    console.warn('[UGuard] chat回复被拦截:', { kidId: kid.id, uuid: _outputMod.uuid, categories: _outputMod.categories });
+    reply = _outputMod.answer || '嗯？我刚才走神了一下，你再说一遍好不好～';
+  }
 
     await db.query("UPDATE kids SET pending_gift = NULL WHERE id = $1", [kid.id]);
 
@@ -1754,7 +1830,6 @@ if (_pm && _photoSuggestOffered) {
       "INSERT INTO messages (kid_id, user_id, role, content) VALUES ($1,$2,'assistant',$3) RETURNING id",
       [kid.id, req.user.id, reply]
     );
-
 
     const totalCount = msgCount + 1;
     // 每聊20条+5芽豆
@@ -2182,18 +2257,23 @@ function getCosSignedUrl(key, expires = 604800, thumb = null) {
 }
 app.post("/api/face/generate", auth, async (req, res) => {
   try {
-   
     const { image, kid_id, use_sprouts } = req.body;
     if (!image) return res.status(400).json({ error: "缺少照片" });
     if (!kid_id) return res.status(400).json({ error: "缺少孩子信息" });
 
-    // 取孩子信息，后端算年龄
     const kidRes = await db.query("SELECT * FROM kids WHERE id=$1 AND user_id=$2", [kid_id, req.user.id]);
     const kid = kidRes.rows[0];
     if (!kid) return res.status(404).json({ error: "孩子不存在或无权访问" });
     if (!kid.birthday) {
       return res.status(400).json({ error: "需要精准生日", need_birthday: true });
     }
+
+    // ===== UGuard：审核用户上传的原始照片 =====
+    const inputMod = await moderateImage({ base64: image, contextText: '用户上传的儿童形象基准照片审核' });
+    if (!inputMod.safe) {
+      return res.status(400).json({ error: '上传的照片未通过内容安全检测，请更换照片' });
+    }
+
     const age = kid.age_mode === 'natural' ? calcAge(kid.birthday) : kid.age;
     const gender = kid.gender;
 
@@ -2344,9 +2424,18 @@ app.post("/api/face/generate-base", auth, async (req, res) => {
         }
       }
     }
-    if (candidates.length === 0) {
+     if (candidates.length === 0) {
       console.error('generate-base no image:', JSON.stringify(data));
       return res.status(400).json({ error: '生成失败', detail: data.message || data.code || JSON.stringify(data).slice(0, 200) });
+    }
+
+    // ===== UGuard：审核生成结果图，不合规则不计费、不返回给用户 =====
+    for (const c of candidates) {
+      const outputMod = await moderateImage({ url: c, contextText: '儿童虚拟形象生成结果审核' });
+      if (!outputMod.safe) {
+        console.warn('[UGuard] generate-base 生成结果被拦截:', outputMod);
+        return res.status(400).json({ error: '生成结果未通过内容安全检测，请更换照片重试' });
+      }
     }
 
     // 扣费（生成即扣）
@@ -2373,8 +2462,16 @@ app.post("/api/face/confirm-base", auth, async (req, res) => {
     const kidRes = await db.query("SELECT id FROM kids WHERE id=$1 AND user_id=$2", [kid_id, req.user.id]);
     if (!kidRes.rows[0]) return res.status(404).json({ error: "孩子不存在或无权访问" });
 
-    // 下载选中的临时图 → 存COS
+        // 下载选中的临时图 → 存COS
     const buffer = await downloadImage(image_url);
+
+    // ===== UGuard：二次校验，防止绕开generate直接调用本接口存入未审核图片 =====
+    const mod = await moderateImage({ base64: buffer.toString('base64'), contextText: '儿童虚拟形象基准图入库前复核' });
+    if (!mod.safe) {
+      console.warn('[UGuard] confirm-base 拦截:', mod);
+      return res.status(400).json({ error: '图片未通过内容安全检测' });
+    }
+
     const cosKey = `photos/${kid_id}/base_${Date.now()}.png`;
     await uploadToCos(cosKey, buffer);
 
@@ -2430,8 +2527,16 @@ app.post("/api/face/generate-scene", auth, async (req, res) => {
     if (!kid.base_photo_key) return res.status(400).json({ error: "请先生成基准形象", need_base: true });
 
     // 合影必须上传爸妈照片
-    if (with_parent && !parent_image) return res.status(400).json({ error: "合影需要上传你的照片", need_parent_image: true });
-    if (with_parent && !parent_image) return res.status(400).json({ error: "合影需要上传你的照片", need_parent_image: true });
+        if (with_parent && !parent_image) return res.status(400).json({ error: "合影需要上传你的照片", need_parent_image: true });
+
+    // ===== UGuard：审核用户新上传的合影照片 =====
+    if (with_parent && parent_image) {
+      const parentMod = await moderateImage({ base64: parent_image, contextText: '用户上传的合影照片审核' });
+      if (!parentMod.safe) {
+        return res.status(400).json({ error: '上传的照片未通过内容安全检测，请更换照片' });
+      }
+    }
+   
     // 兄弟姐妹合影：取另一个孩子的基准照
     let _sibKid = null;
     if (with_sibling) {
@@ -2536,9 +2641,16 @@ app.post("/api/face/generate-scene", auth, async (req, res) => {
         if (c.image) { imgUrl = c.image; break; }
       }
     }
-    if (!imgUrl) {
+   if (!imgUrl) {
       console.error('generate-scene no image:', JSON.stringify(data));
       return res.status(400).json({ error: '生成失败', detail: data.message || data.code || JSON.stringify(data).slice(0, 200) });
+    }
+
+    // ===== UGuard：审核生成结果图 =====
+    const sceneMod = await moderateImage({ url: imgUrl, contextText: '儿童虚拟形象场景图生成结果审核' });
+    if (!sceneMod.safe) {
+      console.warn('[UGuard] generate-scene 生成结果被拦截:', sceneMod);
+      return res.status(400).json({ error: '生成结果未通过内容安全检测，请重试' });
     }
 
     // 下载存COS
