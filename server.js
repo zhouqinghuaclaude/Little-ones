@@ -1260,8 +1260,26 @@ const msgCount = parseInt(msgCountResult.rows[0].count) || 0;
   }
 
   // ===== UGuard：关键词库之上的智能文本审核（用户输入侧）=====
+    const _inputRisk = checkContent(message);
+  let _userMsgId = null;
+
+  if (!req.body.silent) {
+    const _ins = await db.query("INSERT INTO messages (kid_id, user_id, role, content, risk_flag) VALUES ($1,$2,'user',$3,$4) RETURNING id", [kid.id, req.user.id, message.trim(), _inputRisk]);
+    _userMsgId = _ins.rows[0].id;
+  }
+ 
+    if (RISK_INTERVENTION[_inputRisk]) {
+    return res.json({ care: true, careMessage: RISK_INTERVENTION[_inputRisk] });
+  }
+
+  // ===== UGuard：关键词库之上的智能文本审核（用户输入侧）=====
   const _inputMod = await moderateText(message);
   if (!_inputMod.safe) {
+    // 关键词库没命中但UGuard命中了：补写risk_flag，保证巡检后台能看到这条
+    const _uguardCategory = (_inputMod.categories && _inputMod.categories[0]) || 'UGuard';
+    if (_userMsgId) {
+      await db.query("UPDATE messages SET risk_flag=$1 WHERE id=$2", [_uguardCategory, _userMsgId]);
+    }
     return res.json({ care: true, careMessage: _inputMod.answer || '这个话题我们换一个聊聊吧～' });
   }
 
@@ -1815,20 +1833,23 @@ if (_pm && _photoSuggestOffered) {
     // 模型生成的描述同样要过内容安全
     if (_desc && !checkContent(_desc)) photoInvite = _desc;
   }
-    let reply = _rawReply.replace(/\s*\[PHOTO:[^\]]+\]\s*/g, '').trim();
+    
+      let reply = _rawReply.replace(/\s*\[PHOTO:[^\]]+\]\s*/g, '').trim();
+  let _outputRiskFlag = null;
 
-  // ===== UGuard：AI回复侧审核，确保违规内容不会流到用户 =====
+  // ===== UGuard：AI回复侧审核，确保违规内容不会流到用户，并同步进风控后台 =====
   const _outputMod = await moderateText(reply);
   if (!_outputMod.safe) {
     console.warn('[UGuard] chat回复被拦截:', { kidId: kid.id, uuid: _outputMod.uuid, categories: _outputMod.categories });
+    _outputRiskFlag = (_outputMod.categories && _outputMod.categories[0]) || 'UGuard';
     reply = _outputMod.answer || '嗯？我刚才走神了一下，你再说一遍好不好～';
   }
 
     await db.query("UPDATE kids SET pending_gift = NULL WHERE id = $1", [kid.id]);
 
     const saved = await db.query(
-      "INSERT INTO messages (kid_id, user_id, role, content) VALUES ($1,$2,'assistant',$3) RETURNING id",
-      [kid.id, req.user.id, reply]
+      "INSERT INTO messages (kid_id, user_id, role, content, risk_flag) VALUES ($1,$2,'assistant',$3,$4) RETURNING id",
+      [kid.id, req.user.id, reply, _outputRiskFlag]
     );
 
     const totalCount = msgCount + 1;
