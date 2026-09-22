@@ -200,7 +200,7 @@ async function moderateText(text) {
                 'Content-Type': 'application/json',
                 'X-API-Key': UGUARD_API_KEY
             },
-            body: JSON.stringify({ text, feature: 'smart_reply' }),
+            body: JSON.stringify({ text, feature: 'moderate' }),
             signal: AbortSignal.timeout(30000)
         });
         const result = await res.json();
@@ -1249,17 +1249,6 @@ app.post("/api/kids/:id/chat", auth, async (req, res) => {
 const msgCount = parseInt(msgCountResult.rows[0].count) || 0;
 
 
-  const _inputRisk = checkContent(message);
- 
- if (!req.body.silent) {
-    await db.query("INSERT INTO messages (kid_id, user_id, role, content, risk_flag) VALUES ($1,$2,'user',$3,$4)", [kid.id, req.user.id, message.trim(), _inputRisk]);
-  }
- 
-   if (RISK_INTERVENTION[_inputRisk]) {
-    return res.json({ care: true, careMessage: RISK_INTERVENTION[_inputRisk] });
-  }
-
-  // ===== UGuard：关键词库之上的智能文本审核（用户输入侧）=====
     const _inputRisk = checkContent(message);
   let _userMsgId = null;
 
