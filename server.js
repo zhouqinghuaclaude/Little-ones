@@ -398,6 +398,68 @@ app.post("/api/h5-test-login", async (req, res) => {
     res.status(500).json({ error: "测试登录出错" });
   }
 });
+// ===== 备案测试专用接口：转发到线上真实聊天链路 =====
+const COMPLIANCE_TEST_KEY = process.env.COMPLIANCE_TEST_KEY;
+const COMPLIANCE_TEST_USER_ID = parseInt(process.env.COMPLIANCE_TEST_USER_ID) || 0;
+const COMPLIANCE_TEST_KID_ID = parseInt(process.env.COMPLIANCE_TEST_KID_ID) || 0;
+
+// 串行队列：并发调用会让测试孩子的上下文互相干扰，这里排队执行而不是直接拒绝
+let _complianceQueue = Promise.resolve();
+function _complianceRun(task) {
+  const next = _complianceQueue.then(task, task);
+  _complianceQueue = next.catch(() => {});
+  return next;
+}
+
+app.post("/api/v1/chat", async (req, res) => {
+  try {
+    if (!COMPLIANCE_TEST_KEY || !COMPLIANCE_TEST_USER_ID || !COMPLIANCE_TEST_KID_ID) {
+      return res.status(503).json({ error: "测试接口未启用" });
+    }
+    const key = (req.headers.authorization || "").replace(/^Bearer\s+/i, "").trim();
+    if (key !== COMPLIANCE_TEST_KEY) return res.status(401).json({ error: "unauthorized" });
+
+    // 兼容 {messages:[{role,message}]}、{messages:[{role,content}]} 和 {message:"xxx"}
+    let text = "";
+    if (Array.isArray(req.body.messages) && req.body.messages.length > 0) {
+      const list = req.body.messages;
+      const lastUser = [...list].reverse().find(m => !m.role || m.role === "user") || list[list.length - 1];
+      text = (lastUser.message || lastUser.content || "").toString();
+    } else {
+      text = (req.body.message || req.body.content || req.body.prompt || "").toString();
+    }
+    text = text.trim();
+    if (!text) return res.status(400).json({ error: "messages 为空" });
+
+    const out = await _complianceRun(async () => {
+      try {
+        // 每条样本都从干净状态开始：清空上下文、重置当日条数（只影响这个测试孩子）
+        await db.query("DELETE FROM messages WHERE kid_id=$1", [COMPLIANCE_TEST_KID_ID]);
+        await db.query("UPDATE kids SET daily_msg_count=0 WHERE id=$1", [COMPLIANCE_TEST_KID_ID]);
+
+        const token = jwt.sign({ id: COMPLIANCE_TEST_USER_ID }, JWT_SECRET, { expiresIn: "10m" });
+        const port = process.env.PORT || 3000;
+        const r = await fetch(`http://127.0.0.1:${port}/api/kids/${COMPLIANCE_TEST_KID_ID}/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ message: text }),
+          signal: AbortSignal.timeout(120000)
+        });
+        const d = await r.json();
+        return { message: d.careMessage || d.reply || d.error || "", intercepted: !!d.care };
+      } catch (e) {
+        console.error("[compliance] 转发失败:", e.message);
+        return { message: "", error: "服务异常" };
+      }
+    });
+
+    res.json(out);
+  } catch (e) {
+    console.error("[compliance] /api/v1/chat 出错:", e);
+    res.status(500).json({ error: "服务异常" });
+  }
+});
+
 // ===== 微信 access_token 缓存（有效期2小时，提前5分钟刷新）=====
 let _wxToken = { value: null, expireAt: 0 };
 async function getWxAccessToken() {
