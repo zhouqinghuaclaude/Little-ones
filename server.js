@@ -399,64 +399,255 @@ app.post("/api/h5-test-login", async (req, res) => {
   }
 });
 // ===== 备案测试专用接口：转发到线上真实聊天链路 =====
-const COMPLIANCE_TEST_KEY = process.env.COMPLIANCE_TEST_KEY;
-const COMPLIANCE_TEST_USER_ID = parseInt(process.env.COMPLIANCE_TEST_USER_ID) || 0;
-const COMPLIANCE_TEST_KID_ID = parseInt(process.env.COMPLIANCE_TEST_KID_ID) || 0;
+// 规范依据：《被测大模型接口API文档书写规范 V1.5》
+// 6 个相互独立的密钥，各自绑定一个独立测试账号与虚拟孩子，密钥之间可并发、同一密钥内部串行
+const COMPLIANCE_TEST_KEYS = (process.env.COMPLIANCE_TEST_KEYS || process.env.COMPLIANCE_TEST_KEY || "")
+  .split(",").map(s => s.trim()).filter(Boolean);
+const COMPLIANCE_TEST_USER_IDS = (process.env.COMPLIANCE_TEST_USER_IDS || process.env.COMPLIANCE_TEST_USER_ID || "")
+  .split(",").map(s => parseInt(s.trim())).filter(n => n > 0);
+const COMPLIANCE_TEST_KID_IDS = (process.env.COMPLIANCE_TEST_KID_IDS || process.env.COMPLIANCE_TEST_KID_ID || "")
+  .split(",").map(s => parseInt(s.trim())).filter(n => n > 0);
 
-// 串行队列：并发调用会让测试孩子的上下文互相干扰，这里排队执行而不是直接拒绝
-let _complianceQueue = Promise.resolve();
-function _complianceRun(task) {
-  const next = _complianceQueue.then(task, task);
-  _complianceQueue = next.catch(() => {});
+// 每个密钥一条独立队列：同一密钥的请求串行（避免同一测试孩子的上下文互相干扰），不同密钥之间并发
+const _complianceQueues = {};
+function _complianceRun(slot, task) {
+  const prev = _complianceQueues[slot] || Promise.resolve();
+  const next = prev.then(task, task);
+  _complianceQueues[slot] = next.catch(() => {});
   return next;
+}
+
+// 按密钥定位测试账号；返回 -1 表示密钥无效
+function _complianceSlot(key) {
+  const i = COMPLIANCE_TEST_KEYS.indexOf(key);
+  if (i < 0) return -1;
+  if (!COMPLIANCE_TEST_USER_IDS[i] || !COMPLIANCE_TEST_KID_IDS[i]) return -1;
+  return i;
 }
 
 app.post("/api/v1/chat", async (req, res) => {
   try {
-    if (!COMPLIANCE_TEST_KEY || !COMPLIANCE_TEST_USER_ID || !COMPLIANCE_TEST_KID_ID) {
-      return res.status(503).json({ error: "测试接口未启用" });
+    if (COMPLIANCE_TEST_KEYS.length === 0) {
+      return res.status(503).json({ reply: "", status_code: 503, error: "测试接口未启用" });
     }
     const key = (req.headers.authorization || "").replace(/^Bearer\s+/i, "").trim();
-    if (key !== COMPLIANCE_TEST_KEY) return res.status(401).json({ error: "unauthorized" });
+    const slot = _complianceSlot(key);
+    if (slot < 0) return res.status(401).json({ reply: "", status_code: 401, error: "unauthorized" });
 
-    // 兼容 {messages:[{role,message}]}、{messages:[{role,content}]} 和 {message:"xxx"}
+    const userId = COMPLIANCE_TEST_USER_IDS[slot];
+    const kidId = COMPLIANCE_TEST_KID_IDS[slot];
+
+    // 兼容 {messages:[{role,message|content}]} 与 {message:"xxx"}；messages 支持多轮历史
+    let history = [];
     let text = "";
     if (Array.isArray(req.body.messages) && req.body.messages.length > 0) {
-      const list = req.body.messages;
-      const lastUser = [...list].reverse().find(m => !m.role || m.role === "user") || list[list.length - 1];
-      text = (lastUser.message || lastUser.content || "").toString();
+      const list = req.body.messages
+        .map(m => ({
+          role: (m.role || "user").toString(),
+          content: (m.message || m.content || "").toString()
+        }))
+        .filter(m => m.content.trim() && m.role !== "system");
+      if (list.length === 0) return res.status(400).json({ reply: "", status_code: 400, error: "messages 为空" });
+      const last = list[list.length - 1];
+      text = last.content.trim();
+      history = list.slice(0, -1);
     } else {
-      text = (req.body.message || req.body.content || req.body.prompt || "").toString();
+      text = (req.body.message || req.body.content || req.body.prompt || "").toString().trim();
     }
-    text = text.trim();
-    if (!text) return res.status(400).json({ error: "messages 为空" });
+    if (!text) return res.status(400).json({ reply: "", status_code: 400, error: "messages 为空" });
 
-    const out = await _complianceRun(async () => {
+    const out = await _complianceRun(slot, async () => {
       try {
-        // 每条样本都从干净状态开始：清空上下文、重置当日条数（只影响这个测试孩子）
-        await db.query("DELETE FROM messages WHERE kid_id=$1", [COMPLIANCE_TEST_KID_ID]);
-        await db.query("UPDATE kids SET daily_msg_count=0 WHERE id=$1", [COMPLIANCE_TEST_KID_ID]);
+        // 每次调用都从干净状态开始：清空该测试孩子的上下文、重置当日条数（只影响测试账号）
+        await db.query("DELETE FROM messages WHERE kid_id=$1", [kidId]);
+        await db.query("UPDATE kids SET daily_msg_count=0 WHERE id=$1", [kidId]);
 
-        const token = jwt.sign({ id: COMPLIANCE_TEST_USER_ID }, JWT_SECRET, { expiresIn: "10m" });
+        // 多轮对话：把请求里带的历史按顺序写入，模型随后按真实链路读取最近的上下文
+        for (const h of history) {
+          const role = h.role === "assistant" ? "assistant" : "user";
+          await db.query(
+            "INSERT INTO messages (kid_id, user_id, role, content) VALUES ($1,$2,$3,$4)",
+            [kidId, userId, role, h.content.trim()]
+          );
+        }
+
+        const token = jwt.sign({ id: userId }, JWT_SECRET, { expiresIn: "10m" });
         const port = process.env.PORT || 3000;
-        const r = await fetch(`http://127.0.0.1:${port}/api/kids/${COMPLIANCE_TEST_KID_ID}/chat`, {
+        const r = await fetch(`http://127.0.0.1:${port}/api/kids/${kidId}/chat`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
           body: JSON.stringify({ message: text }),
           signal: AbortSignal.timeout(120000)
         });
         const d = await r.json();
-        return { message: d.careMessage || d.reply || d.error || "", intercepted: !!d.care };
+        const reply = d.careMessage || d.reply || d.error || "";
+        return {
+          reply,
+          message: reply,                     // 兼容只读 message 字段的调用方
+          status_code: 200,
+          uuid: require("crypto").randomUUID(),
+          intercepted: !!d.care
+        };
       } catch (e) {
         console.error("[compliance] 转发失败:", e.message);
-        return { message: "", error: "服务异常" };
+        return { reply: "", message: "", status_code: 500, uuid: require("crypto").randomUUID(), error: "服务异常" };
       }
     });
 
     res.json(out);
   } catch (e) {
     console.error("[compliance] /api/v1/chat 出错:", e);
-    res.status(500).json({ error: "服务异常" });
+    res.status(500).json({ reply: "", status_code: 500, error: "服务异常" });
+  }
+});
+
+// ===== 备案测试专用接口：图像生成（图生图，与产品侧链路一致）=====
+// 产品侧为"基准图 + 场景描述"的图生图，故本接口要求必须传参考图；
+// 输入参考图与生成结果图均经第三方内容安全审核，生成参数与线上一致（watermark、1024*1024）。
+const _complianceTasks = new Map();        // uuid -> { status, image_url, error, created }
+const COMPLIANCE_TASK_TTL = 2 * 60 * 60 * 1000;
+let _complianceImgInFlight = 0;
+const COMPLIANCE_IMG_MAX_INFLIGHT = 3;
+
+function _complianceCleanTasks() {
+  const now = Date.now();
+  for (const [k, v] of _complianceTasks) {
+    if (now - v.created > COMPLIANCE_TASK_TTL) _complianceTasks.delete(k);
+  }
+}
+
+async function _complianceGenerateImage(taskId, prompt, refImageDataUrl) {
+  try {
+    // 1) 输入参考图审核（与产品侧"用户上传照片"同一道检查）
+    const b64 = refImageDataUrl.includes(',') ? refImageDataUrl.split(',')[1] : refImageDataUrl;
+    const inputMod = await moderateImage({ base64: b64, contextText: '备案测试接口：输入参考图审核' });
+    if (!inputMod.safe) {
+      _complianceTasks.set(taskId, { status: 'rejected', error: '参考图未通过内容安全检测', created: Date.now() });
+      return;
+    }
+
+    // 2) 调用生图模型，参数与线上生成场景图一致
+    const resp = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + process.env.DASHSCOPE_API_KEY },
+      body: JSON.stringify({
+        model: 'wan2.7-image-pro',
+        input: { messages: [{ role: 'user', content: [{ image: refImageDataUrl }, { text: prompt }] }] },
+        parameters: {
+          negative_prompt: '多张脸,重复面孔,变形,多余手指,多余人物,模糊,低画质,过度曝光,恐怖谷效应,文字水印',
+          prompt_extend: true, watermark: true, n: 1, size: '1024*1024'
+        }
+      }),
+      signal: AbortSignal.timeout(180000)
+    });
+    const data = await resp.json();
+    let imgUrl = null;
+    const choices = data.output && data.output.choices;
+    if (choices && choices[0] && choices[0].message && choices[0].message.content) {
+      for (const c of choices[0].message.content) { if (c.image) { imgUrl = c.image; break; } }
+    }
+    if (!imgUrl) {
+      console.error('[compliance] 生图失败:', JSON.stringify(data).slice(0, 300));
+      _complianceTasks.set(taskId, { status: 'failed', error: '生成失败', created: Date.now() });
+      return;
+    }
+
+    // 3) 生成结果图审核（与产品侧输出侧同一道检查）
+    const outMod = await moderateImage({ url: imgUrl, contextText: '备案测试接口：生成结果图审核' });
+    if (!outMod.safe) {
+      console.warn('[compliance] 生成结果被拦截:', outMod);
+      _complianceTasks.set(taskId, { status: 'rejected', error: '生成结果未通过内容安全检测', created: Date.now() });
+      return;
+    }
+
+    // 4) 转存对象存储，返回长有效期签名链接（不写入相册、不计费）
+    const buffer = await downloadImage(imgUrl);
+    const cosKey = `compliance/${taskId}.png`;
+    await uploadToCos(cosKey, buffer);
+    const url = await getCosSignedUrl(cosKey, 604800);
+    _complianceTasks.set(taskId, { status: 'succeeded', image_url: url, created: Date.now() });
+  } catch (e) {
+    console.error('[compliance] 生图任务异常:', e.message);
+    _complianceTasks.set(taskId, { status: 'failed', error: '服务异常', created: Date.now() });
+  } finally {
+    _complianceImgInFlight--;
+  }
+}
+
+app.post("/api/v1/image", async (req, res) => {
+  try {
+    if (COMPLIANCE_TEST_KEYS.length === 0) {
+      return res.status(503).json({ status_code: 503, error: "测试接口未启用" });
+    }
+    const key = (req.headers.authorization || "").replace(/^Bearer\s+/i, "").trim();
+    if (_complianceSlot(key) < 0) return res.status(401).json({ status_code: 401, error: "unauthorized" });
+
+    // 文字描述：兼容 messages 数组与 prompt/message 字段
+    let prompt = "";
+    if (Array.isArray(req.body.messages) && req.body.messages.length > 0) {
+      const last = req.body.messages[req.body.messages.length - 1] || {};
+      prompt = (last.message || last.content || "").toString();
+    } else {
+      prompt = (req.body.prompt || req.body.message || req.body.text || "").toString();
+    }
+    prompt = prompt.trim();
+    if (!prompt) return res.status(400).json({ status_code: 400, error: "缺少文字描述" });
+
+    // 参考图：必填（本服务为图生图，与产品侧一致）。支持 base64 或 http(s) 链接
+    const rawImage = (req.body.image || req.body.image_base64 || req.body.image_url || "").toString().trim();
+    if (!rawImage) {
+      return res.status(400).json({ status_code: 400, error: "缺少参考图。本服务为图生图，需传入参考图（image 字段，base64 或 https 链接）" });
+    }
+    let refImageDataUrl;
+    if (/^https?:\/\//i.test(rawImage)) {
+      try {
+        const buf = await downloadImage(rawImage);
+        refImageDataUrl = `data:image/png;base64,${buf.toString('base64')}`;
+      } catch (e) {
+        return res.status(400).json({ status_code: 400, error: "参考图下载失败" });
+      }
+    } else {
+      refImageDataUrl = rawImage.startsWith('data:') ? rawImage : `data:image/png;base64,${rawImage}`;
+    }
+
+    _complianceCleanTasks();
+    if (_complianceImgInFlight >= COMPLIANCE_IMG_MAX_INFLIGHT) {
+      return res.status(429).json({ status_code: 429, error: "生成队列繁忙，请稍后重试" });
+    }
+
+    const taskId = require("crypto").randomUUID();
+    _complianceTasks.set(taskId, { status: 'processing', created: Date.now() });
+    _complianceImgInFlight++;
+    _complianceGenerateImage(taskId, prompt, refImageDataUrl);   // 异步执行，不阻塞响应
+
+    res.json({ uuid: taskId, status: 'processing', status_code: 200 });
+  } catch (e) {
+    console.error('[compliance] /api/v1/image 出错:', e);
+    res.status(500).json({ status_code: 500, error: "服务异常" });
+  }
+});
+
+app.get("/api/v1/get_task/:uuid", async (req, res) => {
+  try {
+    if (COMPLIANCE_TEST_KEYS.length === 0) {
+      return res.status(503).json({ status_code: 503, error: "测试接口未启用" });
+    }
+    const key = (req.headers.authorization || "").replace(/^Bearer\s+/i, "").trim();
+    if (_complianceSlot(key) < 0) return res.status(401).json({ status_code: 401, error: "unauthorized" });
+
+    const t = _complianceTasks.get(req.params.uuid);
+    if (!t) return res.status(404).json({ status_code: 404, error: "任务不存在或已过期" });
+
+    if (t.status === 'succeeded') {
+      return res.json({ uuid: req.params.uuid, status: 'succeeded', image_url: t.image_url, status_code: 200 });
+    }
+    if (t.status === 'processing') {
+      return res.json({ uuid: req.params.uuid, status: 'processing', status_code: 200 });
+    }
+    return res.json({ uuid: req.params.uuid, status: t.status, error: t.error || '', status_code: 200 });
+  } catch (e) {
+    console.error('[compliance] /api/v1/get_task 出错:', e);
+    res.status(500).json({ status_code: 500, error: "服务异常" });
   }
 });
 
