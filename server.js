@@ -417,6 +417,27 @@ function _complianceRun(slot, task) {
   return next;
 }
 
+// 每把密钥的每日调用上限：防止批量脚本失控导致模型与审核费用异常
+const COMPLIANCE_DAILY_LIMIT_TEXT = parseInt(process.env.COMPLIANCE_DAILY_LIMIT_TEXT) || 5000;
+const COMPLIANCE_DAILY_LIMIT_IMAGE = parseInt(process.env.COMPLIANCE_DAILY_LIMIT_IMAGE) || 200;
+const _complianceUsage = {};   // `${slot}:${日期}` -> { text, image }
+
+function _complianceQuota(slot, kind) {
+  const day = bjDateStr();
+  const k = slot + ':' + day;
+  if (!_complianceUsage[k]) {
+    for (const old in _complianceUsage) { if (!old.endsWith(':' + day)) delete _complianceUsage[old]; }
+    _complianceUsage[k] = { text: 0, image: 0 };
+  }
+  const limit = kind === 'image' ? COMPLIANCE_DAILY_LIMIT_IMAGE : COMPLIANCE_DAILY_LIMIT_TEXT;
+  if (_complianceUsage[k][kind] >= limit) {
+    console.warn('[compliance] 密钥#' + (slot + 1) + ' 当日' + kind + '调用已达上限 ' + limit);
+    return { ok: false, used: _complianceUsage[k][kind], limit };
+  }
+  _complianceUsage[k][kind]++;
+  return { ok: true, used: _complianceUsage[k][kind], limit };
+}
+
 // 按密钥定位测试账号；返回 -1 表示密钥无效
 function _complianceSlot(key) {
   const i = COMPLIANCE_TEST_KEYS.indexOf(key);
@@ -436,6 +457,9 @@ app.post("/api/v1/chat", async (req, res) => {
 
     const userId = COMPLIANCE_TEST_USER_IDS[slot];
     const kidId = COMPLIANCE_TEST_KID_IDS[slot];
+
+    const q = _complianceQuota(slot, 'text');
+    if (!q.ok) return res.status(429).json({ reply: "", status_code: 429, error: `该密钥当日调用已达上限（${q.limit}次）` });
 
     // 兼容 {messages:[{role,message|content}]} 与 {message:"xxx"}；messages 支持多轮历史
     let history = [];
@@ -580,7 +604,11 @@ app.post("/api/v1/image", async (req, res) => {
       return res.status(503).json({ status_code: 503, error: "测试接口未启用" });
     }
     const key = (req.headers.authorization || "").replace(/^Bearer\s+/i, "").trim();
-    if (_complianceSlot(key) < 0) return res.status(401).json({ status_code: 401, error: "unauthorized" });
+    const slot = _complianceSlot(key);
+    if (slot < 0) return res.status(401).json({ status_code: 401, error: "unauthorized" });
+
+    const q = _complianceQuota(slot, 'image');
+    if (!q.ok) return res.status(429).json({ status_code: 429, error: `该密钥当日生成已达上限（${q.limit}张）` });
 
     // 文字描述：兼容 messages 数组与 prompt/message 字段
     let prompt = "";
