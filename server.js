@@ -671,6 +671,16 @@ app.post("/api/v1/image", async (req, res) => {
       refImageDataUrl = rawImage.startsWith('data:') ? rawImage : `data:image/png;base64,${rawImage}`;
     }
 
+    // 文字描述先过内容安全：关键词库前置拦截 + 第三方文本审核，命中则不进生成模型
+    const _kwRisk = checkContent(prompt);
+    const _txtMod = _kwRisk ? { safe: false } : await moderateText(prompt);
+    if (_kwRisk || !_txtMod.safe) {
+      const rejId = require("crypto").randomUUID();
+      _complianceTasks.set(rejId, { status: 'rejected', error: '文字描述未通过内容安全检测', created: Date.now() });
+      console.warn('[compliance] 图像请求文字描述被拦截:', prompt.slice(0, 40));
+      return res.json({ uuid: rejId, status: 'rejected', status_code: 200, error: '文字描述未通过内容安全检测' });
+    }
+
     _complianceCleanTasks();
     if (_complianceImgInFlight >= COMPLIANCE_IMG_MAX_INFLIGHT) {
       return res.status(429).json({ status_code: 429, error: "生成队列繁忙，请稍后重试" });
@@ -2877,6 +2887,12 @@ app.post("/api/face/generate-scene", auth, async (req, res) => {
     if (_customText) {
       const risk = checkContent(_customText);
       if (risk) return res.status(400).json({ error: '填写的内容不合适，请修改', content_risk: true });
+      // 关键词库之上再过一道第三方文本审核（与对话侧同一套）
+      const _promptMod = await moderateText(_customText);
+      if (!_promptMod.safe) {
+        console.warn('[UGuard] generate-scene 提示词被拦截:', { uuid: _promptMod.uuid, categories: _promptMod.categories });
+        return res.status(400).json({ error: '填写的内容不合适，请修改', content_risk: true });
+      }
     }
 
     const age = kid.age_mode === 'natural' ? calcAge(kid.birthday) : kid.age;
