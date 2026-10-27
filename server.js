@@ -398,6 +398,39 @@ app.post("/api/h5-test-login", async (req, res) => {
     res.status(500).json({ error: "测试登录出错" });
   }
 });
+// ===== 备案测试账号登录：账号 + 长期验证码（网页端与APP端共用）=====
+// 由环境变量 TEST_ACCOUNT_LOGIN=on 启用；备案结束后删除该变量并重启即可停用
+app.post("/api/test-account-login", async (req, res) => {
+  try {
+    if ((process.env.TEST_ACCOUNT_LOGIN || "").toLowerCase() !== "on") {
+      return res.status(403).json({ error: "测试账号登录未启用" });
+    }
+    const name = (req.body.username || req.body.name || "").toString().trim();
+    const code = (req.body.code || req.body.password || "").toString().trim();
+    if (!name || !code) return res.status(400).json({ error: "请输入账号与验证码" });
+
+    const r = await db.query(
+      "SELECT * FROM users WHERE test_login_name=$1 AND test_login_code=$2",
+      [name, code]
+    );
+    const user = r.rows[0];
+    if (!user) return res.status(403).json({ error: "账号或验证码不正确" });
+
+    if (!user.adult_confirmed_at) {
+      await db.query("UPDATE users SET adult_confirmed_at = NOW() WHERE id = $1", [user.id]);
+    }
+
+    const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "30d" });
+    res.json({
+      token,
+      user: { id: user.id, name: user.name, openid: user.openid, phone: user.phone }
+    });
+  } catch (e) {
+    console.error("test-account-login error:", e);
+    res.status(500).json({ error: "登录出错" });
+  }
+});
+
 // ===== 备案测试专用接口：转发到线上真实聊天链路 =====
 // 规范依据：《被测大模型接口API文档书写规范 V1.5》
 // 6 个相互独立的密钥，各自绑定一个独立测试账号与虚拟孩子，密钥之间可并发、同一密钥内部串行
@@ -3522,6 +3555,8 @@ db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 
 db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS openid VARCHAR(64) DEFAULT NULL").catch(() => {});
 db.query("ALTER TABLE kids ADD COLUMN IF NOT EXISTS last_mem_inject_at TIMESTAMP DEFAULT NULL").catch(() => {});
 db.query("ALTER TABLE achievements ADD COLUMN IF NOT EXISTS activity_type VARCHAR(50)").catch(() => {});
+db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS test_login_name VARCHAR(32) DEFAULT NULL").catch(() => {});
+db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS test_login_code VARCHAR(64) DEFAULT NULL").catch(() => {});
 db.query("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_openid ON users(openid) WHERE openid IS NOT NULL").catch(() => {});
 db.query(`CREATE TABLE IF NOT EXISTS user_actions (
   id SERIAL PRIMARY KEY,
