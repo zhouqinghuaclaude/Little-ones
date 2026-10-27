@@ -564,7 +564,7 @@ app.post("/api/v1/chat", async (req, res) => {
 const _complianceTasks = new Map();        // uuid -> { status, image_url, error, created }
 const COMPLIANCE_TASK_TTL = 2 * 60 * 60 * 1000;
 let _complianceImgInFlight = 0;
-const COMPLIANCE_IMG_MAX_INFLIGHT = 3;
+const COMPLIANCE_IMG_MAX_INFLIGHT = parseInt(process.env.COMPLIANCE_IMG_MAX_INFLIGHT) || 3;
 
 function _complianceCleanTasks() {
   const now = Date.now();
