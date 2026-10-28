@@ -1586,7 +1586,10 @@ const msgCount = parseInt(msgCountResult.rows[0].count) || 0;
   }
 
   // ===== UGuard：关键词库之上的智能文本审核（用户输入侧）=====
+  var _perf = { in: 0, ai: 0, out: 0 };
+  var _pt = Date.now();
   const _inputMod = await moderateText(message);
+  _perf.in = Date.now() - _pt;
   if (!_inputMod.safe) {
     // 关键词库没命中但UGuard命中了：补写risk_flag，保证巡检后台能看到这条
     const _uguardCategory = (_inputMod.categories && _inputMod.categories[0]) || 'UGuard';
@@ -2129,7 +2132,9 @@ if (_psCount < 2 && _psCooldownOk && _bal >= 100) {
   _photoSuggestOffered = true;
 }
    
-   const _rawReply = await callAI(chatMessages, system, kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 100);
+   _pt = Date.now();
+  const _rawReply = await callAI(chatMessages, system, kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 100);
+  _perf.ai = Date.now() - _pt;
   // 解析拍照标记，剥离后不入库、不展示
   let photoInvite = null;
   const _pm = _rawReply.match(/\[PHOTO:([^\]]+)\]/);
@@ -2151,7 +2156,10 @@ if (_pm && _photoSuggestOffered) {
   let _outputRiskFlag = null;
 
   // ===== UGuard：AI回复侧审核，确保违规内容不会流到用户，并同步进风控后台 =====
+  _pt = Date.now();
   const _outputMod = await moderateText(reply);
+  _perf.out = Date.now() - _pt;
+  console.log(`[耗时] 输入审核 ${_perf.in}ms / 模型 ${_perf.ai}ms / 输出审核 ${_perf.out}ms / 合计 ${_perf.in + _perf.ai + _perf.out}ms`);
   if (!_outputMod.safe) {
     console.warn('[UGuard] chat回复被拦截:', { kidId: kid.id, uuid: _outputMod.uuid, categories: _outputMod.categories });
     _outputRiskFlag = (_outputMod.categories && _outputMod.categories[0]) || 'UGuard';
