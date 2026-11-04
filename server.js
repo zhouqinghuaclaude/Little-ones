@@ -51,15 +51,20 @@ const GIFT_PRICES = {
   "牛仔裤":60,"保暖帽":30,"厚长裤":80,"厚毛裤":80,"厚毛衣":120,"夹棉衣裙":150,"加厚长裙":150,"棉大衣":220,"羽绒服":250,
   "望远镜":1500,"海洋世界":2500,"主题乐园":3000,"无人机":3000,"夏令营":4000,"旅行":5000,"高尔夫":5000,"马术":6000,"太空探索":8000
 };
-let _claudeAI = null;
-function getClaudeAI() {
-  if (_claudeAI) return _claudeAI;
-  _claudeAI = process.env.DOUBAO_API_KEY
-    ? new Anthropic({ apiKey: process.env.DOUBAO_API_KEY, baseURL: "https://ark.cn-beijing.volces.com/api/compatible" })
-    : claude;
-  return _claudeAI;
+let _arkAI = null;
+function getArkAI() {
+  if (_arkAI) return _arkAI;
+  // 本服务仅使用境内已备案的基础模型（火山引擎方舟），不设境外模型兜底。
+  // 缺少配置时直接报错，而不是静默切换到其他来源的模型。
+  if (!process.env.DOUBAO_API_KEY) {
+    throw new Error("DOUBAO_API_KEY 未配置：本服务仅使用境内已备案的基础模型，不提供兜底");
+  }
+  _arkAI = new Anthropic({
+    apiKey: process.env.DOUBAO_API_KEY,
+    baseURL: "https://ark.cn-beijing.volces.com/api/compatible"
+  });
+  return _arkAI;
 }
-const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 let _doubao = null;
 function getDoubao() {
   if (!_doubao && process.env.DOUBAO_API_KEY) {
@@ -98,13 +103,8 @@ async function callAI(messages, system, maxTokens) {
  console.log('[EMPTY_REPLY] 重试后仍空, finish_reason:', res.choices[0]?.finish_reason);
  return "嗯？我刚才走神了一下，你再说一遍好不好～";
  } else {
- const res = await claude.messages.create({
- model: "claude-sonnet-4-20250514",
- max_tokens: maxTokens || 1000,
- system: system,
- messages: messages,
- });
- return res.content[0].text.trim();
+ // 境内已备案的基础模型未配置时直接失败，不走任何其他模型
+ throw new Error("DOUBAO_API_KEY 未配置：本服务仅使用境内已备案的基础模型，不提供兜底");
  }
 }
 
@@ -1194,8 +1194,8 @@ app.post("/api/kids/:id/wish-products", auth, async (req, res) => {
  const membershipType = userResult.rows[0]?.membership_type || 'free';
  const maxItems = 6;
  try {
- const result = await getClaudeAI().messages.create({
- model: process.env.DOUBAO_MODEL || "claude-sonnet-4-20250514",
+ const result = await getArkAI().messages.create({
+ model: process.env.DOUBAO_MODEL || "doubao-seed-2-0-lite-260428",
  max_tokens: 300,
   system: `你是一个虚拟儿童礼品商城的商品生成助手。根据孩子的心愿,生成6个相关的虚拟商品,按价值从低到高排列。每个商品包含:name(商品名,10字以内)、emoji(最合适的emoji)、price(芽豆价格,30-200之间)、desc(简短描述,15字以内)。严禁输出任何思考过程或解释,直接输出结果。只输出JSON数组,格式:[{"name":"...","emoji":"...","price":100,"desc":"..."}]不要其他任何内容。`,
    messages: [{ role: "user", content: `孩子的心愿是:${wishContent}` }]
@@ -1228,8 +1228,8 @@ app.post("/api/kids/:id/context-check", auth, async (req, res) => {
  .map(w => w.content)
  .join('、');
  try {
- const check = await getClaudeAI().messages.create({
- model: process.env.DOUBAO_MODEL || "claude-sonnet-4-20250514",
+ const check = await getArkAI().messages.create({
+ model: process.env.DOUBAO_MODEL || "doubao-seed-2-0-lite-260428",
  max_tokens: 100,
  system: `你是一个对话分析助手。按以下优先级判断对话内容,只输出JSON:
 第一优先:判断父母和孩子是否在商量"接下来要一起去做"某个具体活动,且双方都有意愿。
@@ -2201,8 +2201,8 @@ if (totalCount % 20 === 0) {
   const _ageStr = (kid.age < 1 && kid.birthday)
     ? `${Math.floor((Date.now() - new Date(kid.birthday)) / 86400000 / 30)}个月`
     : `${kid.age}岁`;
-  getClaudeAI().messages.create({
-    model: process.env.DOUBAO_MODEL || "claude-sonnet-4-20250514",
+  getArkAI().messages.create({
+    model: process.env.DOUBAO_MODEL || "doubao-seed-2-0-lite-260428",
     max_tokens: 500,
     system: `你是${kid.name}的记忆整理助手。从以下亲子对话中，提取${kid.name}值得长期记住的记忆。用第一人称"我"来表达，就像${kid.name}自己在记录（例如"我的好朋友叫踢踢"、"我第一次自己骑自行车成功了"、"妈妈抱着我的时候我最安心"）。
 
@@ -2298,8 +2298,8 @@ app.post("/api/kids/:id/gifts", auth, async (req, res) => {
         const giftSystem = `You are ${pkid.name}, a ${pkid.age}-year-old ${pkid.gender === "boy" ? "boy" : "girl"}. You just received a gift: ${gift_name}. React with genuine excitement and gratitude in Chinese. Be age-appropriate, warm and enthusiastic. Keep it to 2-3 short sentences. 严禁输出任何思考过程、自我更正或内心独白，直接给出最终的中文回复。`;
     let thankMsg;
     try {
-      const giftResp = await getClaudeAI().messages.create({
-        model: process.env.DOUBAO_MODEL || "claude-sonnet-4-20250514",
+      const giftResp = await getArkAI().messages.create({
+        model: process.env.DOUBAO_MODEL || "doubao-seed-2-0-lite-260428",
         max_tokens: pkid.age <= 1 ? 30 : pkid.age <= 6 ? 60 : 150,
         system: giftSystem,
         messages: [{ role: "user", content: `${pkid.parent_role}送给你${gift_name}！` }]
@@ -2358,8 +2358,8 @@ app.post("/api/kids/:id/gifts", auth, async (req, res) => {
 
     // Generate instant thank-you message from kid
     const giftSystem = `You are ${kid.name}, a ${kid.age}-year-old ${kid.gender === "boy" ? "boy" : "girl"}. You are ${kid.parent_role === "爸爸" ? "your dad's" : "your mom's"} beloved child. You just received a gift: ${gift_name}. React with genuine excitement and gratitude in Chinese. Be age-appropriate, warm and enthusiastic. Keep it to 2-3 sentences.`;
-    const giftResponse = await getClaudeAI().messages.create({
-      model: process.env.DOUBAO_MODEL || "claude-sonnet-4-20250514",
+    const giftResponse = await getArkAI().messages.create({
+      model: process.env.DOUBAO_MODEL || "doubao-seed-2-0-lite-260428",
       max_tokens: kid.age <= 1 ? 30 : kid.age <= 6 ? 60 : 150,
 
       system: giftSystem,
